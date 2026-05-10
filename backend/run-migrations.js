@@ -61,6 +61,13 @@ const applyBootstrap = async (label, file) => {
       console.log('Base schema already present. Skipping bootstrap.');
     }
 
+    // pg_dump emits `SELECT pg_catalog.set_config('search_path', '', false)` which
+    // disables the public schema for subsequent statements on the same connection.
+    // Force the role's default search_path back to public so 056+ migrations
+    // (which use unqualified identifiers) can resolve.
+    await pool.query("ALTER ROLE CURRENT_USER SET search_path TO public");
+    await pool.query("SET search_path TO public");
+
     await pool.query(`
       CREATE TABLE IF NOT EXISTS _migrations (
         id SERIAL PRIMARY KEY,
@@ -85,7 +92,7 @@ const applyBootstrap = async (label, file) => {
       const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
       console.log(`RUN   ${file}...`);
       try {
-        await pool.query(sql);
+        await pool.query(`SET search_path TO public;\n${sql}`);
         await pool.query('INSERT INTO _migrations (name) VALUES ($1)', [file]);
         ran++;
         console.log(`DONE  ${file}`);

@@ -5,7 +5,7 @@ const lastUpdated = "April 1, 2026";
 const sections = [
   {
     title: "1. Introduction",
-    content: `This Privacy Policy applies to air-gapped deployments of TeamChatX — installations that operate on isolated networks with no internet connectivity. Air-gapped deployment offers the highest level of data security for organizations handling classified, sensitive, or regulated information.`,
+    content: `This Privacy Policy applies to air-gapped deployments of TheChatNest — installations that operate on isolated networks with no internet connectivity. Air-gapped deployment offers the highest level of data security for organizations handling classified, sensitive, or regulated information.`,
   },
   {
     title: "2. Complete Data Isolation",
@@ -13,19 +13,19 @@ const sections = [
     list: [
       "Zero data leaves your network — no outbound connections of any kind",
       "No telemetry, no update checks, no external API calls",
-      "TeamChatX operates 100% offline after initial installation",
+      "TheChatNest operates 100% offline after initial installation",
       "All features work without internet: messaging, calls, file sharing, admin panel",
       "GIF search and external integrations are disabled by design",
       "WebRTC calls route through your internal TURN server only",
     ],
   },
   {
-    title: "3. Data Collection by TeamChatX",
-    content: `In an air-gapped environment, TeamChatX (the company) collects absolutely NO data from your deployment. We have no technical capability to access your systems. The only interaction is the initial license key validation, which can be performed offline via a signed license file.`,
+    title: "3. Data Collection by TheChatNest",
+    content: `In an air-gapped environment, TheChatNest (the company) collects absolutely NO data from your deployment. We have no technical capability to access your systems. The only interaction is the initial license key validation, which can be performed offline via a signed license file.`,
   },
   {
     title: "4. Deployment Architecture",
-    content: `Air-gapped TeamChatX runs entirely within your secure network:`,
+    content: `Air-gapped TheChatNest runs entirely within your secure network:`,
     list: [
       "Application server deployed on your internal infrastructure",
       "PostgreSQL database on your internal database server",
@@ -41,7 +41,7 @@ const sections = [
   },
   {
     title: "6. Compliance",
-    content: `Air-gapped TeamChatX is designed for environments requiring:`,
+    content: `Air-gapped TheChatNest is designed for environments requiring:`,
     list: [
       "Government and military classified networks",
       "Healthcare organizations (HIPAA compliance)",
@@ -56,7 +56,7 @@ const sections = [
   },
   {
     title: "8. Contact",
-    content: `For air-gapped deployment support, contact us at enterprise@teamchatx.com. We offer on-site deployment assistance for enterprise customers.`,
+    content: `For air-gapped deployment support, contact us at enterprise@thechatnest.com. We offer on-site deployment assistance for enterprise customers.`,
   },
 ];
 

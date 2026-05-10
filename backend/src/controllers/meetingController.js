@@ -25,11 +25,11 @@ const buildIcsAttachment = ({ meetingCode, title, description, scheduledAt, dura
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//TeamChat//Meeting//EN',
+    'PRODID:-//TheChatNest//Meeting//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
-    `UID:${meetingCode}@teamchat`,
+    `UID:${meetingCode}@thechatnest`,
     `DTSTAMP:${fmt(new Date())}`,
     `DTSTART:${fmt(start)}`,
     `DTEND:${fmt(end)}`,

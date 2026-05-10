@@ -1,12 +1,12 @@
 {
-  "name": "teamchatx-desktop",
-  "productName": "TeamChatX",
+  "name": "thechatnest-desktop",
+  "productName": "TheChatNest",
   "version": "1.0.2",
-  "description": "TeamChatX desktop client",
+  "description": "TheChatNest desktop client",
   "main": "main.js",
   "author": {
-    "name": "TeamChatX",
-    "email": "support@teamchatx.com"
+    "name": "TheChatNest",
+    "email": "support@thechatnest.com"
   },
   "license": "UNLICENSED",
   "scripts": {
@@ -16,8 +16,8 @@
     "release": "electron-builder --publish always"
   },
   "build": {
-    "appId": "com.teamchatx.desktop",
-    "productName": "TeamChatX",
+    "appId": "com.thechatnest.desktop",
+    "productName": "TheChatNest",
     "files": [
       "main.js",
       "preload.js",
@@ -47,7 +47,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "TeamChatX"
+      "shortcutName": "TheChatNest"
     },
     "mac": {
       "target": [

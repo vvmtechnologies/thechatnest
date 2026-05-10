@@ -6,7 +6,7 @@ const lastUpdated = "April 1, 2026";
 const sections = [
   {
     title: "1. Money-Back Guarantee",
-    content: `TeamChatX offers a 30-day money-back guarantee on all paid plans. If you're not satisfied with the service within the first 30 days of your initial subscription, you can request a full refund — no questions asked.`,
+    content: `TheChatNest offers a 30-day money-back guarantee on all paid plans. If you're not satisfied with the service within the first 30 days of your initial subscription, you can request a full refund — no questions asked.`,
   },
   {
     title: "2. Eligibility for Refund",
@@ -27,14 +27,14 @@ const sections = [
       "Annual subscriptions after the 90-day cancellation window (unless required by local law)",
       "Custom development, integration, or consulting services",
       "On-premise deployment and setup fees once deployment is completed",
-      "Domain or SSL certificate costs purchased through TeamChatX",
+      "Domain or SSL certificate costs purchased through TheChatNest",
     ],
   },
   {
     title: "4. How to Request a Refund",
     content: `To request a refund:`,
     list: [
-      "Email billing@teamchatx.com with your account email and reason for refund",
+      "Email billing@thechatnest.com with your account email and reason for refund",
       "Or contact us through the Contact page on our website",
       "Include your transaction ID or invoice number (found in Admin Panel > Payments)",
       "Refund requests are processed within 5 business days",
@@ -61,11 +61,11 @@ const sections = [
   },
   {
     title: "7. Free Trial",
-    content: `TeamChatX offers a free trial period. No payment information is required to start a trial. You will not be charged unless you explicitly choose a paid plan after the trial ends.`,
+    content: `TheChatNest offers a free trial period. No payment information is required to start a trial. You will not be charged unless you explicitly choose a paid plan after the trial ends.`,
   },
   {
     title: "8. Dispute Resolution",
-    content: `If you disagree with a refund decision, please contact us at billing@teamchatx.com with additional details. We will review your case within 10 business days and provide a final resolution.`,
+    content: `If you disagree with a refund decision, please contact us at billing@thechatnest.com with additional details. We will review your case within 10 business days and provide a final resolution.`,
   },
   {
     title: "9. Changes to This Policy",
@@ -98,7 +98,7 @@ export default function RefundPolicy() {
 
         <div style={{ background: "#f1f5f9", borderRadius: 12, padding: 24, marginTop: 24 }}>
           <p style={{ color: "#475569", fontSize: 14, margin: 0 }}>
-            Need help with billing? <Link to="/contact" style={{ color: "#0162c4", fontWeight: 600 }}>Contact us</Link> or email billing@teamchatx.com.
+            Need help with billing? <Link to="/contact" style={{ color: "#0162c4", fontWeight: 600 }}>Contact us</Link> or email billing@thechatnest.com.
           </p>
         </div>
       </section>

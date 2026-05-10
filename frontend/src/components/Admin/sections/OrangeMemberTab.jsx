@@ -2,8 +2,8 @@ import { Avatar, Chip, Stack, Typography } from "@mui/material";
 import FormCard from "../forms/FormCard";
 
 const defaultMembers = [
-  { id: 1, name: "Orange Desk", email: "orange1@aabhyasa.com", status: "Invited" },
-  { id: 2, name: "Field Ops", email: "orange2@aabhyasa.com", status: "Active" },
+  { id: 1, name: "Orange Desk", email: "orange1@thechatnest.com", status: "Invited" },
+  { id: 2, name: "Field Ops", email: "orange2@thechatnest.com", status: "Active" },
 ];
 
 const OrangeMemberTab = ({ members = defaultMembers }) => (

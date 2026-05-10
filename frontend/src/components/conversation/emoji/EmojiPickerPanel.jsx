@@ -371,7 +371,7 @@ const EmojiPickerPanel = ({ open, onClose, onSelectEmoji }) => {
                 color="text.primary"
               >
                 <PiSmiley size={16} style={{ marginRight: 8 }} />
-                TeamChatx
+                TheChatNest
               </Typography>
               <IconButton size="small" sx={{ ml: "auto" }} onClick={onClose}>
                 <PiX size={16} />

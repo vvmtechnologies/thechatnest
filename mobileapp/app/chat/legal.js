@@ -6,7 +6,7 @@ import { useTheme } from '../../src/store/ThemeContext';
 
 const PRIVACY_POLICY = `Last Updated: April 2026
 
-TeamChatX ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
+TheChatNest ("we", "our", "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our mobile application.
 
 1. INFORMATION WE COLLECT
 
@@ -53,7 +53,7 @@ We do not sell, trade, or share your personal information with third parties exc
 - Export your chat history via chat menu > Export
 - Delete your messages via long-press > Delete/Unsend
 - Manage app permissions via Settings > Permissions
-- Request account deletion by emailing support@teamchatx.com
+- Request account deletion by emailing support@thechatnest.com
 
 7. COOKIES & TRACKING
 
@@ -61,7 +61,7 @@ The mobile app does not use cookies. We do not use third-party analytics or adve
 
 8. CHILDREN'S PRIVACY
 
-TeamChatX is designed for business use and is not intended for children under 13.
+TheChatNest is designed for business use and is not intended for children under 13.
 
 9. CHANGES TO THIS POLICY
 
@@ -69,12 +69,12 @@ We may update this Privacy Policy from time to time. We will notify you of chang
 
 10. CONTACT US
 
-Email: support@teamchatx.com
-Website: https://teamchatx.com`;
+Email: support@thechatnest.com
+Website: https://thechatnest.com`;
 
 const TERMS_OF_SERVICE = `Last Updated: April 2026
 
-By using TeamChatX, you agree to these Terms of Service.
+By using TheChatNest, you agree to these Terms of Service.
 
 1. ACCEPTANCE OF TERMS
 
@@ -123,7 +123,7 @@ You agree NOT to:
 
 8. LIMITATION OF LIABILITY
 
-TeamChatX is provided "as is" without warranties. We are not liable for any damages arising from use of the app.
+TheChatNest is provided "as is" without warranties. We are not liable for any damages arising from use of the app.
 
 9. CHANGES TO TERMS
 
@@ -131,7 +131,7 @@ We may update these terms. Continued use after changes constitutes acceptance.
 
 10. CONTACT
 
-Email: support@teamchatx.com`;
+Email: support@thechatnest.com`;
 
 export default function LegalScreen() {
   const { type } = useLocalSearchParams(); // 'privacy' or 'terms'
@@ -186,7 +186,7 @@ export default function LegalScreen() {
         {/* Contact footer */}
         <View style={[s.legalFooter, { borderTopColor: isDark ? '#334155' : '#e2e8f0' }]}>
           <Ionicons name="mail-outline" size={16} color={t.accent} />
-          <Text style={[s.legalFooterText, { color: subColor }]}>Questions? Email support@teamchatx.com</Text>
+          <Text style={[s.legalFooterText, { color: subColor }]}>Questions? Email support@thechatnest.com</Text>
         </View>
       </ScrollView>
     </View>

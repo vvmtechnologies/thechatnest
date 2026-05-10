@@ -84,7 +84,7 @@ if (process.env.NODE_ENV !== 'test') {
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'TeamChat API',
+    service: 'TheChatNest API',
     message: 'Backend is running',
     timestamp: new Date().toISOString(),
   });

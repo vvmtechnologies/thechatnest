@@ -10,19 +10,19 @@ const getVerificationOtpMailTemplate = ({
   ownerName,
   otpCode,
   otpExpiresMinutes = 10,
-  appName = 'TeamChatX',
+  appName = 'TheChatNest',
   purpose = 'verification',
-  supportEmail = 'support@teamchatx.com',
+  supportEmail = 'support@thechatnest.com',
 }) => {
   const safeOwner = escapeHtml(ownerName || 'User');
   const safeOtp = escapeHtml(otpCode || '');
   const safeMinutes = escapeHtml(otpExpiresMinutes);
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
-  const safeSupport = escapeHtml(supportEmail || 'support@teamchatx.com');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
+  const safeSupport = escapeHtml(supportEmail || 'support@thechatnest.com');
   const isLoginPurpose = String(purpose || '').trim().toLowerCase() === 'login';
   const subject = isLoginPurpose
-    ? `Your ${appName || 'TeamChatX'} login verification code`
-    : `Your ${appName || 'TeamChatX'} verification code`;
+    ? `Your ${appName || 'TheChatNest'} login verification code`
+    : `Your ${appName || 'TheChatNest'} verification code`;
   const contextLabel = isLoginPurpose ? 'Login Verification' : 'Account Verification';
   const instructionText = isLoginPurpose
     ? `Use the following one-time password (OTP) to sign in to ${safeAppName}.`
@@ -34,14 +34,14 @@ const getVerificationOtpMailTemplate = ({
       `Hello ${ownerName},`,
       '',
       isLoginPurpose
-        ? `Your ${appName || 'TeamChatX'} login verification code is: ${otpCode}`
-        : `Your ${appName || 'TeamChatX'} verification code is: ${otpCode}`,
+        ? `Your ${appName || 'TheChatNest'} login verification code is: ${otpCode}`
+        : `Your ${appName || 'TheChatNest'} verification code is: ${otpCode}`,
       `This code expires in ${otpExpiresMinutes} minutes.`,
       '',
       'If you did not request this, please ignore this email.',
-      `Support: ${supportEmail || 'support@teamchatx.com'}`,
+      `Support: ${supportEmail || 'support@thechatnest.com'}`,
       '',
-      `${appName || 'TeamChatX'} Security`,
+      `${appName || 'TheChatNest'} Security`,
     ].join('\n'),
     html: `
       <div style="margin:0;padding:24px;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">

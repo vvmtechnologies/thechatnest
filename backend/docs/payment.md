@@ -263,7 +263,7 @@ After success:
 
 ### Overview
 
-TeamChatX supports **dual payment gateways**: Stripe and PayPal. The gateway is selected at checkout time via the `gateway` parameter. Both follow the same billing APIs but diverge at the provider level.
+TheChatNest supports **dual payment gateways**: Stripe and PayPal. The gateway is selected at checkout time via the `gateway` parameter. Both follow the same billing APIs but diverge at the provider level.
 
 ### PayPal Architecture
 

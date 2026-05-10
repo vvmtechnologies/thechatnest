@@ -6,14 +6,14 @@ const benefits = [
   { title: "Sales & Marketing Support", desc: "Access co-branded materials, product demos, and dedicated partner manager support.", icon: "📊" },
   { title: "Priority Technical Support", desc: "Get priority access to our engineering team for deployment assistance and custom integrations.", icon: "🛠️" },
   { title: "Exclusive Pricing", desc: "Offer your clients special partner pricing that's not available through direct channels.", icon: "🏷️" },
-  { title: "Training & Certification", desc: "Comprehensive product training and official TeamChatX partner certification.", icon: "🎓" },
+  { title: "Training & Certification", desc: "Comprehensive product training and official TheChatNest partner certification.", icon: "🎓" },
   { title: "Deal Registration", desc: "Register your deals for pipeline protection and enhanced support during the sales cycle.", icon: "🤝" },
 ];
 
 const partnerTypes = [
-  { title: "Reseller Partner", desc: "Purchase TeamChatX licenses at discounted rates and resell to your clients with full margin control.", best: "IT companies, system integrators, managed service providers" },
+  { title: "Reseller Partner", desc: "Purchase TheChatNest licenses at discounted rates and resell to your clients with full margin control.", best: "IT companies, system integrators, managed service providers" },
   { title: "Referral Partner", desc: "Refer qualified leads and earn a commission on every successful conversion. No technical involvement required.", best: "Consultants, agencies, industry influencers" },
-  { title: "Technology Partner", desc: "Integrate your product with TeamChatX to offer joint solutions. Co-market to combined audiences.", best: "SaaS companies, productivity tool vendors, security providers" },
+  { title: "Technology Partner", desc: "Integrate your product with TheChatNest to offer joint solutions. Co-market to combined audiences.", best: "SaaS companies, productivity tool vendors, security providers" },
 ];
 
 export default function ChannelPartner() {
@@ -24,7 +24,7 @@ export default function ChannelPartner() {
         <div className="container">
           <h1 style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: 12 }}>Channel Partner Program</h1>
           <p style={{ fontSize: "1.1rem", color: "#94a3b8", maxWidth: 600, margin: "0 auto 28px" }}>
-            Grow your business by partnering with TeamChatX. Help enterprises adopt secure, self-hosted communication — and earn while doing it.
+            Grow your business by partnering with TheChatNest. Help enterprises adopt secure, self-hosted communication — and earn while doing it.
           </p>
           <Link to="/contact" style={{ display: "inline-block", background: "#0162c4", color: "#fff", padding: "12px 32px", borderRadius: 8, fontWeight: 600, textDecoration: "none" }}>
             Apply to Partner Program

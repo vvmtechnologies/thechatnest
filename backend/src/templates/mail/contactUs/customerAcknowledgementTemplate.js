@@ -8,20 +8,20 @@ const escapeHtml = (value) =>
 
 const getContactUsCustomerAcknowledgementTemplate = (
   payload,
-  { appName = 'TeamChatX', supportEmail = 'support@teamchatx.com' } = {}
+  { appName = 'TheChatNest', supportEmail = 'support@thechatnest.com' } = {}
 ) => {
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
-  const safeSupport = escapeHtml(supportEmail || 'support@teamchatx.com');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
+  const safeSupport = escapeHtml(supportEmail || 'support@thechatnest.com');
   return {
-    subject: `Thank you for contacting ${appName || 'TeamChatX'}`,
+    subject: `Thank you for contacting ${appName || 'TheChatNest'}`,
     text: [
       `Hi ${payload.name},`,
       '',
-      `Thank you for contacting ${appName || 'TeamChatX'}.`,
+      `Thank you for contacting ${appName || 'TheChatNest'}.`,
       'Our team has received your request and will get back to you shortly.',
-      `Support: ${supportEmail || 'support@teamchatx.com'}`,
+      `Support: ${supportEmail || 'support@thechatnest.com'}`,
       '',
-      `${appName || 'TeamChatX'} Support`,
+      `${appName || 'TheChatNest'} Support`,
     ].join('\n'),
     html: `
       <div style="margin:0;padding:24px;background:#eef2ff;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">

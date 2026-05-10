@@ -2,10 +2,10 @@ import { DataGrid } from "@mui/x-data-grid";
 import FormCard from "../forms/FormCard";
 
 const defaultRows = [
-  { id: 1, name: "Anita Sharma", email: "anita@aabhyasa.com", role: "Admin", department: "Product", status: "Active" },
-  { id: 2, name: "Ravi Verma", email: "ravi@aabhyasa.com", role: "Member", department: "Engineering", status: "Pending" },
-  { id: 3, name: "Nisha Rao", email: "nisha@aabhyasa.com", role: "Manager", department: "HR", status: "Active" },
-  { id: 4, name: "Sameer Khan", email: "sameer@aabhyasa.com", role: "Orange Member", department: "Marketing", status: "Inactive" },
+  { id: 1, name: "Anita Sharma", email: "anita@thechatnest.com", role: "Admin", department: "Product", status: "Active" },
+  { id: 2, name: "Ravi Verma", email: "ravi@thechatnest.com", role: "Member", department: "Engineering", status: "Pending" },
+  { id: 3, name: "Nisha Rao", email: "nisha@thechatnest.com", role: "Manager", department: "HR", status: "Active" },
+  { id: 4, name: "Sameer Khan", email: "sameer@thechatnest.com", role: "Orange Member", department: "Marketing", status: "Inactive" },
 ];
 
 const defaultColumns = [

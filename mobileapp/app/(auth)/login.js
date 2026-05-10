@@ -79,7 +79,7 @@ export default function LoginScreen() {
   const handleBiometricLogin = useCallback(async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Sign in to TeamChatX',
+        promptMessage: 'Sign in to TheChatNest',
         cancelLabel: 'Use password',
         disableDeviceFallback: false,
         fallbackLabel: 'Use password',
@@ -190,7 +190,7 @@ export default function LoginScreen() {
               <LinearGradient colors={[P, PD]} style={z.logoGrad}>
                 <Ionicons name="chatbubbles" size={22} color="#fff" />
               </LinearGradient>
-              <Text style={z.brand}>TeamChatX</Text>
+              <Text style={z.brand}>TheChatNest</Text>
             </View>
           </Animated.View>
 

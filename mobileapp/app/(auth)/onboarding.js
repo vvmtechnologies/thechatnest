@@ -66,7 +66,7 @@ export default function OnboardingScreen() {
                 <Ionicons name="chatbubbles" size={15} color="#fff" />
               </LinearGradient>
             </View>
-            <Text style={z.logoText}>TeamChatX</Text>
+            <Text style={z.logoText}>TheChatNest</Text>
           </View>
 
           <Text style={z.topTitle}>Everything you need{'\n'}to stay connected</Text>

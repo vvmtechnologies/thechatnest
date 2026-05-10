@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "TeamChatX",
-    "slug": "teamchatx",
-    "scheme": "teamchatx",
+    "name": "TheChatNest",
+    "slug": "thechatnest",
+    "scheme": "thechatnest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,20 +14,20 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.teamchatx.app",
+      "bundleIdentifier": "com.thechatnest.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "TeamChatX needs camera access to take photos and videos for sharing in chats.",
-        "NSPhotoLibraryUsageDescription": "TeamChatX needs photo library access to share images and videos in chats.",
-        "NSMicrophoneUsageDescription": "TeamChatX needs microphone access to record voice messages.",
-        "NSLocationWhenInUseUsageDescription": "TeamChatX needs your location to share it in chats.",
-        "NSContactsUsageDescription": "TeamChatX needs contacts access to share contact information in chats.",
-        "NSFaceIDUsageDescription": "TeamChatX uses Face ID for quick and secure login.",
-        "NSPhotoLibraryAddUsageDescription": "TeamChatX needs permission to save photos and files to your device."
+        "NSCameraUsageDescription": "TheChatNest needs camera access to take photos and videos for sharing in chats.",
+        "NSPhotoLibraryUsageDescription": "TheChatNest needs photo library access to share images and videos in chats.",
+        "NSMicrophoneUsageDescription": "TheChatNest needs microphone access to record voice messages.",
+        "NSLocationWhenInUseUsageDescription": "TheChatNest needs your location to share it in chats.",
+        "NSContactsUsageDescription": "TheChatNest needs contacts access to share contact information in chats.",
+        "NSFaceIDUsageDescription": "TheChatNest uses Face ID for quick and secure login.",
+        "NSPhotoLibraryAddUsageDescription": "TheChatNest needs permission to save photos and files to your device."
       },
       "bitcode": false
     },
     "android": {
-      "package": "com.teamchatx.app",
+      "package": "com.thechatnest.app",
       "versionCode": 1,
       "windowSoftInputMode": "adjustResize",
       "adaptiveIcon": {
@@ -72,20 +72,20 @@
       [
         "expo-audio",
         {
-          "microphonePermission": "TeamChatX needs microphone access to record voice messages."
+          "microphonePermission": "TheChatNest needs microphone access to record voice messages."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "TeamChatX needs photo library access to share images in chats.",
-          "cameraPermission": "TeamChatX needs camera access to take photos for chats."
+          "photosPermission": "TheChatNest needs photo library access to share images in chats.",
+          "cameraPermission": "TheChatNest needs camera access to take photos for chats."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "TeamChatX needs camera access to scan QR codes for linking your web browser.",
+          "cameraPermission": "TheChatNest needs camera access to scan QR codes for linking your web browser.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -93,13 +93,13 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "TeamChatX needs your location to share it in chats."
+          "locationWhenInUsePermission": "TheChatNest needs your location to share it in chats."
         }
       ],
       [
         "expo-contacts",
         {
-          "contactsPermission": "TeamChatX needs contacts access to share contact information."
+          "contactsPermission": "TheChatNest needs contacts access to share contact information."
         }
       ],
       [
@@ -111,7 +111,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "TeamChatX uses Face ID for secure login."
+          "faceIDPermission": "TheChatNest uses Face ID for secure login."
         }
       ],
       [
@@ -124,8 +124,8 @@
       [
         "@config-plugins/react-native-webrtc",
         {
-          "cameraPermission": "TeamChatX needs camera access for video calls.",
-          "microphonePermission": "TeamChatX needs microphone access for audio and video calls."
+          "cameraPermission": "TheChatNest needs camera access for video calls.",
+          "microphonePermission": "TheChatNest needs microphone access for audio and video calls."
         }
       ]
     ],

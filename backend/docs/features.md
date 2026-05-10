@@ -1,4 +1,4 @@
-# TeamChatX Backend Features
+# TheChatNest Backend Features
 
 Last updated: 2026-03-13
 
@@ -355,7 +355,7 @@ Last updated: 2026-03-13
 - **Previously:** Pin was local-only (frontend state), lost on reload. Now persisted via socket → DB.
 
 ### AI Assistant (Live Support Agent)
-- **What:** Intelligent, role-aware AI support agent embedded in TeamChatX. Knows all app features and provides step-by-step guidance.
+- **What:** Intelligent, role-aware AI support agent embedded in TheChatNest. Knows all app features and provides step-by-step guidance.
 - **Access:** 🤖 Robot icon in left sidebar → toggles assistant panel.
 - **Multi-Provider:** Uses active AI provider from `ai_providers` DB table (Gemini/OpenAI/Claude). No `.env` dependency.
 - **Role-Aware Responses:**

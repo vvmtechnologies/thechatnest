@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 
-const KEY = 'teamchatx_device_id';
+const KEY = 'thechatnest_device_id';
 
 export async function getDeviceId() {
   let id = await SecureStore.getItemAsync(KEY);

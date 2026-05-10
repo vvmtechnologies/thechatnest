@@ -1,4 +1,4 @@
-# TeamChatX — System Requirements & Scaling Guide
+# TheChatNest — System Requirements & Scaling Guide
 
 Last updated: 2026-03-24
 
@@ -188,7 +188,7 @@ Last updated: 2026-03-24
 
 ## 5. Multi-Device Architecture
 
-TeamChatX supports simultaneous connections from multiple devices per user:
+TheChatNest supports simultaneous connections from multiple devices per user:
 
 | Feature | Implementation |
 |---------|---------------|
@@ -254,7 +254,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=<password>
-DB_NAME=teamchatx
+DB_NAME=thechatnest
 DB_POOL_MAX=20                    # Increase for scale: 50-100
 DB_IDLE_TIMEOUT_MS=10000
 DB_CONN_TIMEOUT_MS=5000
@@ -280,7 +280,7 @@ MESSAGE_ENCRYPTION_KEY=<32-byte-hex-key>
 AWS_ACCESS_KEY_ID=<key>
 AWS_SECRET_ACCESS_KEY=<secret>
 AWS_REGION=ap-south-1
-AWS_S3_BUCKET=teamchatx-files
+AWS_S3_BUCKET=thechatnest-files
 ```
 
 ### Optional
@@ -406,7 +406,7 @@ Create `ecosystem.config.js`:
 ```js
 module.exports = {
   apps: [{
-    name: 'teamchatx',
+    name: 'thechatnest',
     script: 'src/server.js',
     instances: 'max',       // Uses all CPU cores
     exec_mode: 'cluster',
@@ -464,7 +464,7 @@ const initSocket = async (httpServer) => {
 
 Nginx config for sticky WebSocket:
 ```nginx
-upstream teamchatx {
+upstream thechatnest {
     ip_hash;
     server app1:5000;
     server app2:5000;
@@ -472,7 +472,7 @@ upstream teamchatx {
 
 server {
     location /socket.io/ {
-        proxy_pass http://teamchatx;
+        proxy_pass http://thechatnest;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

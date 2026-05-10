@@ -54,7 +54,7 @@ ON CONFLICT (feature_category_id, title) DO UPDATE SET description = EXCLUDED.de
 
 -- ═══ AI FEATURES ═══
 INSERT INTO feature_items (feature_category_id, title, description, display_order) VALUES
-((SELECT feature_category_id FROM feature_categories WHERE category_key = 'ai_features'), 'AI App Guide Assistant', 'In-app AI chatbot that answers questions about TeamChatX features, how-to guides, and troubleshooting in English/Hindi/Hinglish.', 13),
+((SELECT feature_category_id FROM feature_categories WHERE category_key = 'ai_features'), 'AI App Guide Assistant', 'In-app AI chatbot that answers questions about TheChatNest features, how-to guides, and troubleshooting in English/Hindi/Hinglish.', 13),
 ((SELECT feature_category_id FROM feature_categories WHERE category_key = 'ai_features'), 'AI Call Notes', 'Automatic meeting notes generation from call recordings with key points and action items.', 14)
 ON CONFLICT (feature_category_id, title) DO UPDATE SET description = EXCLUDED.description;
 

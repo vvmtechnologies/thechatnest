@@ -1,4 +1,4 @@
-# TeamChatX Complete API Documentation
+# TheChatNest Complete API Documentation
 
 Last updated: 2026-03-10
 
@@ -813,16 +813,16 @@ PUT example body:
 
 ```json
 {
-  "brand_name": "TeamChatX Global",
+  "brand_name": "TheChatNest Global",
   "logo_url": "https://cdn.example.com/logo-new.png",
   "mascot_url": "https://cdn.example.com/mascot-new.png",
-  "linkedin_url": "https://linkedin.com/company/teamchatx-global",
-  "twitter_url": "https://x.com/teamchatxglobal",
-  "youtube_url": "https://youtube.com/@teamchatxglobal",
+  "linkedin_url": "https://linkedin.com/company/thechatnest-global",
+  "twitter_url": "https://x.com/thechatnestglobal",
+  "youtube_url": "https://youtube.com/@thechatnestglobal",
   "status": "active",
   "emails": [
     {
-      "email_address": "support@teamchatx.com",
+      "email_address": "support@thechatnest.com",
       "label": "support",
       "is_primary": true,
       "status": "active"
@@ -855,8 +855,8 @@ PATCH example body:
 
 ```json
 {
-  "brand_name": "TeamChatX India",
-  "twitter_url": "https://x.com/teamchatxindia"
+  "brand_name": "TheChatNest India",
+  "twitter_url": "https://x.com/thechatnestindia"
 }
 ```
 
@@ -938,7 +938,7 @@ Mail workflow:
 - admin notification mail (`New Contact Us Request`) goes to `.env CONTACT_US_NOTIFY_TO`
 - customer acknowledgement mail (`Thank you for contacting us`) goes to submitted `email_address`
 - mail dispatch async/background hai, isliye `POST /contact-us` response fast aata hai
-- recommended env: `CONTACT_US_NOTIFY_TO=support@teamchatx.com`
+- recommended env: `CONTACT_US_NOTIFY_TO=support@thechatnest.com`
 
 Example `POST` body:
 
@@ -1036,7 +1036,7 @@ Example `POST /groups` body:
 
 ```json
 {
-  "group_name": "Aabhyasa Development",
+  "group_name": "Thechatnest Development",
   "group_description": "Main dev group",
   "group_image": null,
   "is_airtime": false,

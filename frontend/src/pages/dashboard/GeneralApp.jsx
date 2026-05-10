@@ -3370,7 +3370,7 @@ const GeneralApp = () => {
                         color={isDark ? theme.palette.text.primary : theme.palette.primary.main}
                         sx={{ letterSpacing: "-0.01em" }}
                       >
-                        TeamChatX
+                        TheChatNest
                       </Typography>
                     </Stack>
 

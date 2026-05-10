@@ -269,7 +269,7 @@ export default function LinkedDevicesScreen() {
             {/* How it works */}
             <View style={[z.howCard, { backgroundColor: cardBg }]}>
               <Text style={[z.howTitle, { color: textColor }]}>How it works</Text>
-              {['Open TeamChatX on web browser', 'Click "Login via QR Code"', 'Tap "Link a Device" and scan QR'].map((t, i) => (
+              {['Open TheChatNest on web browser', 'Click "Login via QR Code"', 'Tap "Link a Device" and scan QR'].map((t, i) => (
                 <View key={i} style={z.howRow}>
                   <View style={[z.howDot, { backgroundColor: `${ACCENT}15` }]}>
                     <Text style={[z.howNum, { color: ACCENT }]}>{i + 1}</Text>

@@ -83,7 +83,7 @@ export default function ForgotPasswordScreen() {
         {/* Logo */}
         <View style={s.logoSection}>
           <LinearGradient colors={[P, PD]} style={s.logoGrad}><Ionicons name="chatbubbles" size={24} color="#fff" /></LinearGradient>
-          <Text style={s.brandText}>TeamChatX</Text>
+          <Text style={s.brandText}>TheChatNest</Text>
         </View>
 
         {/* Steps */}

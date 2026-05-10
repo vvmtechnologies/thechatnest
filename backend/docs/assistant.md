@@ -1,4 +1,4 @@
-# TeamChatX AI Assistant — Complete Specification
+# TheChatNest AI Assistant — Complete Specification
 
 Last updated: 2026-03-19
 
@@ -95,7 +95,7 @@ Last updated: 2026-03-19
 
 ## Request Flow (Step by Step)
 
-1. **User clicks 🤖** in left sidebar → `CustomEvent("teamchatx:assistant")` dispatched
+1. **User clicks 🤖** in left sidebar → `CustomEvent("thechatnest:assistant")` dispatched
 2. **LiveAssistant opens** → fetches workspace state (org, users, groups) via existing APIs
 3. **User types question** → e.g. "message kaise edit karte hain?"
 4. **Frontend builds payload:**
@@ -235,7 +235,7 @@ Last updated: 2026-03-19
     { "role": "user", "content": "And how to delete?" }
   ],
   "systemPrompt": "optional custom system prompt",
-  "workspaceContext": "Organization: TeamChatX\nPlan: Enterprise..."
+  "workspaceContext": "Organization: TheChatNest\nPlan: Enterprise..."
 }
 ```
 
@@ -305,7 +305,7 @@ Last updated: 2026-03-19
 ```text
 # Message editing help
 User: Hardik Patel
-Organization: TeamChatX
+Organization: TheChatNest
 Date: 3/19/2026, 10:00:00 AM
 Messages: 4
 
@@ -547,13 +547,13 @@ Priority values: `normal`, `high`, `urgent`
 
 **Owner added knowledge entry:**
 - Title: "Office WiFi Setup"
-- Content: "WiFi: TeamChat-Office, Password: TC@2026secure, IT Support: ext. 1234"
+- Content: "WiFi: TheChatNest-Office, Password: TC@2026secure, IT Support: ext. 1234"
 
 **User asks:** "Office ka WiFi password kya hai?"
 
 **AI Assistant:**
 > Office WiFi ki details:
-> - **Network Name:** TeamChat-Office
+> - **Network Name:** TheChatNest-Office
 > - **Password:** TC@2026secure
 >
 > Agar connect nahi ho raha toh IT Support ko call karo: **ext. 1234**

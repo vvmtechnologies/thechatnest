@@ -8,7 +8,7 @@ export default function AuthHeader({ title, subtitle }) {
       <View style={styles.logoCircle}>
         <Ionicons name="chatbubbles" size={32} color={colors.white} />
       </View>
-      <Text style={styles.appName}>TeamChatX</Text>
+      <Text style={styles.appName}>TheChatNest</Text>
       {title && <Text style={styles.title}>{title}</Text>}
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>

@@ -21,7 +21,7 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
 }
-const APP_USER_MODEL_ID = "com.teamchatx.desktop";
+const APP_USER_MODEL_ID = "com.thechatnest.desktop";
 const WIN_NOTIFICATION_REG_PATH = `HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\${APP_USER_MODEL_ID}`;
 const isWindows = process.platform === "win32";
 // Use fully transparent background so Windows doesn't draw the default white titlebar
@@ -118,7 +118,7 @@ function createWindow() {
     height: 800,
     minWidth: 1000,
     minHeight: 600,
-    title: "TeamChatX",
+    title: "TheChatNest",
     icon: path.join(__dirname, "icons/icon.ico"),
     autoHideMenuBar: true,
     transparent: true,
@@ -177,7 +177,7 @@ function createWindow() {
         "data:text/html;charset=utf-8," +
         encodeURIComponent(
           '<body style="font-family:system-ui;padding:40px;color:#0f172a;background:#f8fafc">' +
-          '<h1 style="margin:0 0 12px">TeamChatX desktop</h1>' +
+          '<h1 style="margin:0 0 12px">TheChatNest desktop</h1>' +
           '<p>Frontend build was not found. Run:</p>' +
           '<pre style="background:#0f172a;color:#fff;padding:12px;border-radius:6px">cd frontend && npm run build</pre>' +
           '<p>Then launch this app again.</p></body>'

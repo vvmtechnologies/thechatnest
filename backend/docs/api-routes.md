@@ -313,7 +313,7 @@
     "devices": { "total": 62 },
     "organizations": { "total": 5, "active": 4 },
     "sessions": { "active": 15 },
-    "topActiveOrgs": [{ "organizationId": 1, "name": "Aabhyasa", "messagesLast24h": 85 }]
+    "topActiveOrgs": [{ "organizationId": 1, "name": "Thechatnest", "messagesLast24h": 85 }]
   }
 }
 ```

@@ -301,7 +301,7 @@ const Features = () => {
         </div>
       </section>
 
-      {/* ─── Why TeamChatX — Value Strip ──────────────────── */}
+      {/* ─── Why TheChatNest — Value Strip ──────────────────── */}
       {!isLoading && featureSections.length > 0 && (
         <section style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "48px 0" }}>
           <div className="container">

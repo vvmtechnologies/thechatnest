@@ -166,7 +166,7 @@ export default function GuideScreen() {
           <Text style={[s.supportTitle, { color: textColor }]}>Need more help?</Text>
           <View style={s.supportActions}>
             <TouchableOpacity style={[s.supportBtn, { backgroundColor: '#22c55e12' }]}
-              onPress={() => Linking.openURL('mailto:support@teamchatx.com')} activeOpacity={0.7}>
+              onPress={() => Linking.openURL('mailto:support@thechatnest.com')} activeOpacity={0.7}>
               <Ionicons name="mail" size={20} color="#22c55e" />
               <Text style={[s.supportBtnText, { color: '#22c55e' }]}>Email Support</Text>
             </TouchableOpacity>

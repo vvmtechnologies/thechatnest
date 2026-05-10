@@ -580,7 +580,7 @@ const createPaypalOrder = async ({
               currency_code: String(currency || 'USD').toUpperCase(),
               value: Number(amount || 0).toFixed(2),
             },
-            description: String(description || 'TeamChatX Billing'),
+            description: String(description || 'TheChatNest Billing'),
           },
         ],
         payer: {

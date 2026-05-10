@@ -6,7 +6,7 @@ Last updated: 2026-03-10
 | --- | --- | --- | --- |
 | `\l` | Sabhi databases ki list dikhata hai | `\l` | Naya project start karte waqt check karna ki kaun-kaun se DB hain |
 | `\l+` | Databases ki list + extra details (size, tablespace, description) | `\l+` | Disk space check karna ya bade databases identify karna |
-| `\c <database_name>` | Dusre database mein switch karna (connect) | `\c teamchatx` | Multiple projects ke beech switch karna |
+| `\c <database_name>` | Dusre database mein switch karna (connect) | `\c thechatnest` | Multiple projects ke beech switch karna |
 | `\dt` | Current database ke tables ki list | `\dt` | Jaldi se dekhna ki is DB mein kaun-kaun se tables hain |
 | `\dt+` | Tables ki list + size, description, access method | `\dt+` | Table sizes check karna (bada table kaun sa hai) |
 | `\dt *.*` | Sabhi schemas ke tables dikhata hai | `\dt *.*` | Public + custom schemas ke tables ek saath dekhne ke liye |
@@ -49,7 +49,7 @@ RESTART IDENTITY;
 ```
 
 ```powershell
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/015_site_details_remove_organization_id_and_truncate.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/015_site_details_remove_organization_id_and_truncate.sql
 ```
 
 ## Useful Commands for Product Features Module
@@ -76,8 +76,8 @@ ORDER BY fc.display_order ASC, fi.display_order ASC, fi.feature_item_id ASC;
 ```
 
 ```powershell
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/016_product_features.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/035_seed_feature_items_full_catalog.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/016_product_features.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/035_seed_feature_items_full_catalog.sql
 ```
 
 ## Useful Commands for Contact Us Module
@@ -88,7 +88,7 @@ SELECT * FROM contact_us_requests ORDER BY contact_request_id DESC LIMIT 50;
 ```
 
 ```powershell
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/017_contact_us.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/017_contact_us.sql
 ```
 
 ```powershell
@@ -109,7 +109,7 @@ SELECT * FROM organization_platform_restrictions ORDER BY restriction_id DESC LI
 ```
 
 ```powershell
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/018_organization_access_restrictions.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/018_organization_access_restrictions.sql
 ```
 
 ## Useful Commands for JWT/Session Debug

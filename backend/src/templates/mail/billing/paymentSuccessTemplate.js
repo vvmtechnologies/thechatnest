@@ -8,7 +8,7 @@ const escapeHtml = (value) =>
 
 const getBillingPaymentSuccessTemplate = (
   payload = {},
-  { appName = 'TeamChatX', supportEmail = 'support@teamchatx.com' } = {},
+  { appName = 'TheChatNest', supportEmail = 'support@thechatnest.com' } = {},
 ) => {
   const orgName = escapeHtml(payload.organization_name || 'Your Workspace');
   const planName = escapeHtml(payload.plan_name || 'Selected Plan');
@@ -32,8 +32,8 @@ const getBillingPaymentSuccessTemplate = (
   const subtotalLabel = escapeHtml(payload.subtotal_label || amount);
   const discountLabel = escapeHtml(payload.discount_label || '0.00');
   const totalLabel = escapeHtml(payload.total_label || amount);
-  const appLabel = escapeHtml(appName || 'TeamChatX');
-  const support = escapeHtml(supportEmail || 'support@teamchatx.com');
+  const appLabel = escapeHtml(appName || 'TheChatNest');
+  const support = escapeHtml(supportEmail || 'support@thechatnest.com');
   const addressJoined = [addressLine1, billingCity, billingState, billingCountry, billingPostalCode]
     .filter((x) => x && x !== '-')
     .join(', ');

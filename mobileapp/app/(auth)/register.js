@@ -107,7 +107,7 @@ export default function RegisterScreen() {
           <LinearGradient colors={[P, PD]} style={z.logoGrad}>
             <Ionicons name="people" size={16} color="#fff" />
           </LinearGradient>
-          <Text style={z.brand}>TeamChatX</Text>
+          <Text style={z.brand}>TheChatNest</Text>
         </View>
 
         {/* Card */}

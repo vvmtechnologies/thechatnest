@@ -209,7 +209,7 @@ useEffect(() => {
 
   const brandName = useMemo(() => {
     const value = String(siteProfile?.brand_name || "").trim();
-    return value || "TeamChatX";
+    return value || "TheChatNest";
   }, [siteProfile]);
 
   const handleInputChange = (event) => {

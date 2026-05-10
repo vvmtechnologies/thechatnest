@@ -1,4 +1,4 @@
-# TeamChatX - Database Schema Overview
+# TheChatNest - Database Schema Overview
 
 Last updated: 2026-03-19
 

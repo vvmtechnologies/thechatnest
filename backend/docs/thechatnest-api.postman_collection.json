@@ -1,9 +1,9 @@
 {
   "info": {
-    "_postman_id": "teamchatx-api-collection",
-    "name": "TeamChatX API",
+    "_postman_id": "thechatnest-api-collection",
+    "name": "TheChatNest API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Complete internal TeamChatX API collection. External Stripe endpoints are intentionally excluded."
+    "description": "Complete internal TheChatNest API collection. External Stripe endpoints are intentionally excluded."
   },
   "variable": [
     {
@@ -3920,7 +3920,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"site_name\": \"TeamChatX\",\n  \"support_email\": \"support@example.com\",\n  \"support_phone\": \"+919999999999\",\n  \"address_line1\": \"Street 1\",\n  \"city\": \"Mumbai\",\n  \"country\": \"India\"\n}",
+              "raw": "{\n  \"site_name\": \"TheChatNest\",\n  \"support_email\": \"support@example.com\",\n  \"support_phone\": \"+919999999999\",\n  \"address_line1\": \"Street 1\",\n  \"city\": \"Mumbai\",\n  \"country\": \"India\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -3978,7 +3978,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"site_name\": \"TeamChatX\"\n}",
+              "raw": "{\n  \"site_name\": \"TheChatNest\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

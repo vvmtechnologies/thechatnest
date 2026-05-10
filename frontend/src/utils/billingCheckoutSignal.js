@@ -1,4 +1,4 @@
-const STORAGE_KEY = "teamchatx.billing_checkout_success";
+const STORAGE_KEY = "thechatnest.billing_checkout_success";
 
 export const storeBillingCheckoutSuccess = (payload = {}) => {
   if (typeof window === "undefined") return;

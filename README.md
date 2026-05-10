@@ -1,4 +1,4 @@
-# TeamChatX
+# TheChatNest
 
 Last updated: 2026-03-13
 
@@ -30,7 +30,7 @@ Recent docs update:
 - `organization-restrictions` module (`/organization-restrictions/ip`, `/organization-restrictions/platform`)
 - migration `018_organization_access_restrictions.sql`
 - contact mail flow:
-  - admin notification -> `CONTACT_US_NOTIFY_TO` (recommended: `support@teamchatx.com`)
+  - admin notification -> `CONTACT_US_NOTIFY_TO` (recommended: `support@thechatnest.com`)
   - customer thank-you mail -> submitted `email_address`
   - mail dispatch async/background for faster `POST /contact-us`
 - all backend mail templates moved to `backend/src/templates/mail/*`

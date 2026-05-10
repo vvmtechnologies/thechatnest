@@ -7,7 +7,7 @@ This page explains how to run SQL migrations from the `migrations/` folder.
 ## Prerequisites
 
 - PostgreSQL installed and running
-- Database created (example: `teamChatx`)
+- Database created (example: `thechatnest`)
 - `psql` command available in terminal
 
 Optional env vars used below:
@@ -63,41 +63,41 @@ From project root:
 
 ```powershell
 $env:PGPASSWORD="postgres"
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/001_init.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/002_org_members_department_designation.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/003_org_members_location.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/004_activity_log.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/005_global_access.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/006_global_access_allow_user_org_scope.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/007_performance_indexes.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/008_activity_log_query_optimizations.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/009_groups_and_related_tables.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/010_group_members_timeline_perf.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/011_groups_lookup_indexes.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/012_api_hotpath_indexes.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/013_org_message_menu_permissions.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/014_site_details.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/015_site_details_remove_organization_id_and_truncate.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/016_product_features.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/017_contact_us.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/018_organization_access_restrictions.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/019_user_devices_add_updated_at.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/020_user_devices_add_hostname_os_name.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/021_designation_uniqueness_by_department.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/022_countries_states_master.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/023_coupons_master.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/024_payment_history_billing_metadata.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/025_billing_addresses.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/026_currencies_master_top50.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/027_plans_default_currency.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/028_add_created_updated_at_to_all_tables.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/029_payment_history_status_and_period_months.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/030_reset_and_seed_plans_reasonable_pricing.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/031_payment_history_strong_uniques.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/032_payment_history_failure_reason_jsonb.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/033_reset_currencies_to_stripe_supported.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/034_drop_coupon_currency_code.sql
-psql -h localhost -p 5432 -U postgres -d teamChatx -f migrations/035_seed_feature_items_full_catalog.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/001_init.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/002_org_members_department_designation.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/003_org_members_location.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/004_activity_log.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/005_global_access.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/006_global_access_allow_user_org_scope.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/007_performance_indexes.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/008_activity_log_query_optimizations.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/009_groups_and_related_tables.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/010_group_members_timeline_perf.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/011_groups_lookup_indexes.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/012_api_hotpath_indexes.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/013_org_message_menu_permissions.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/014_site_details.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/015_site_details_remove_organization_id_and_truncate.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/016_product_features.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/017_contact_us.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/018_organization_access_restrictions.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/019_user_devices_add_updated_at.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/020_user_devices_add_hostname_os_name.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/021_designation_uniqueness_by_department.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/022_countries_states_master.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/023_coupons_master.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/024_payment_history_billing_metadata.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/025_billing_addresses.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/026_currencies_master_top50.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/027_plans_default_currency.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/028_add_created_updated_at_to_all_tables.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/029_payment_history_status_and_period_months.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/030_reset_and_seed_plans_reasonable_pricing.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/031_payment_history_strong_uniques.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/032_payment_history_failure_reason_jsonb.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/033_reset_currencies_to_stripe_supported.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/034_drop_coupon_currency_code.sql
+psql -h localhost -p 5432 -U postgres -d thechatnest -f migrations/035_seed_feature_items_full_catalog.sql
 ```
 
 ## Method 2: Run All in a Loop (PowerShell)
@@ -144,7 +144,7 @@ $files = @(
 
 foreach ($f in $files) {
   Write-Host "Running $f ..."
-  psql -h localhost -p 5432 -U postgres -d teamChatx -f $f
+  psql -h localhost -p 5432 -U postgres -d thechatnest -f $f
   if ($LASTEXITCODE -ne 0) {
     throw "Migration failed: $f"
   }
@@ -271,7 +271,7 @@ ORDER BY tablename, indexname;
 
 Runtime config note:
 - contact module admin mail recipient: `.env CONTACT_US_NOTIFY_TO`
-- recommended value: `support@teamchatx.com`
+- recommended value: `support@thechatnest.com`
 
 `plan_features` module notes:
 - current schema is documented in `docs/database.md` under `CREATE TABLE plan_features`.

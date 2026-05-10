@@ -8,21 +8,21 @@ import React, {
 import { API_BASE_URL } from "../config/apiBaseUrl";
 
 // Single source of truth for the brand name, logo, contact info, and socials.
-// Anything in the UI that used to hard-code "TeamChatX" should call
+// Anything in the UI that used to hard-code "TheChatNest" should call
 // useSiteBranding() so admins can rename the product from the Site Details
 // admin tab and have it ripple through the whole app.
 //
 // Behaviour:
 //  - One fetch per app boot (cached in memory + sessionStorage so the next
 //    page load is instant and silent on a flaky network).
-//  - Falls back to "TeamChatX" defaults when the API is unreachable.
+//  - Falls back to "TheChatNest" defaults when the API is unreachable.
 //  - Re-fetched when the user calls refresh() — used by the admin Site
 //    Details editor right after a successful save.
 
-const STORAGE_KEY = "teamchatx.site_branding";
+const STORAGE_KEY = "thechatnest.site_branding";
 
 const DEFAULT_BRANDING = {
-  brandName: "TeamChatX",
+  brandName: "TheChatNest",
   brandShort: "TC",
   logoUrl: "",
   mascotUrl: "",
@@ -189,9 +189,9 @@ export const SiteTitleSync = () => {
       document.title = `${brandName}${current.slice(dash)}`;
     } else if (
       !current ||
-      current === "TeamChatX" ||
-      current === "TeamChatx" ||
-      current === "TeamChat"
+      current === "TheChatNest" ||
+      current === "TheChatNest" ||
+      current === "TheChatNest"
     ) {
       document.title = brandName;
     }

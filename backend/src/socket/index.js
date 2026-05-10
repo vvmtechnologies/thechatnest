@@ -159,7 +159,7 @@ const invalidateDndCache = (userId) => {
 
 /**
  * Resolve role_id (from JWT) → role_key string used in allowed_roles JSONB.
- * Role mapping: 1=owner, 2=admin, 3=moderator, 4=user (standard TeamChatX roles).
+ * Role mapping: 1=owner, 2=admin, 3=moderator, 4=user (standard TheChatNest roles).
  * Falls back to DB lookup if the ID is outside the known range.
  */
 const _roleIdToKey = { 1: 'owner', 2: 'admin', 3: 'moderator', 4: 'user' };
@@ -2318,7 +2318,7 @@ const onConnection = (socket) => {
       // Resolve branding for email (fire once, reuse)
       let branding = null;
       try { branding = await resolveMailBranding(); } catch (_) {}
-      const appName = branding?.appName || 'TeamChatX';
+      const appName = branding?.appName || 'TheChatNest';
 
       for (const targetId of targetUserIds) {
         // 1. Send real-time popup notification

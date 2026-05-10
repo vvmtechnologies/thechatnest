@@ -114,9 +114,9 @@ export const ensureNotificationPermission = async () => {
 };
 
 export const showSystemNotification = ({
-  title = "TeamChatX",
+  title = "TheChatNest",
   body = "",
-  icon = "/teamchatXElement.png",
+  icon = "/thechatnestElement.png",
   tag,
   requireInteraction = false,
   silent = false,

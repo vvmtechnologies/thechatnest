@@ -1,4 +1,4 @@
-# TeamChatX API
+# TheChatNest API
 
 Last updated: 2026-03-13
 
@@ -47,7 +47,7 @@ DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=postgres
-DB_NAME=teamChatx
+DB_NAME=thechatnest
 DB_SSL=false
 DB_POOL_MAX=20
 DB_IDLE_TIMEOUT_MS=10000
@@ -76,7 +76,7 @@ SMTP_SECURE=false
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
-SECURITY_SUPPORT_EMAIL=support@teamchatx.com
+SECURITY_SUPPORT_EMAIL=support@thechatnest.com
 SMTP_TIMEOUT_MS=5000
 SMTP_MAX_CONNECTIONS=5
 SMTP_MAX_MESSAGES=100
@@ -542,7 +542,7 @@ Example `PATCH` body:
 
 Mail behavior on create:
 - `POST /contact-us` ke baad 2 mails auto-send hote hain:
-- admin notification mail (`New Contact Us Request`) -> `CONTACT_US_NOTIFY_TO` (recommended: `support@teamchatx.com`)
+- admin notification mail (`New Contact Us Request`) -> `CONTACT_US_NOTIFY_TO` (recommended: `support@thechatnest.com`)
 - customer acknowledgement mail (`Thank you for contacting us`) -> submitted `email_address`
 - mails background me dispatch hote hain, isliye `POST /contact-us` response fast return hota hai.
 - mail templates compact hain (only important fields) for cleaner UI.
@@ -555,16 +555,16 @@ Example `PUT` body:
 
 ```json
 {
-  "brand_name": "TeamChatX Global",
+  "brand_name": "TheChatNest Global",
   "logo_url": "https://cdn.example.com/logo-new.png",
   "mascot_url": "https://cdn.example.com/mascot-new.png",
-  "linkedin_url": "https://linkedin.com/company/teamchatx-global",
-  "twitter_url": "https://x.com/teamchatxglobal",
-  "youtube_url": "https://youtube.com/@teamchatxglobal",
+  "linkedin_url": "https://linkedin.com/company/thechatnest-global",
+  "twitter_url": "https://x.com/thechatnestglobal",
+  "youtube_url": "https://youtube.com/@thechatnestglobal",
   "status": "active",
   "emails": [
     {
-      "email_address": "support@teamchatx.com",
+      "email_address": "support@thechatnest.com",
       "label": "support",
       "is_primary": true,
       "status": "active"
@@ -597,8 +597,8 @@ Example `PATCH` body:
 
 ```json
 {
-  "brand_name": "TeamChatX India",
-  "twitter_url": "https://x.com/teamchatxindia"
+  "brand_name": "TheChatNest India",
+  "twitter_url": "https://x.com/thechatnestindia"
 }
 ```
 
@@ -736,7 +736,7 @@ Groups:
 
 Group Members:
 - `GET /group-members`
-- `GET /group-members/by-group-name?group_name=Aabhyasa%20Development&organization_id=2&status=active&limit=10&offset=0`
+- `GET /group-members/by-group-name?group_name=Thechatnest%20Development&organization_id=2&status=active&limit=10&offset=0`
 - `GET /group-members/:id`
 - `POST /group-members` (`role_id = 4` blocked)
 - `PUT /group-members/:id` (`role_id = 4` blocked)

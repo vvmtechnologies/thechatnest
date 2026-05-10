@@ -122,7 +122,7 @@ const NotificationTab = ({
               Notification
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Choose how TeamChatX alerts you about updates.
+              Choose how TheChatNest alerts you about updates.
             </Typography>
 
             <Stack

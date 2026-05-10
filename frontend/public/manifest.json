@@ -1,5 +1,5 @@
 {
-  "name": "TeamChatX",
+  "name": "TheChatNest",
   "short_name": "ChatX",
   "start_url": "/",
   "display": "standalone",
@@ -21,12 +21,12 @@
 ],
   "icons": [
       {
-          "src": "/aabhyasa_logo_element.png",
+          "src": "/thechatnest_logo_element.png",
           "sizes": "192x192",
           "type": "image/png"
       },
       {
-          "src": "/aabhyasa_logo_element.png",
+          "src": "/thechatnest_logo_element.png",
           "sizes": "512x512",
           "type": "image/png"
       }

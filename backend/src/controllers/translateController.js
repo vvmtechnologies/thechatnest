@@ -1254,7 +1254,7 @@ const transcribeWithGemini = async (audioBuffer, mimeType, apiKey, modelOverride
 
 // ─── AI Help Bot ─────────────────────────────────────────────────────────────
 const APP_KNOWLEDGE = `
-TeamChatX is a secure, self-hosted business team communication platform (like Slack / MS Teams). Features:
+TheChatNest is a secure, self-hosted business team communication platform (like Slack / MS Teams). Features:
 
 MESSAGING: One-on-one DM, group chat, text formatting (bold/italic), code blocks, emoji, @mentions, message reply (swipe right), edit (5 min limit), unsend (5 min limit), forward, copy, pin (server-side, visible to all), star/bookmark (local, personal), reactions (emoji), voice messages with 1x/1.5x/2x playback, file/image/video/audio/location/contact sharing, GIF picker (Tenor), polls (single/multi choice), link previews, disappearing messages (24h/7d), broadcast to multiple contacts, draft auto-save.
 
@@ -1288,14 +1288,14 @@ const appHelp = async (req, res, next) => {
 
     const ai = await resolveAIProvider();
 
-    const systemPrompt = `You are TeamChatX Help Assistant — a friendly, concise AI helper for the TeamChatX business chat app. Answer user questions about app features, how-to guides, and troubleshooting.
+    const systemPrompt = `You are TheChatNest Help Assistant — a friendly, concise AI helper for the TheChatNest business chat app. Answer user questions about app features, how-to guides, and troubleshooting.
 
 ${APP_KNOWLEDGE}
 
 RULES:
 - Answer in the same language the user asks (Hindi/Hinglish/English)
 - Be concise — max 3-4 sentences unless the user asks for detail
-- If you don't know, say "I'm not sure about that. Contact support at support@teamchatx.com"
+- If you don't know, say "I'm not sure about that. Contact support at support@thechatnest.com"
 - Use bullet points for step-by-step instructions
 - Never make up features that don't exist`;
 
@@ -1340,7 +1340,7 @@ RULES:
       answer = data?.content?.[0]?.text?.trim() || '';
     }
 
-    if (!answer) answer = "I couldn't process that. Please try again or contact support@teamchatx.com";
+    if (!answer) answer = "I couldn't process that. Please try again or contact support@thechatnest.com";
 
     return success(res, { answer }, 'Help response');
   } catch (err) {

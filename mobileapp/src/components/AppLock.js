@@ -30,7 +30,7 @@ export default function AppLock({ children }) {
       const hasHw = await LocalAuthentication.hasHardwareAsync();
       const enrolled = await LocalAuthentication.isEnrolledAsync();
       if (hasHw && enrolled) {
-        const result = await LocalAuthentication.authenticateAsync({ promptMessage: 'Unlock TeamChatX', cancelLabel: 'Use PIN' });
+        const result = await LocalAuthentication.authenticateAsync({ promptMessage: 'Unlock TheChatNest', cancelLabel: 'Use PIN' });
         if (result.success) { setLocked(false); return; }
       }
     } catch {}
@@ -85,7 +85,7 @@ export default function AppLock({ children }) {
         <View style={s.iconWrap}>
           <Ionicons name="lock-closed" size={40} color="#fff" />
         </View>
-        <Text style={s.title}>TeamChatX Locked</Text>
+        <Text style={s.title}>TheChatNest Locked</Text>
         <Text style={s.sub}>Enter PIN or use biometric to unlock</Text>
 
         <View style={s.pinRow}>

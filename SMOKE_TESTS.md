@@ -1,4 +1,4 @@
-# TeamChat Smoke Test Checklist
+# TheChatNest Smoke Test Checklist
 
 Run this checklist before every release. Top 20 high-impact features. Each test should take **under 2 minutes**. Target total time: **~30-40 min** for the full pass.
 

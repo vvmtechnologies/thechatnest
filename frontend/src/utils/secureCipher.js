@@ -7,7 +7,7 @@ const TEXT_DECODER = typeof TextDecoder !== "undefined" ? new TextDecoder() : nu
 const SALT_STORAGE_KEY = "chatx.secure.salt";
 const MASTER_SECRET =
   (typeof import.meta !== "undefined" && import.meta.env?.VITE_SECURE_STORAGE_SECRET) ||
-  "teamchatx-dev-secret";
+  "thechatnest-dev-secret";
 
 const PBKDF2_ITERATIONS = 120000;
 const IV_LENGTH = 12; // AES-GCM recommended length in bytes

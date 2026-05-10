@@ -70,8 +70,8 @@ const SideBar = () => {
     const handler = (e) => {
       if (e.detail?.open === false) setAssistantOpen(false);
     };
-    window.addEventListener("teamchatx:assistant", handler);
-    return () => window.removeEventListener("teamchatx:assistant", handler);
+    window.addEventListener("thechatnest:assistant", handler);
+    return () => window.removeEventListener("thechatnest:assistant", handler);
   }, []);
   const [unreadCount, setUnreadCount] = useState(0); // State for unread message count
   const mascotSrc = useMascot();
@@ -319,7 +319,7 @@ const SideBar = () => {
                 <IconButton
                   onClick={() => {
                     setAssistantOpen(false);
-                    window.dispatchEvent(new CustomEvent("teamchatx:assistant", { detail: { open: false } }));
+                    window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: false } }));
                   }}
                   sx={{ color: "#fff" }}
                 >
@@ -330,7 +330,7 @@ const SideBar = () => {
               <IconButton
                 onClick={() => {
                   setAssistantOpen(true);
-                  window.dispatchEvent(new CustomEvent("teamchatx:assistant", { detail: { open: true } }));
+                  window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: true } }));
                 }}
                 sx={{
                   width: "max-content",

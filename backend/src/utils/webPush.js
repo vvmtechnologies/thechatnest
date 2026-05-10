@@ -14,7 +14,7 @@ const db = require('../config/database');
 
 const PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
-const SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@teamchatx.local';
+const SUBJECT = process.env.VAPID_SUBJECT || 'mailto:admin@thechatnest.local';
 
 let configured = false;
 if (PUBLIC_KEY && PRIVATE_KEY) {

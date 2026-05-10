@@ -25,7 +25,7 @@ const Footer = () => {
 
     if (apiEmails.length) return apiEmails;
 
-    return ["support@teamchatx.com", "sales@teamchatx.com"];
+    return ["support@thechatnest.com", "sales@thechatnest.com"];
   }, [emails]);
 
   const socialLinks = useMemo(

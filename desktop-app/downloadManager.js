@@ -63,7 +63,7 @@ const ensureTray = () => {
   if (!trayImage) return null;
   try {
     trayInstance = new Tray(trayImage);
-    trayInstance.setToolTip("TeamChatX");
+    trayInstance.setToolTip("TheChatNest");
     trayInstance.on("click", () => {
       const [win] = BrowserWindow.getAllWindows();
       if (win) {

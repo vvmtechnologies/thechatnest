@@ -209,7 +209,7 @@ FROM feature_categories fc, (VALUES
   ('Picture-in-Picture (Mobile)', 'Pop a video call into a floating window when you switch apps.',                          60),
   ('Floating Chat Bubbles',  'Android-only chat heads keep priority chats one tap away across apps.',                      70),
   ('Quick Reply from Notifications', 'Reply right from the system notification without opening the app.',                  80),
-  ('Share Extension',        'Share photos, links and files from any app into a TeamChatX chat in two taps.',              90),
+  ('Share Extension',        'Share photos, links and files from any app into a TheChatNest chat in two taps.',              90),
   ('Siri Shortcuts',         'Trigger "send chat to Bhavesh" via Siri without unlocking your phone.',                     100),
   ('Google Assistant Actions', 'Ask Google Assistant to read or send chats hands-free.',                                  110),
   ('Multi-Window Desktop',   'Open multiple chats and meetings side-by-side in separate desktop windows.',                120),

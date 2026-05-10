@@ -6,21 +6,21 @@ const escapeHtml = (value) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-const getPasswordResetSuccessMailTemplate = ({ ownerName, supportEmail, appName = 'TeamChatX' }) => {
+const getPasswordResetSuccessMailTemplate = ({ ownerName, supportEmail, appName = 'TheChatNest' }) => {
   const safeOwner = escapeHtml(ownerName || 'User');
-  const safeSupport = escapeHtml(supportEmail || 'support@teamchatx.com');
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
+  const safeSupport = escapeHtml(supportEmail || 'support@thechatnest.com');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
 
   return {
-    subject: `Your ${appName || 'TeamChatX'} password was changed`,
+    subject: `Your ${appName || 'TheChatNest'} password was changed`,
     text: [
       `Hello ${ownerName || 'User'},`,
       '',
-      `Your ${appName || 'TeamChatX'} account password has been reset successfully.`,
+      `Your ${appName || 'TheChatNest'} account password has been reset successfully.`,
       'If this was not you, secure your account immediately and contact support.',
-      `Support: ${supportEmail || 'support@teamchatx.com'}`,
+      `Support: ${supportEmail || 'support@thechatnest.com'}`,
       '',
-      `${appName || 'TeamChatX'} Security`,
+      `${appName || 'TheChatNest'} Security`,
     ].join('\n'),
     html: `
       <div style="margin:0;padding:24px;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">

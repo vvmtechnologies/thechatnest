@@ -1,8 +1,8 @@
 const siteDetailModel = require('../models/siteDetailModel');
 
-const DEFAULT_APP_NAME = process.env.APP_NAME || 'TeamChatX';
+const DEFAULT_APP_NAME = process.env.APP_NAME || 'TheChatNest';
 const DEFAULT_SUPPORT_EMAIL =
-  process.env.SECURITY_SUPPORT_EMAIL || 'support@teamchatx.com';
+  process.env.SECURITY_SUPPORT_EMAIL || 'support@thechatnest.com';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -91,8 +91,8 @@ const resolveMailBranding = async ({ useCache = true } = {}) => {
 
   const fallback = {
     appName: DEFAULT_APP_NAME,
-    supportEmail: extractFirstEmail(DEFAULT_SUPPORT_EMAIL) || 'support@teamchatx.com',
-    notifyRecipients: fallbackRecipients.length ? fallbackRecipients : ['support@teamchatx.com'],
+    supportEmail: extractFirstEmail(DEFAULT_SUPPORT_EMAIL) || 'support@thechatnest.com',
+    notifyRecipients: fallbackRecipients.length ? fallbackRecipients : ['support@thechatnest.com'],
   };
 
   try {

@@ -47,14 +47,14 @@ const getWelcomeMessage = () => {
     return {
       role: "assistant",
       content:
-        "Namaste! Main **TeamChatX AI Assistant** hoon 🤖\n\nMain aapki madad kar sakta hoon:\n• **Chat** — Message bhejein, reply, edit, delete, forward, pin\n• **Search** — Normal & AI Smart Search\n• **Files** — Share, preview, summarize\n• **AI Features** — Smart Reply, Translate, Grammar\n• **Settings** — Profile, timezone, wallpapers\n\nKuch bhi poochiye! Jaise:\n*\"Message kaise edit karte hain?\"*\n*\"Search kaise karein?\"*",
+        "Namaste! Main **TheChatNest AI Assistant** hoon 🤖\n\nMain aapki madad kar sakta hoon:\n• **Chat** — Message bhejein, reply, edit, delete, forward, pin\n• **Search** — Normal & AI Smart Search\n• **Files** — Share, preview, summarize\n• **AI Features** — Smart Reply, Translate, Grammar\n• **Settings** — Profile, timezone, wallpapers\n\nKuch bhi poochiye! Jaise:\n*\"Message kaise edit karte hain?\"*\n*\"Search kaise karein?\"*",
       suggestions: ["Message kaise edit karein?", "Smart Search kya hai?", "Keyboard shortcuts dikhao"],
     };
   }
   return {
     role: "assistant",
     content:
-      "Hello! I'm **TeamChatX AI Assistant** 🤖\n\nI can help you with:\n• **Chat** — Send, reply, edit, delete, forward, pin messages\n• **Search** — Normal & AI Smart Search\n• **Files** — Share, preview, summarize documents\n• **AI Features** — Smart Reply, Translate, Summarize, Grammar\n• **Settings** — Profile, timezone, wallpapers, notifications\n\nAsk me anything! For example:\n*\"How to edit a message?\"*\n*\"How to use Smart Search?\"*",
+      "Hello! I'm **TheChatNest AI Assistant** 🤖\n\nI can help you with:\n• **Chat** — Send, reply, edit, delete, forward, pin messages\n• **Search** — Normal & AI Smart Search\n• **Files** — Share, preview, summarize documents\n• **AI Features** — Smart Reply, Translate, Summarize, Grammar\n• **Settings** — Profile, timezone, wallpapers, notifications\n\nAsk me anything! For example:\n*\"How to edit a message?\"*\n*\"How to use Smart Search?\"*",
     suggestions: ["How to edit a message?", "What are keyboard shortcuts?", "How to search old messages?"],
   };
 };
@@ -231,8 +231,8 @@ const LiveAssistant = () => {
       const shouldOpen = e.detail?.open;
       setOpen(shouldOpen ?? ((prev) => !prev));
     };
-    window.addEventListener("teamchatx:assistant", handler);
-    return () => window.removeEventListener("teamchatx:assistant", handler);
+    window.addEventListener("thechatnest:assistant", handler);
+    return () => window.removeEventListener("thechatnest:assistant", handler);
   }, []);
 
   // ── fetch workspace state when chat is opened ──────────────────────────────
@@ -460,7 +460,7 @@ const LiveAssistant = () => {
                   ? "Loading…"
                   : wsError
                     ? "Ready to help"
-                    : "TeamChatX Support"}
+                    : "TheChatNest Support"}
               </Typography>
             </Box>
             <Tooltip title="History">
@@ -487,7 +487,7 @@ const LiveAssistant = () => {
                 size="small"
                 onClick={() => {
                   setOpen(false);
-                  window.dispatchEvent(new CustomEvent("teamchatx:assistant", { detail: { open: false } }));
+                  window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: false } }));
                 }}
                 sx={{ color: "#fff", p: 0.5 }}
               >
@@ -606,7 +606,7 @@ const LiveAssistant = () => {
               fullWidth
               multiline
               maxRows={3}
-              placeholder="Ask anything about TeamChatX…"
+              placeholder="Ask anything about TheChatNest…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}

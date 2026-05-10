@@ -4604,9 +4604,9 @@ const OwnerDashboard = () => {
       if (!payment) return;
       try {
         const company = {
-          name: "TeamChatX",
+          name: "TheChatNest",
           address: "Sector 62, Tower A, Noida, UP, India, 201301",
-          email: "support@teamchatx.com",
+          email: "support@thechatnest.com",
           phone: "+91 9876543210",
         };
         await downloadInvoicePdf({

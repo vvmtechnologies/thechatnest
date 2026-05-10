@@ -1,9 +1,9 @@
 const APP_BRANDING_ASSETS = {
-    mascot: '/teamchatXElement.png',
-    notificationIcon: '/aabhyasa_logo_element.png',
+    mascot: '/thechatnestElement.png',
+    notificationIcon: '/thechatnest_logo_element.png',
 };
 
-const CACHE_NAME = 'teamchatx-cache-v3';
+const CACHE_NAME = 'thechatnest-cache-v3';
 
 const getPrecacheUrls = () => [
     // Do NOT cache '/': it can serve different content depending on deploy
@@ -164,16 +164,16 @@ self.addEventListener('push', (event) => {
         payload = event.data ? event.data.json() : {};
     } catch (_) {
         try {
-            payload = { title: 'TeamChatX', body: event.data ? event.data.text() : '' };
+            payload = { title: 'TheChatNest', body: event.data ? event.data.text() : '' };
         } catch (__) { payload = {}; }
     }
 
-    const title = payload.title || 'TeamChatX';
+    const title = payload.title || 'TheChatNest';
     const options = {
         body: payload.body || '',
         icon: APP_BRANDING_ASSETS.notificationIcon,
         badge: APP_BRANDING_ASSETS.notificationIcon,
-        tag: payload.tag || payload.threadId || 'teamchatx',
+        tag: payload.tag || payload.threadId || 'thechatnest',
         renotify: !!payload.renotify,
         requireInteraction: !!payload.requireInteraction,
         vibrate: [120, 60, 120],

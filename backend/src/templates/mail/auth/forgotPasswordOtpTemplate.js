@@ -10,27 +10,27 @@ const getForgotPasswordOtpMailTemplate = ({
   ownerName,
   otpCode,
   otpExpiresMinutes = 10,
-  appName = 'TeamChatX',
-  supportEmail = 'support@teamchatx.com',
+  appName = 'TheChatNest',
+  supportEmail = 'support@thechatnest.com',
 }) => {
   const safeOwner = escapeHtml(ownerName || 'User');
   const safeOtp = escapeHtml(otpCode || '');
   const safeMinutes = escapeHtml(otpExpiresMinutes);
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
-  const safeSupport = escapeHtml(supportEmail || 'support@teamchatx.com');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
+  const safeSupport = escapeHtml(supportEmail || 'support@thechatnest.com');
 
   return {
-    subject: `${appName || 'TeamChatX'} password reset code`,
+    subject: `${appName || 'TheChatNest'} password reset code`,
     text: [
       `Hello ${ownerName},`,
       '',
-      `Your ${appName || 'TeamChatX'} password reset OTP is: ${otpCode}`,
+      `Your ${appName || 'TheChatNest'} password reset OTP is: ${otpCode}`,
       `This code expires in ${otpExpiresMinutes} minutes.`,
       '',
       'If you did not request this, please ignore this email.',
-      `Support: ${supportEmail || 'support@teamchatx.com'}`,
+      `Support: ${supportEmail || 'support@thechatnest.com'}`,
       '',
-      `${appName || 'TeamChatX'} Security`,
+      `${appName || 'TheChatNest'} Security`,
     ].join('\n'),
     html: `
       <div style="margin:0;padding:24px;background:#f4f7fb;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">

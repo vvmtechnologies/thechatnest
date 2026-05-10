@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: teamchatx-api
+    name: thechatnest-api
     runtime: node
     buildCommand: npm install
     startCommand: npm start

@@ -1,6 +1,6 @@
 import { appBrandingAssets } from "./CommonData";
 
-const MASCOT_STORAGE_KEY = "teamchatx.branding.mascot";
+const MASCOT_STORAGE_KEY = "thechatnest.branding.mascot";
 
 const listeners = new Set();
 

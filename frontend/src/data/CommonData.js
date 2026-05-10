@@ -1,15 +1,15 @@
 // Brand assets consumed by layouts/auth screens.
 export const appBrandingAssets = Object.freeze({
-  mascot: "/teamchatXElement.png",
-  notificationIcon: "/teamchatXElement.png",
-  brand: "TeamChatx",
+  mascot: "/thechatnestElement.png",
+  notificationIcon: "/thechatnestElement.png",
+  brand: "TheChatNest",
 });
 
 // Tenant/org metadata used by the org switcher + filters.
 export const mockOrganizations = [
   {
     id: "org-1",
-    label: "Aabhyasa Technologies Pvt Ltd.",
+    label: "Thechatnest Technologies Pvt Ltd.",
     unreadCount: 6,
     isPrimary: true,
   },
@@ -39,9 +39,9 @@ const withCompanyMeta = (companyMeta) => (thread) => ({
   ...thread,
 });
 
-const withAabhyasaMeta = withCompanyMeta({
-  company: "Aabhyasa Technologies Pvt Ltd.",
-  domain_name: "aabhyasa.com",
+const withThechatnestMeta = withCompanyMeta({
+  company: "Thechatnest Technologies Pvt Ltd.",
+  domain_name: "thechatnest.com",
   global_user: 0,
 });
 
@@ -54,12 +54,12 @@ const withVedsuMeta = withCompanyMeta({
 // Chat roster grouped by organization (used by GeneralApp/ChatList).
 const baseMockThreadsByOrg = {
   "org-1": [
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-1",
       user_id: "USR-001",
       username: "Emily Carter",
       label: "Emily Carter",
-      email: "emily.carter@aabhyasa.com",
+      email: "emily.carter@thechatnest.com",
       designation: "Product Manager",
       designation_id: 1,
       department: "Product",
@@ -82,12 +82,12 @@ const baseMockThreadsByOrg = {
       status: "Online",
       profilePicture: "https://i.pravatar.cc/150?img=32",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-2",
       user_id: "USR-002",
       username: "Rahul Desai",
       label: "Rahul Desai",
-      email: "rahul.desai@aabhyasa.com",
+      email: "rahul.desai@thechatnest.com",
       designation: "Engineering Lead",
       designation_id: 2,
       department: "Platform",
@@ -110,12 +110,12 @@ const baseMockThreadsByOrg = {
       status: "Idle",
       profilePicture: "https://i.pravatar.cc/150?img=55",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-4",
       user_id: "USR-004",
       username: "Sofia Martinez",
       label: "Sofia Martinez",
-      email: "sofia.martinez@aabhyasa.com",
+      email: "sofia.martinez@thechatnest.com",
       designation: "UX Designer",
       designation_id: 3,
       department: "Design",
@@ -138,12 +138,12 @@ const baseMockThreadsByOrg = {
       status: "Away",
       profilePicture: "https://i.pravatar.cc/150?img=47",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-5",
       user_id: "USR-005",
       username: "Noah Patel",
       label: "Noah Patel",
-      email: "noah.patel@aabhyasa.com",
+      email: "noah.patel@thechatnest.com",
       designation: "QA Analyst",
       designation_id: 4,
       department: "Quality",
@@ -166,12 +166,12 @@ const baseMockThreadsByOrg = {
       status: "Online",
       profilePicture: "https://i.pravatar.cc/150?img=11",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-6",
       user_id: "USR-006",
       username: "Sara Evans",
       label: "Sara Evans",
-      email: "sara.evans@aabhyasa.com",
+      email: "sara.evans@thechatnest.com",
       designation: "Support Specialist",
       designation_id: 5,
       department: "Support",
@@ -194,12 +194,12 @@ const baseMockThreadsByOrg = {
       status: "Offline",
       profilePicture: "https://i.pravatar.cc/150?img=65",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-7",
       user_id: "USR-007",
       username: "Mason Brooks",
       label: "Mason Brooks",
-      email: "mason.brooks@aabhyasa.com",
+      email: "mason.brooks@thechatnest.com",
       designation: "Marketing Strategist",
       designation_id: 6,
       department: "Marketing",
@@ -222,12 +222,12 @@ const baseMockThreadsByOrg = {
       status: "Idle",
       profilePicture: "",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-8",
       user_id: "USR-008",
       username: "Bianca Flores",
       label: "Bianca Flores",
-      email: "bianca.flores@aabhyasa.com",
+      email: "bianca.flores@thechatnest.com",
       designation: "Finance Manager",
       designation_id: 7,
       department: "Finance",
@@ -250,12 +250,12 @@ const baseMockThreadsByOrg = {
       status: "neverlogged",
       profilePicture: "https://i.pravatar.cc/150?img=21",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-9",
       user_id: "USR-009",
       username: "Olivia Chen",
       label: "Olivia Chen",
-      email: "olivia.chen@aabhyasa.com",
+      email: "olivia.chen@thechatnest.com",
       designation: "Automation Engineer",
       designation_id: 8,
       department: "DevOps",
@@ -278,12 +278,12 @@ const baseMockThreadsByOrg = {
       status: "Away",
       profilePicture: "",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-10",
       user_id: "USR-010",
       username: "Leo Thompson",
       label: "Leo Thompson",
-      email: "leo.thompson@aabhyasa.com",
+      email: "leo.thompson@thechatnest.com",
       designation: "Data Analyst",
       designation_id: 9,
       department: "Analytics",
@@ -306,12 +306,12 @@ const baseMockThreadsByOrg = {
       status: "Offline",
       profilePicture: "https://i.pravatar.cc/150?img=34",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-11",
       user_id: "USR-011",
       username: "Harper Singh",
       label: "Harper Singh",
-      email: "harper.singh@aabhyasa.com",
+      email: "harper.singh@thechatnest.com",
       designation: "Security Analyst",
       designation_id: 10,
       department: "Security",
@@ -334,12 +334,12 @@ const baseMockThreadsByOrg = {
       status: "Idle",
       profilePicture: "https://i.pravatar.cc/150?img=52",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-12",
       user_id: "USR-012",
       username: "Isaac Romero",
       label: "Isaac Romero",
-      email: "isaac.romero@aabhyasa.com",
+      email: "isaac.romero@thechatnest.com",
       designation: "DevOps Engineer",
       designation_id: 11,
       department: "DevOps",
@@ -362,7 +362,7 @@ const baseMockThreadsByOrg = {
       status: "Offline",
       profilePicture: "https://i.pravatar.cc/150?img=25",
     }),
-    withAabhyasaMeta({
+    withThechatnestMeta({
       id: "thread-ops-group",
       type: "group",
       threadType: "group",
@@ -370,7 +370,7 @@ const baseMockThreadsByOrg = {
       groupName: "Platform Ops Squad",
       label: "Platform Ops Squad",
       description: "Cross-functional room for incident + release coordination.",
-      email: "platform-ops@aabhyasa.com",
+      email: "platform-ops@thechatnest.com",
       profilePicture: "https://i.pravatar.cc/150?img=13",
       lastMessageAt: "2024-11-04T15:47:00Z",
       preview: "Rahul removed Ava Nair",
@@ -396,53 +396,53 @@ const baseMockThreadsByOrg = {
         {
           id: "USR-002",
           name: "Rahul Desai",
-          email: "rahul.desai@aabhyasa.com",
+          email: "rahul.desai@thechatnest.com",
           role: "Engineering Lead",
           avatar: "https://i.pravatar.cc/150?img=55",
         },
         {
           id: agentSelfId,
           name: "You",
-          email: "agent.self@teamchatx.com",
+          email: "agent.self@thechatnest.com",
           role: "Admin",
           avatar: "",
         },
         {
           id: "USR-004",
           name: "Sofia Martinez",
-          email: "sofia.martinez@aabhyasa.com",
+          email: "sofia.martinez@thechatnest.com",
           role: "UX Designer",
           avatar: "https://i.pravatar.cc/150?img=47",
         },
         {
           id: "USR-008",
           name: "Lia Chen",
-          email: "lia.chen@aabhyasa.com",
+          email: "lia.chen@thechatnest.com",
           role: "Release Manager",
           avatar: "https://i.pravatar.cc/150?img=23",
         },
         {
           id: "USR-009",
           name: "Leo Thompson",
-          email: "leo.thompson@aabhyasa.com",
+          email: "leo.thompson@thechatnest.com",
           role: "Site Reliability",
           avatar: "https://i.pravatar.cc/150?img=17",
         },
         {
           id: "USR-010",
           name: "Aria Kapoor",
-          email: "aria.kapoor@aabhyasa.com",
+          email: "aria.kapoor@thechatnest.com",
           role: "Product Ops",
           avatar: "https://i.pravatar.cc/150?img=5",
         },
       ],
       participants: [
-        "rahul.desai@aabhyasa.com",
-        "sofia.martinez@aabhyasa.com",
-        "lia.chen@aabhyasa.com",
-        "leo.thompson@aabhyasa.com",
-        "aria.kapoor@aabhyasa.com",
-        "agent.self@teamchatx.com",
+        "rahul.desai@thechatnest.com",
+        "sofia.martinez@thechatnest.com",
+        "lia.chen@thechatnest.com",
+        "leo.thompson@thechatnest.com",
+        "aria.kapoor@thechatnest.com",
+        "agent.self@thechatnest.com",
       ],
       wallpaper: "/wallpapers/ops-grid.png",
     }),
@@ -891,12 +891,12 @@ const ROLE_LABEL_BY_ID = Object.freeze({
 });
 
 const ROLE_BY_EMAIL = Object.freeze({
-  "emily.carter@aabhyasa.com": 1,
-  "rahul.desai@aabhyasa.com": 2,
-  "sara.evans@aabhyasa.com": 2,
-  "leo.thompson@aabhyasa.com": 2,
-  "isaac.romero@aabhyasa.com": 2,
-  "noah.patel@aabhyasa.com": 2,
+  "emily.carter@thechatnest.com": 1,
+  "rahul.desai@thechatnest.com": 2,
+  "sara.evans@thechatnest.com": 2,
+  "leo.thompson@thechatnest.com": 2,
+  "isaac.romero@thechatnest.com": 2,
+  "noah.patel@thechatnest.com": 2,
   "lara.schmidt@globex.com": 1,
 });
 
@@ -1072,7 +1072,7 @@ const buildSequentialMessages = ({
       direction: "incoming",
       status: "delivered",
       content: {
-        url: "https://aabhyasa.notion.site/launch-room",
+        url: "https://thechatnest.notion.site/launch-room",
         title: "Launch Room Dashboard",
         description: "Live view for cutover timeline, rollbacks, and owners.",
       },
@@ -1410,7 +1410,7 @@ export const mockDesignationDirectory = [
 export const mockLocationDirectory = [
   {
     id: 1,
-    label: "Aabhyasa HQ",
+    label: "Thechatnest HQ",
     address: "91 Springboard, MG Road",
     city: "Bengaluru",
     state: "Karnataka",
@@ -1442,9 +1442,9 @@ export const mockGlobalMembers = [
     globalMember: true,
     avatar: "https://i.pravatar.cc/150?img=15",
     allowedUserIds: resolveUserIds([
-      "emily.carter@aabhyasa.com",
-      "rahul.desai@aabhyasa.com",
-      "sara.evans@aabhyasa.com",
+      "emily.carter@thechatnest.com",
+      "rahul.desai@thechatnest.com",
+      "sara.evans@thechatnest.com",
     ]),
   },
   {
@@ -1461,8 +1461,8 @@ export const mockGlobalMembers = [
     globalMember: true,
     avatar: "https://i.pravatar.cc/150?img=27",
     allowedUserIds: resolveUserIds([
-      "noah.patel@aabhyasa.com",
-      "leo.thompson@aabhyasa.com",
+      "noah.patel@thechatnest.com",
+      "leo.thompson@thechatnest.com",
     ]),
   },
   {
@@ -1479,9 +1479,9 @@ export const mockGlobalMembers = [
     globalMember: true,
     avatar: "https://i.pravatar.cc/150?img=41",
     allowedUserIds: resolveUserIds([
-      "mason.brooks@aabhyasa.com",
-      "bianca.flores@aabhyasa.com",
-      "isaac.romero@aabhyasa.com",
+      "mason.brooks@thechatnest.com",
+      "bianca.flores@thechatnest.com",
+      "isaac.romero@thechatnest.com",
     ]),
   },
 ];
@@ -1491,19 +1491,19 @@ export const mockRolesDirectory = [
   {
     id: 1,
     name: "Emily Carter",
-    email: "emily.carter@aabhyasa.com",
+    email: "emily.carter@thechatnest.com",
     role: "Super Admin",
   },
   {
     id: 2,
     name: "Rahul Desai",
-    email: "rahul.desai@aabhyasa.com",
+    email: "rahul.desai@thechatnest.com",
     role: "Admin",
   },
   {
     id: 3,
     name: "Sara Evans",
-    email: "sara.evans@aabhyasa.com",
+    email: "sara.evans@thechatnest.com",
     role: "User",
   },
 ];
@@ -1513,31 +1513,31 @@ export const mockExMembers = [
   {
     id: 1,
     name: "Sonia Iyer",
-    email: "sonia.iyer@aabhyasa.com",
+    email: "sonia.iyer@thechatnest.com",
     status: "Inactive",
   },
   {
     id: 2,
     name: "Karan Mehta",
-    email: "karan.mehta@aabhyasa.com",
+    email: "karan.mehta@thechatnest.com",
     status: "Inactive",
   },
   {
     id: 3,
     name: "Vivian Gray",
-    email: "vivian.gray@aabhyasa.com",
+    email: "vivian.gray@thechatnest.com",
     status: "Active",
   },
   {
     id: 4,
     name: "Arjun Khatri",
-    email: "arjun.khatri@aabhyasa.com",
+    email: "arjun.khatri@thechatnest.com",
     status: "Banned",
   },
   {
     id: 5,
     name: "Nisha Talwar",
-    email: "nisha.talwar@aabhyasa.com",
+    email: "nisha.talwar@thechatnest.com",
     status: "Inactive",
   },
 ];
@@ -1577,8 +1577,8 @@ export const mockMessages = {
       direction: "incoming",
       author: { id: "user-emily", name: "Emily Carter" },
       content: {
-        url: "https://aabhyasa.notion.site/teamchatx-release-plan",
-        title: "TeamChatX Release Plan (Notion)",
+        url: "https://thechatnest.notion.site/thechatnest-release-plan",
+        title: "TheChatNest Release Plan (Notion)",
         description: "Launch checklist, owners and migration notes.",
       },
       createdAt: "2024-11-04T09:13:10.000Z",
@@ -1641,7 +1641,7 @@ export const mockMessages = {
       direction: "incoming",
       author: { id: "user-emily", name: "Emily Carter" },
       content: {
-        fileName: "TeamChatX-Metric-Review.pdf",
+        fileName: "TheChatNest-Metric-Review.pdf",
         mimeType: "application/pdf",
         fileSize: "2.3 MB",
         url: "https://file-examples.com/storage/fe9bb9/2017/10/file-sample_150kB.pdf",
@@ -1759,7 +1759,7 @@ export const mockMessages = {
       direction: "outgoing",
       author: { id: "agent-self", name: "You" },
       content: {
-        url: "https://github.com/Aabhyasa-Development/TeamChatX/pull/42",
+        url: "https://github.com/Thechatnest-Development/TheChatNest/pull/42",
         title: "Fix throttling on Auth API",
         description:
           "Pull request to raise the rate limit and add exponential backoff.",
@@ -1780,7 +1780,7 @@ export const mockMessages = {
         filename: "request-payload.json",
         code: JSON.stringify(
           {
-            email: "qa@teamchatx.com",
+            email: "qa@thechatnest.com",
             action: "auth_attempt",
             meta: { requestId: "req-490ab" },
           },
@@ -1868,7 +1868,7 @@ export const mockMessages = {
         avatar: "https://i.pravatar.cc/150?img=17",
       },
       content: {
-        url: "https://status.aabhyasa.com/incidents/ops-452",
+        url: "https://status.thechatnest.com/incidents/ops-452",
         title: "Incident OPS-452",
         description: "Live view for the error budget while we rollout.",
       },
@@ -1992,7 +1992,7 @@ export const mockMessages = {
         avatar: "https://i.pravatar.cc/150?img=47",
       },
       content: {
-        url: "https://status.aabhyasa.com/incidents/ops-452",
+        url: "https://status.thechatnest.com/incidents/ops-452",
         title: "Freeze Tracker Board",
         description: "Live view for freeze readiness and rollback notes.",
       },
@@ -2120,7 +2120,7 @@ export const mockMessages = {
       content: {
         language: "bash",
         filename: "ops-check.sh",
-        code: "curl -s https://status.aabhyasa.com/health\nkubectl get pods -n prod",
+        code: "curl -s https://status.thechatnest.com/health\nkubectl get pods -n prod",
       },
       createdAt: "2024-11-04T15:23:00.000Z",
       status: "delivered",
@@ -2154,7 +2154,7 @@ export const mockMessages = {
         avatar: "https://i.pravatar.cc/150?img=47",
       },
       content: {
-        url: "https://status.aabhyasa.com/incidents/ops-452",
+        url: "https://status.thechatnest.com/incidents/ops-452",
         title: "Freeze Status Board",
         description: "Live updates and owner checklist.",
       },

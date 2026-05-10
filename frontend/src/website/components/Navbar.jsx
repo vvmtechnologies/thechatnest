@@ -111,7 +111,7 @@ const Navbar = () => {
         <div className="container-fluid">
           <Link className="navbar-brand text-uppercase" to="/">
             <img
-              src="/chat.jpeg"
+              src="/chat.png"
               alt={brandName}
               style={{ width: "100px" }}
             />
@@ -334,7 +334,7 @@ const Navbar = () => {
                         flexItem
                         sx={{ bgcolor: "#000" }}
                       />
-                      <a className="">support@teamchatx.com</a>
+                      <a className="">support@thechatnest.com</a>
                     </div>
                   </div>
                 </div>

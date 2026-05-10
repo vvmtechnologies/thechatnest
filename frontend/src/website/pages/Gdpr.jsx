@@ -6,13 +6,13 @@ const lastUpdated = "April 1, 2026";
 const sections = [
   {
     title: "1. Our Commitment",
-    content: `TeamChatX is committed to protecting the privacy and rights of individuals in accordance with the General Data Protection Regulation (GDPR). Whether you use our cloud-hosted service or deploy on-premise, we provide the tools and transparency required for full GDPR compliance.`,
+    content: `TheChatNest is committed to protecting the privacy and rights of individuals in accordance with the General Data Protection Regulation (GDPR). Whether you use our cloud-hosted service or deploy on-premise, we provide the tools and transparency required for full GDPR compliance.`,
   },
   {
     title: "2. Lawful Basis for Processing",
     content: `We process personal data under the following legal bases:`,
     list: [
-      "Contract Performance: Processing necessary to provide the TeamChatX service as agreed in our Terms of Service",
+      "Contract Performance: Processing necessary to provide the TheChatNest service as agreed in our Terms of Service",
       "Legitimate Interest: Security monitoring, fraud prevention, and service improvement",
       "Consent: Marketing communications and optional analytics (you can withdraw consent at any time)",
       "Legal Obligation: Tax records, financial reporting, and responding to legal requests",
@@ -33,7 +33,7 @@ const sections = [
   },
   {
     title: "4. Data Processing Agreement (DPA)",
-    content: `For organizations using TeamChatX cloud service, we offer a Data Processing Agreement that covers:`,
+    content: `For organizations using TheChatNest cloud service, we offer a Data Processing Agreement that covers:`,
     list: [
       "Scope and purpose of data processing",
       "Types of personal data processed",
@@ -75,7 +75,7 @@ const sections = [
   },
   {
     title: "8. Sub-Processors",
-    content: `Current sub-processors for cloud-hosted TeamChatX:`,
+    content: `Current sub-processors for cloud-hosted TheChatNest:`,
     list: [
       "AWS (Amazon Web Services): Cloud infrastructure and S3 file storage",
       "Stripe: Payment processing",
@@ -85,11 +85,11 @@ const sections = [
   },
   {
     title: "9. Self-Hosted Compliance",
-    content: `Organizations deploying TeamChatX on-premise or in air-gapped environments act as independent Data Controllers. TeamChatX provides the software tools for GDPR compliance (account deletion, data export, access controls) but the organization is responsible for implementing appropriate data protection policies for their deployment.`,
+    content: `Organizations deploying TheChatNest on-premise or in air-gapped environments act as independent Data Controllers. TheChatNest provides the software tools for GDPR compliance (account deletion, data export, access controls) but the organization is responsible for implementing appropriate data protection policies for their deployment.`,
   },
   {
     title: "10. Data Protection Officer",
-    content: `For GDPR-related inquiries, data subject requests, or to request a Data Processing Agreement, contact our Data Protection team at dpo@teamchatx.com.`,
+    content: `For GDPR-related inquiries, data subject requests, or to request a Data Processing Agreement, contact our Data Protection team at dpo@thechatnest.com.`,
   },
 ];
 
@@ -118,7 +118,7 @@ export default function Gdpr() {
 
         <div style={{ background: "#f1f5f9", borderRadius: 12, padding: 24, marginTop: 24 }}>
           <p style={{ color: "#475569", fontSize: 14, margin: 0 }}>
-            Need a Data Processing Agreement or have a GDPR inquiry? <Link to="/contact" style={{ color: "#0162c4", fontWeight: 600 }}>Contact us</Link> or email dpo@teamchatx.com.
+            Need a Data Processing Agreement or have a GDPR inquiry? <Link to="/contact" style={{ color: "#0162c4", fontWeight: 600 }}>Contact us</Link> or email dpo@thechatnest.com.
           </p>
         </div>
       </section>

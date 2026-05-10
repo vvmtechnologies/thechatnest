@@ -20,7 +20,7 @@ const blogPosts = [
   },
   {
     id: 3,
-    title: "How TeamChatX Saves 60% Compared to Slack and Microsoft Teams",
+    title: "How TheChatNest Saves 60% Compared to Slack and Microsoft Teams",
     excerpt: "We break down the real costs of team communication — licensing, hosting, storage, and hidden fees — and show how self-hosting changes the equation.",
     category: "Pricing",
     date: "Mar 12, 2026",
@@ -28,8 +28,8 @@ const blogPosts = [
   },
   {
     id: 4,
-    title: "Setting Up TeamChatX on Your Own Server in Under 30 Minutes",
-    excerpt: "A step-by-step guide to deploying TeamChatX on your infrastructure — from server requirements to SSL configuration and first login.",
+    title: "Setting Up TheChatNest on Your Own Server in Under 30 Minutes",
+    excerpt: "A step-by-step guide to deploying TheChatNest on your infrastructure — from server requirements to SSL configuration and first login.",
     category: "Guide",
     date: "Feb 28, 2026",
     readTime: "8 min read",
@@ -37,7 +37,7 @@ const blogPosts = [
   {
     id: 5,
     title: "GDPR Compliance for Team Messaging: What You Need to Know",
-    excerpt: "Understanding data processing agreements, user rights, data portability, and how TeamChatX helps you stay compliant with EU regulations.",
+    excerpt: "Understanding data processing agreements, user rights, data portability, and how TheChatNest helps you stay compliant with EU regulations.",
     category: "Compliance",
     date: "Feb 15, 2026",
     readTime: "7 min read",

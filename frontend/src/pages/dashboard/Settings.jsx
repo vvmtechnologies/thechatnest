@@ -1149,9 +1149,9 @@ const Settings = () => {
     }
     try {
       const result = showSystemNotification({
-        title: "TeamChatX",
+        title: "TheChatNest",
         body: "Notifications are working!",
-        icon: "/teamchatXElement.png",
+        icon: "/thechatnestElement.png",
       });
       if (!result?.ok) {
         throw result?.error || new Error("Notification dispatch failed");

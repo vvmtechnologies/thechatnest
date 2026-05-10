@@ -8,16 +8,16 @@ const escapeHtml = (value) =>
 
 const sanitizeHeader = (value) => String(value ?? '').replace(/[\r\n]+/g, ' ').trim();
 
-const getContactUsAdminNotificationTemplate = (payload, { appName = 'TeamChatX' } = {}) => {
+const getContactUsAdminNotificationTemplate = (payload, { appName = 'TheChatNest' } = {}) => {
   const submittedAt = new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
   const requirementPreview = String(payload.requirement_details || '')
     .trim()
     .slice(0, 160);
   const safeCompanyForSubject = sanitizeHeader(payload.company_name) || 'Unknown Company';
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
 
   return {
-    subject: `New ${appName || 'TeamChatX'} Contact Request - ${safeCompanyForSubject}`,
+    subject: `New ${appName || 'TheChatNest'} Contact Request - ${safeCompanyForSubject}`,
     text: [
       'New contact request received.',
       `Name: ${payload.name}`,

@@ -33,37 +33,37 @@ const Videos = () => {
   const videoData = [
     {
       feature: "Google Drive Integration",
-      title: "Google Drive integration with TeamChatX",
+      title: "Google Drive integration with TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
       feature: "Forkout",
-      title: "How to use Forkout Feature - TeamChatX",
+      title: "How to use Forkout Feature - TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
       feature: "Burnout",
-      title: "Burnout is an exceptional privacy feature of TeamChatX",
+      title: "Burnout is an exceptional privacy feature of TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
       feature: "Audio Calling",
-      title: "Audio & Video Calls - TeamChatX",
+      title: "Audio & Video Calls - TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
       feature: "Mute Conversations",
-      title: "Mute Conversations - TeamChatX",
+      title: "Mute Conversations - TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
       feature: "Respond Later",
-      title: "How to Respond Messages Later - TeamChatX",
+      title: "How to Respond Messages Later - TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
       feature: "Message Edit",
-      title: "Edit a Message - TeamChatX",
+      title: "Edit a Message - TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
     {
@@ -73,7 +73,7 @@ const Videos = () => {
     },
     {
       feature: "Audio Messaging",
-      title: "Audio Message - TeamChatX",
+      title: "Audio Message - TheChatNest",
       thumbnail: "https://via.placeholder.com/300", // Replace with actual thumbnail URL
     },
   ];

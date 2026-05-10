@@ -1,4 +1,4 @@
-# TeamChatX - Project Architecture
+# TheChatNest - Project Architecture
 
 ---
 
@@ -22,7 +22,7 @@
 ## Project Structure
 
 ```
-TeamChat/
+TheChatNest/
 ├── backend/
 │   ├── src/
 │   │   ├── server.js              # Entry point (HTTP + Socket.IO)

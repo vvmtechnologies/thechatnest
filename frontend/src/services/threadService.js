@@ -685,7 +685,7 @@ class ThreadService {
       normaliseString(this.agentProfile.organizationLabel) ||
       normaliseString(organization?.label) ||
       this.agentProfile.company ||
-      "TeamChatX";
+      "TheChatNest";
     const username =
       this.agentProfile.username ??
       this.agentProfile.fullName ??

@@ -1,4 +1,4 @@
-# TeamChatX SQL Query Reference
+# TheChatNest SQL Query Reference
 
 Last updated: 2026-03-09
 
@@ -1252,7 +1252,7 @@ INSERT INTO users (
   status
 )
 VALUES (
-  'owner@teamchatx.com',
+  'owner@thechatnest.com',
   'Default Owner',
   '$2b$10$abcdefghijklmnopqrstuv1234567890abcdefghijklmnopqr',
   '+919999999999',
@@ -1277,10 +1277,10 @@ INSERT INTO organizations (
   status
 )
 VALUES (
-  'teamchatx_org_001',
-  'Teamchatx',
-  'teamchatx',
-  'teamchatx.com',
+  'thechatnest_org_001',
+  'TheChatNest',
+  'thechatnest',
+  'thechatnest.com',
   1,
   1,
   1,

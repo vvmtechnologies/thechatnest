@@ -5,7 +5,7 @@ const lastUpdated = "April 1, 2026";
 const sections = [
   {
     title: "1. Introduction",
-    content: `This Privacy Policy describes how TeamChatX ("we", "our", or "us") collects, uses, and protects your personal information when you use our cloud-hosted (SaaS) messaging platform. By using TeamChatX, you agree to the practices described in this policy.`,
+    content: `This Privacy Policy describes how TheChatNest ("we", "our", or "us") collects, uses, and protects your personal information when you use our cloud-hosted (SaaS) messaging platform. By using TheChatNest, you agree to the practices described in this policy.`,
   },
   {
     title: "2. Information We Collect",
@@ -23,7 +23,7 @@ const sections = [
     title: "3. How We Use Your Information",
     content: null,
     list: [
-      "Provide and maintain the TeamChatX messaging service",
+      "Provide and maintain the TheChatNest messaging service",
       "Authenticate users and manage device sessions (max 3 devices)",
       "Process payments and manage subscriptions",
       "Send transactional emails (OTP verification, meeting invitations, password resets)",
@@ -74,11 +74,11 @@ const sections = [
   },
   {
     title: "8. Cookies & Tracking",
-    content: `TeamChatX uses essential cookies for authentication and session management. We do not use third-party advertising cookies or cross-site tracking. Analytics data is collected in aggregate form and cannot identify individual users.`,
+    content: `TheChatNest uses essential cookies for authentication and session management. We do not use third-party advertising cookies or cross-site tracking. Analytics data is collected in aggregate form and cannot identify individual users.`,
   },
   {
     title: "9. Children's Privacy",
-    content: `TeamChatX is designed for business use and is not intended for individuals under 16 years of age. We do not knowingly collect personal information from children.`,
+    content: `TheChatNest is designed for business use and is not intended for individuals under 16 years of age. We do not knowingly collect personal information from children.`,
   },
   {
     title: "10. Changes to This Policy",
@@ -86,7 +86,7 @@ const sections = [
   },
   {
     title: "11. Contact",
-    content: `For privacy-related inquiries, contact us at privacy@teamchatx.com or through the Contact page on our website.`,
+    content: `For privacy-related inquiries, contact us at privacy@thechatnest.com or through the Contact page on our website.`,
   },
 ];
 

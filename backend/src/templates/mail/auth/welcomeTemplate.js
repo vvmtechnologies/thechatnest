@@ -6,19 +6,19 @@ const escapeHtml = (value) =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-const getWelcomeMailTemplate = ({ ownerName, appName = 'TeamChatX', supportEmail, loginUrl }) => {
+const getWelcomeMailTemplate = ({ ownerName, appName = 'TheChatNest', supportEmail, loginUrl }) => {
   const safeOwner = escapeHtml(ownerName || 'User');
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
-  const safeSupport = escapeHtml(supportEmail || 'support@teamchatx.com');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
+  const safeSupport = escapeHtml(supportEmail || 'support@thechatnest.com');
   const safeLoginUrl = loginUrl ? escapeHtml(loginUrl) : '';
   const hasLoginUrl = Boolean(String(loginUrl || '').trim());
 
   return {
-    subject: `Welcome to ${appName || 'TeamChatX'} - Your workspace is ready`,
+    subject: `Welcome to ${appName || 'TheChatNest'} - Your workspace is ready`,
     text: [
       `Hello ${ownerName || 'User'},`,
       '',
-      `Welcome to ${appName || 'TeamChatX'}! Your workspace is now ready.`,
+      `Welcome to ${appName || 'TheChatNest'}! Your workspace is now ready.`,
       '',
       'What you can do next:',
       '- Login and complete your profile',
@@ -26,9 +26,9 @@ const getWelcomeMailTemplate = ({ ownerName, appName = 'TeamChatX', supportEmail
       '- Configure roles and permissions',
       hasLoginUrl ? `- Login now: ${loginUrl}` : null,
       '',
-      `Need help? Reach us at: ${supportEmail || 'support@teamchatx.com'}`,
+      `Need help? Reach us at: ${supportEmail || 'support@thechatnest.com'}`,
       '',
-      `${appName || 'TeamChatX'} Team`,
+      `${appName || 'TheChatNest'} Team`,
     ].filter(Boolean).join('\n'),
     html: `
       <div style="margin:0;padding:28px 16px;background:#eaf1ff;font-family:Arial,Helvetica,sans-serif;color:#0f172a;">

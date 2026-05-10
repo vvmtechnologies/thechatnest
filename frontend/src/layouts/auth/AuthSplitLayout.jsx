@@ -48,7 +48,7 @@ const AuthSplitLayout = ({
             WebkitAppRegion: "drag",
           }}
         >
-          AABHYASA ENTERPRISE BUILD
+          THECHATNEST ENTERPRISE BUILD
         </Box>
       )}
       <Paper

@@ -18,7 +18,7 @@ const isEmojiOnly = (txt) => {
 const openInApp = (url, color) => url && WebBrowser.openBrowserAsync(url, { presentationStyle: 'pageSheet', controlsColor: color || '#ea4c89' });
 const openExternal = (url) => url && Linking.openURL(url);
 
-// URL regex — detects both https://... AND bare domains like teamchatx.com, google.com/path
+// URL regex — detects both https://... AND bare domains like thechatnest.com, google.com/path
 const URL_REGEX = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+(?:com|org|net|io|dev|app|co|in|me|info|biz|xyz|tech|ai|cloud|edu|gov|mil|pro|site|online|store|shop|blog|design|agency|studio|media|world|space|live|digital|solutions|software|systems|services|team|chat|work|zone|link|click|page|wiki|tv|fm|gg|ly|to|cc|us|uk|de|fr|jp|cn|ru|br|au|ca|eu))(?:\/[^\s<>"{}|\\^`\[\]]*)?)/gi;
 
 // Parse text into parts: plain text + clickable links

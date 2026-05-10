@@ -11,7 +11,7 @@ import { useTheme } from '../../src/store/ThemeContext';
 
 const { width: W } = Dimensions.get('window');
 
-const SYSTEM_PROMPT = `You are TeamChatX AI Assistant — a friendly, concise helper for the TeamChatX business chat app (like Troop Messenger/Slack).
+const SYSTEM_PROMPT = `You are TheChatNest AI Assistant — a friendly, concise helper for the TheChatNest business chat app (like Troop Messenger/Slack).
 
 Features: DM, group chat, announcement groups, text formatting, code blocks, emoji, @mentions, reply (swipe right), edit/unsend (5 min), forward, pin (server), star (local bookmark), reactions, voice messages (1x/1.5x/2x speed), file/image/video/audio/location/contact sharing, GIF picker, polls, link previews, disappearing messages, broadcast, draft auto-save, typing indicator, online/away/busy/offline status, swipe-to-reply, image viewer (double-tap zoom), chat wallpaper, chat filters (All/Groups/Unread), pin/archive chats, storage manager, app lock (PIN+biometric), QR login, department contacts filter, global member orange badge, group admin controls, group timeline.
 
@@ -35,7 +35,7 @@ export default function AssistantScreen() {
   const ACCENT = t.accent;
 
   const [messages, setMessages] = useState([
-    { role: 'assistant', text: 'Hello! I\'m your TeamChatX AI assistant.\nAsk me anything about the app.' },
+    { role: 'assistant', text: 'Hello! I\'m your TheChatNest AI assistant.\nAsk me anything about the app.' },
   ]);
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(false);
@@ -95,7 +95,7 @@ export default function AssistantScreen() {
             <Text style={z.statusText}>Online</Text>
           </View>
         </View>
-        <TouchableOpacity onPress={() => { setMessages([{ role: 'assistant', text: 'Hello! I\'m your TeamChatX AI assistant.\nAsk me anything about the app.' }]); }}
+        <TouchableOpacity onPress={() => { setMessages([{ role: 'assistant', text: 'Hello! I\'m your TheChatNest AI assistant.\nAsk me anything about the app.' }]); }}
           style={[z.clearBtn, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
           <Ionicons name="refresh" size={16} color="#fff" />
         </TouchableOpacity>

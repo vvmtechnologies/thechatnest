@@ -1,6 +1,6 @@
 -- ============================================================================
--- TeamChatX — Complete Feature Catalog Seed
--- Run this in pgAdmin or psql against your teamChatx database.
+-- TheChatNest — Complete Feature Catalog Seed
+-- Run this in pgAdmin or psql against your thechatnest database.
 -- Uses ON CONFLICT to safely upsert (won't duplicate existing rows).
 -- ============================================================================
 
@@ -411,7 +411,7 @@ INSERT INTO feature_items (feature_category_id, title, description, display_orde
 VALUES
   ((SELECT feature_category_id FROM feature_categories WHERE category_key = 'integrations_cs'),
    'Slack Integration',
-   'Connect TeamChatX with Slack for cross-platform messaging.',
+   'Connect TheChatNest with Slack for cross-platform messaging.',
    1),
   ((SELECT feature_category_id FROM feature_categories WHERE category_key = 'integrations_cs'),
    'Google Workspace',

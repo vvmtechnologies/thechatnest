@@ -123,7 +123,7 @@ export default function LinkedDevicesScreen() {
             <View style={[s.corner, s.bl]} />
             <View style={[s.corner, s.br]} />
           </View>
-          <Text style={s.scanHint}>Point camera at QR code on{'\n'}TeamChatX web login page</Text>
+          <Text style={s.scanHint}>Point camera at QR code on{'\n'}TheChatNest web login page</Text>
           {processing && <ActivityIndicator color="#fff" style={{ marginTop: 16 }} />}
         </View>
 
@@ -173,7 +173,7 @@ export default function LinkedDevicesScreen() {
             <View style={[s.howCard, { backgroundColor: cardBg }]}>
               <Text style={[s.howTitle, { color: textColor }]}>How it works</Text>
               {[
-                { step: '1', text: 'Open TeamChatX on your web browser' },
+                { step: '1', text: 'Open TheChatNest on your web browser' },
                 { step: '2', text: 'Click "Login via QR Code" on the login page' },
                 { step: '3', text: 'Tap "Link a Device" above and scan the QR code' },
               ].map((item, i) => (

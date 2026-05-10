@@ -127,7 +127,7 @@ export default function Splash() {
 
           {/* Below circle — Powered by + dots clearly below orbit */}
           <View style={z.below}>
-            <Animated.Text style={[z.poweredText, { opacity: titleOp, transform: [{ translateY: titleY }] }]}>Powered by TeamChatX</Animated.Text>
+            <Animated.Text style={[z.poweredText, { opacity: titleOp, transform: [{ translateY: titleY }] }]}>Powered by TheChatNest</Animated.Text>
             <Animated.View style={{ opacity: dotsOp, marginTop: 16 }}><Dots /></Animated.View>
           </View>
         </View>

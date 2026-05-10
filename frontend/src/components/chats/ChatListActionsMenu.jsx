@@ -105,8 +105,8 @@ const ChatListActionsMenu = ({
   // Listen for sidebar meeting button
   useEffect(() => {
     const openHandler = () => setMeetingDialogOpen(true);
-    window.addEventListener("teamchatx:openMeeting", openHandler);
-    return () => window.removeEventListener("teamchatx:openMeeting", openHandler);
+    window.addEventListener("thechatnest:openMeeting", openHandler);
+    return () => window.removeEventListener("thechatnest:openMeeting", openHandler);
   }, []);
 
   const handleMeetingCreated = (meetingData, action) => {

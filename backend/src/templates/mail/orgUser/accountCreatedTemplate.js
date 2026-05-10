@@ -9,26 +9,26 @@ const escapeHtml = (value) =>
 const getOrgUserAccountCreatedMailTemplate = ({
   name,
   tempPassword,
-  appName = 'TeamChatX',
-  supportEmail = 'support@teamchatx.com',
+  appName = 'TheChatNest',
+  supportEmail = 'support@thechatnest.com',
 }) => {
   const safeName = escapeHtml(name || 'User');
   const safeTemp = escapeHtml(tempPassword || '');
-  const safeAppName = escapeHtml(appName || 'TeamChatX');
-  const safeSupport = escapeHtml(supportEmail || 'support@teamchatx.com');
+  const safeAppName = escapeHtml(appName || 'TheChatNest');
+  const safeSupport = escapeHtml(supportEmail || 'support@thechatnest.com');
 
   return {
-    subject: `Your ${appName || 'TeamChatX'} account password`,
+    subject: `Your ${appName || 'TheChatNest'} account password`,
     text: [
       `Hello ${name},`,
       '',
-      `Your ${appName || 'TeamChatX'} user account has been created.`,
+      `Your ${appName || 'TheChatNest'} user account has been created.`,
       `Temporary password: ${tempPassword}`,
       '',
       'Please login and change your password immediately.',
-      `Support: ${supportEmail || 'support@teamchatx.com'}`,
+      `Support: ${supportEmail || 'support@thechatnest.com'}`,
       '',
-      `${appName || 'TeamChatX'}`,
+      `${appName || 'TheChatNest'}`,
     ].join('\n'),
     html: `
       <div style="margin:0;padding:20px;background:#f8fafc;font-family:Arial,sans-serif;color:#0f172a;">

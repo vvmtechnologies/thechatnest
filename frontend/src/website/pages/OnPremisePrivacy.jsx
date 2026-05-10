@@ -5,22 +5,22 @@ const lastUpdated = "April 1, 2026";
 const sections = [
   {
     title: "1. Introduction",
-    content: `This Privacy Policy applies to the on-premise (self-hosted) deployment of TeamChatX. When you deploy TeamChatX on your own infrastructure, your organization acts as the Data Controller. TeamChatX (the company) acts solely as the software provider and does not access, process, or store any of your communication data.`,
+    content: `This Privacy Policy applies to the on-premise (self-hosted) deployment of TheChatNest. When you deploy TheChatNest on your own infrastructure, your organization acts as the Data Controller. TheChatNest (the company) acts solely as the software provider and does not access, process, or store any of your communication data.`,
   },
   {
     title: "2. Your Data, Your Control",
     content: `With on-premise deployment:`,
     list: [
       "All data remains on YOUR servers — messages, files, user profiles, and logs never leave your infrastructure",
-      "TeamChatX has zero access to your data, conversations, or user information",
+      "TheChatNest has zero access to your data, conversations, or user information",
       "Your IT team controls backups, retention policies, and data deletion",
-      "No telemetry, analytics, or usage data is sent to TeamChatX servers",
+      "No telemetry, analytics, or usage data is sent to TheChatNest servers",
       "Database credentials, encryption keys, and API secrets are managed entirely by your organization",
     ],
   },
   {
-    title: "3. Data Processed by TeamChatX (Limited)",
-    content: `The only data TeamChatX processes in an on-premise deployment:`,
+    title: "3. Data Processed by TheChatNest (Limited)",
+    content: `The only data TheChatNest processes in an on-premise deployment:`,
     list: [
       "License Key: Your organization's license key for activation and validation",
       "Update Checks: Periodic version checks (can be disabled in air-gapped environments)",
@@ -29,14 +29,14 @@ const sections = [
   },
   {
     title: "4. Your Responsibilities as Data Controller",
-    content: `As the operator of a self-hosted TeamChatX instance, your organization is responsible for:`,
+    content: `As the operator of a self-hosted TheChatNest instance, your organization is responsible for:`,
     list: [
       "Complying with applicable data protection laws (GDPR, CCPA, etc.)",
       "Implementing appropriate security measures (firewalls, SSL, access controls)",
       "Managing user consent and privacy notices for your employees",
       "Handling data subject requests (access, deletion, portability)",
       "Configuring data retention and backup policies",
-      "Maintaining server security patches and TeamChatX updates",
+      "Maintaining server security patches and TheChatNest updates",
     ],
   },
   {
@@ -55,7 +55,7 @@ const sections = [
   },
   {
     title: "6. Third-Party Services",
-    content: `On-premise TeamChatX may optionally connect to external services that you configure:`,
+    content: `On-premise TheChatNest may optionally connect to external services that you configure:`,
     list: [
       "STUN/TURN Servers: For WebRTC calls (configurable, can use your own servers)",
       "Tenor API: For GIF search (can be disabled)",
@@ -69,7 +69,7 @@ const sections = [
   },
   {
     title: "8. Contact",
-    content: `For questions about on-premise privacy or deployment assistance, contact us at privacy@teamchatx.com.`,
+    content: `For questions about on-premise privacy or deployment assistance, contact us at privacy@thechatnest.com.`,
   },
 ];
 

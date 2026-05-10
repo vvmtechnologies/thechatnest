@@ -3,7 +3,7 @@ import { Avatar, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stac
 
 const defaultUser = {
   name: "Anita Sharma",
-  email: "anita@aabhyasa.com",
+  email: "anita@thechatnest.com",
   department: "Product",
   role: "Workspace Admin",
 };

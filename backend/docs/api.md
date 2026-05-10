@@ -1,4 +1,4 @@
-# TeamChatX API Handbook
+# TheChatNest API Handbook
 
 Last updated: 2026-03-19
 
@@ -577,7 +577,7 @@ Access: `GET` = `JWT`, write routes = `Owner`
 
 ## Request Body Schemas
 
-These are practical request schemas for internal TeamChatX APIs. They are example-ready shapes, not JSON Schema files.
+These are practical request schemas for internal TheChatNest APIs. They are example-ready shapes, not JSON Schema files.
 
 ### Auth Schemas
 
@@ -812,7 +812,7 @@ These are practical request schemas for internal TeamChatX APIs. They are exampl
 
 ```json
 {
-  "site_name": "TeamChatX",
+  "site_name": "TheChatNest",
   "support_email": "support@example.com",
   "support_phone": "+919999999999",
   "address_line1": "Street 1",
@@ -1096,7 +1096,7 @@ These are practical request schemas for internal TeamChatX APIs. They are exampl
 
 ## Postman Collection
 
-- Collection file: [teamchatx-api.postman_collection.json](c:/Users/DELL/OneDrive/Desktop/TeamChat/backend/docs/teamchatx-api.postman_collection.json)
+- Collection file: [thechatnest-api.postman_collection.json](c:/Users/DELL/OneDrive/Desktop/TheChatNest/backend/docs/thechatnest-api.postman_collection.json)
 - Environment values to set in Postman:
   - `baseUrl`
   - `token`
@@ -1223,7 +1223,7 @@ curl "$BASE_URL/plan-features" -H "Authorization: Bearer $TOKEN"
 curl -X POST "$BASE_URL/plan-features" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "X-CSRF-Token: $CSRF_TOKEN" -d '{"plan_id":1,"feature_name":"Audit Logs","enabled":true}'
 
 curl "$BASE_URL/site-details"
-curl -X POST "$BASE_URL/site-details" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "X-CSRF-Token: $CSRF_TOKEN" -d '{"site_name":"TeamChatX"}'
+curl -X POST "$BASE_URL/site-details" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -H "X-CSRF-Token: $CSRF_TOKEN" -d '{"site_name":"TheChatNest"}'
 
 curl "$BASE_URL/product-features/catalog"
 curl "$BASE_URL/product-features/categories"
@@ -1310,7 +1310,7 @@ curl "$BASE_URL/organization/locations" -H "Authorization: Bearer $TOKEN"
 # Docs Sync (2026-03-10)
 
 - Billing endpoints now reflect exact payment failure capture, activity-log side effects, and invoice numbers generated from `payment_history.payment_id`.
-- Access notes, request schemas, response examples, and cURL references were expanded and kept limited to internal TeamChatX APIs.
+- Access notes, request schemas, response examples, and cURL references were expanded and kept limited to internal TheChatNest APIs.
 - External Stripe REST endpoints remain intentionally excluded from this document.
 
 ## Update Log (2026-03-13)

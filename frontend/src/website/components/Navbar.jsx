@@ -113,7 +113,7 @@ const Navbar = () => {
             <img
               src="/chat.png"
               alt={brandName}
-              style={{ width: "100px" }}
+              style={{ height: "50px", width: "auto", objectFit: "contain" }}
             />
           </Link>
           <button

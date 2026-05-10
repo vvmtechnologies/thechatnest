@@ -111,7 +111,7 @@ const Navbar = () => {
         <div className="container-fluid">
           <Link className="navbar-brand text-uppercase" to="/">
             <img
-              src={logoUrl || "/chat.jpeg"}
+              src="/chat.jpeg"
               alt={brandName}
               style={{ width: "100px" }}
             />

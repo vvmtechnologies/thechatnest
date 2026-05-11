@@ -6,196 +6,161 @@ import {
   PiYoutubeLogo,
   PiLinkedinLogo,
   PiPinterestLogo,
+  PiEnvelopeSimpleDuotone,
+  PiShieldCheckDuotone,
 } from "react-icons/pi";
 import { Link } from "react-router-dom";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 
+const linkGroups = [
+  {
+    title: "Product",
+    links: [
+      { label: "Features", to: "/features" },
+      { label: "Pricing", to: "/pricing" },
+      { label: "Compare", to: "/compare" },
+      { label: "Downloads", to: "/downloads" },
+      { label: "Versions", to: "/versions" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Home", to: "/" },
+      { label: "Blogs", to: "/blogs" },
+      { label: "Channel Partner", to: "/channel-partner" },
+      { label: "Contact", to: "/contact" },
+    ],
+  },
+  {
+    title: "Support",
+    links: [
+      { label: "Help Center", to: "/help" },
+      { label: "FAQs", to: "/faqs" },
+      { label: "How it Works", to: "/how-it-works" },
+      { label: "Support", to: "/support" },
+      { label: "Book a Demo", to: "/demo" },
+    ],
+  },
+  {
+    title: "Privacy & Legal",
+    links: [
+      { label: "SaaS Privacy", to: "/saas-privacy" },
+      { label: "On-Premise Privacy", to: "/on-premise-privacy" },
+      { label: "Air-Gapped Privacy", to: "/air-gapped-privacy" },
+      { label: "GDPR", to: "/gdpr" },
+      { label: "Refund Policy", to: "/refund-policy" },
+    ],
+  },
+];
+
+const socials = [
+  { key: "facebook", Icon: PiFacebookLogo, label: "Facebook" },
+  { key: "twitter", Icon: PiTwitterLogo, label: "Twitter" },
+  { key: "linkedin", Icon: PiLinkedinLogo, label: "LinkedIn" },
+  { key: "instagram", Icon: PiInstagramLogo, label: "Instagram" },
+  { key: "youtube", Icon: PiYoutubeLogo, label: "YouTube" },
+  { key: "pinterest", Icon: PiPinterestLogo, label: "Pinterest" },
+];
+
 const Footer = () => {
-  const { brandName, social, emails } = useSiteBranding();
+  const { brandName, logoUrl, social, emails } = useSiteBranding();
 
   const contactEmails = useMemo(() => {
     const apiEmails = Array.isArray(emails)
       ? emails
-          .filter(
-            (row) => String(row?.status || "active").toLowerCase() !== "inactive"
-          )
+          .filter((row) => String(row?.status || "active").toLowerCase() !== "inactive")
           .map((row) => String(row?.email_address || "").trim())
           .filter(Boolean)
       : [];
 
     if (apiEmails.length) return apiEmails;
-
     return ["support@thechatnest.com", "sales@thechatnest.com"];
   }, [emails]);
 
   const socialLinks = useMemo(
     () => ({
-      facebook: social?.facebook || "#!",
-      twitter: social?.twitter || "#!",
-      instagram: social?.instagram || "#!",
-      youtube: social?.youtube || "#!",
-      linkedin: social?.linkedin || "#!",
-      pinterest: social?.pinterest || "#!",
+      facebook: social?.facebook || "#",
+      twitter: social?.twitter || "#",
+      instagram: social?.instagram || "#",
+      youtube: social?.youtube || "#",
+      linkedin: social?.linkedin || "#",
+      pinterest: social?.pinterest || "#",
     }),
     [social]
   );
 
   return (
-    <footer className="footer">
-      <div className="container-fluid px-md-5 wrapper">
-        <div className="row mx-0">
-          {/* About Section */}
-          <div className="col-lg-4 col-md-6 col-12 mb-4">
-            <h5 className="text-uppercase mb-2">{brandName}</h5>
-            <p className="text-muted fs-6 pe-md-4 ">
-              Empower your team with seamless communication. {brandName} is a
-              secure, self-hosted business messaging platform built for
-              enterprises that demand data privacy, IP ownership, and full
-              control. From instant messaging and video meetings to AI-powered
-              productivity tools — everything your team needs, on your
-              infrastructure.
+    <footer className="tcn-footer">
+      <div className="container">
+        <div className="tcn-footer-top">
+          {/* Brand column */}
+          <div className="tcn-footer-brand">
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+              <img
+                src="/chat.png"
+                alt={brandName || "TheChatNest"}
+                style={{ height: 56, width: "auto", display: "block" }}
+              />
+            </div>
+            <p className="tcn-footer-tagline">
+              The secure team workspace for messaging, calls, file sharing, and AI —
+              built for businesses that own their data.
             </p>
-          </div>
 
-          {/* About Links */}
-          <div className="col-lg-2 col-md-6 col-12 mb-4">
-            <h6 className="fw-bold">About</h6>
-            <ul className="list-unstyled">
-              <li>
-                <Link to="/" className="text-muted ">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/features" className="text-muted ">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link to="/pricing" className="text-muted ">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link to="/downloads" className="text-muted ">
-                  Downloads
-                </Link>
-              </li>
-              <li>
-                <Link to="/blogs" className="text-muted ">
-                  Blogs
-                </Link>
-              </li>
-              <li>
-                <Link to="/versions" className="text-muted ">
-                  Versions
-                </Link>
-              </li>
-              <li>
-                <Link to="/channel-partner" className="text-muted ">
-                  Channel Partner
-                </Link>
-              </li>
-            </ul>
-          </div>
+            <div className="tcn-footer-contact">
+              {contactEmails.map((email) => (
+                <a key={email} href={`mailto:${email}`} className="tcn-footer-email">
+                  <PiEnvelopeSimpleDuotone size={18} />
+                  {email}
+                </a>
+              ))}
+            </div>
 
-          {/* Support Links */}
-          <div className="col-lg-2 col-md-6 col-12 mb-4">
-            <h6 className="fw-bold">Support</h6>
-            <ul className="list-unstyled">
-              <li>
-                <Link to="/faqs" className="text-muted ">
-                  FAQs
-                </Link>
-              </li>
-              <li>
-                <Link to="/how-it-works" className="text-muted ">
-                  How it Works
-                </Link>
-              </li>
-              <li>
-                <Link to="/contact" className="text-muted ">
-                  Contact
-                </Link>
-              </li>
-              <li>
-                <Link to="/support" className="text-muted ">
-                  Support
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Policy Links */}
-          <div className="col-lg-2 col-md-6 col-12 mb-4">
-            <h6 className="fw-bold">Policy</h6>
-            <ul className="list-unstyled">
-              <li>
-                <Link to="/saas-privacy" className="text-muted ">
-                  SaaS Privacy
-                </Link>
-              </li>
-              <li>
-                <Link to="/on-premise-privacy" className="text-muted ">
-                  On Premise Privacy
-                </Link>
-              </li>
-              <li>
-                <Link to="/air-gapped-privacy" className="text-muted ">
-                  Air Gapped Privacy
-                </Link>
-              </li>
-              <li>
-                <Link to="/gdpr" className="text-muted ">
-                  GDPR
-                </Link>
-              </li>
-              <li>
-                <Link to="/refund-policy" className="text-muted ">
-                  Refund Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Us Section */}
-          <div className="col-lg-2 col-md-6 col-12">
-            <h6 className="fw-bold">Contact Us</h6>
-            {contactEmails.map((email, index) => (
-              <p
-                key={`${email}-${index}`}
-                className={`text-muted mb-${index === contactEmails.length - 1 ? 4 : 1}`}
-              >
-                {email}
-              </p>
-            ))}
-            <div className="d-flex gap-2">
-              <a href={socialLinks.facebook} className="text-muted" target="_blank" rel="noreferrer">
-                <PiFacebookLogo size={24} />
-              </a>
-              <a href={socialLinks.twitter} className="text-muted" target="_blank" rel="noreferrer">
-                <PiTwitterLogo size={24} />
-              </a>
-              <a href={socialLinks.instagram} className="text-muted" target="_blank" rel="noreferrer">
-                <PiInstagramLogo size={24} />
-              </a>
-              <a href={socialLinks.youtube} className="text-muted" target="_blank" rel="noreferrer">
-                <PiYoutubeLogo size={24} />
-              </a>
-              <a href={socialLinks.linkedin} className="text-muted" target="_blank" rel="noreferrer">
-                <PiLinkedinLogo size={24} />
-              </a>
-              <a href={socialLinks.pinterest} className="text-muted" target="_blank" rel="noreferrer">
-                <PiPinterestLogo size={24} />
-              </a>
+            <div className="tcn-footer-socials">
+              {socials.map(({ key, Icon, label }) => (
+                <a
+                  key={key}
+                  href={socialLinks[key]}
+                  aria-label={label}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="tcn-social-btn"
+                >
+                  <Icon size={18} />
+                </a>
+              ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Footer Bottom */}
-      <div className="text-center py-3 bg-dark text-white">
-        &copy; {new Date().getFullYear()} {brandName}. All rights reserved.
+          {/* Link columns */}
+          <div className="tcn-footer-links">
+            {linkGroups.map((group) => (
+              <div key={group.title} className="tcn-footer-col">
+                <h6>{group.title}</h6>
+                <ul>
+                  {group.links.map((link) => (
+                    <li key={link.to}>
+                      <Link to={link.to}>{link.label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="tcn-footer-bottom">
+          <div className="tcn-footer-copyright">
+            &copy; {new Date().getFullYear()} {brandName || "TheChatNest"}. All rights reserved.
+          </div>
+          <div className="tcn-footer-badges">
+            <span className="tcn-footer-badge">
+              <PiShieldCheckDuotone size={14} />
+              SOC 2 · GDPR · AES-256
+            </span>
+          </div>
+        </div>
       </div>
     </footer>
   );

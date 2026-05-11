@@ -1,211 +1,276 @@
 import React from "react";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-
 import Slider from "react-slick";
+import { Link } from "react-router-dom";
 import {
-  PiArrowClockwise,
-  PiArrowUpRight,
-  PiBriefcase,
-  PiCheckSquare,
-  PiCode,
-  PiColumns,
-  PiFileText,
-  PiFlame,
-  PiHandPointing,
-  PiImage,
-  PiList,
-  PiMicrophone,
-  PiPen,
-  PiPencil,
-  PiSliders,
-  PiUser,
-  PiUsers,
+  PiArrowClockwiseDuotone,
+  PiArrowUpRightDuotone,
+  PiBriefcaseDuotone,
+  PiCheckSquareDuotone,
+  PiCodeDuotone,
+  PiColumnsDuotone,
+  PiFileTextDuotone,
+  PiFlameDuotone,
+  PiHandPointingDuotone,
+  PiImageDuotone,
+  PiListDuotone,
+  PiMicrophoneDuotone,
+  PiPenDuotone,
+  PiPencilDuotone,
+  PiSlidersDuotone,
+  PiUserDuotone,
+  PiUsersDuotone,
+  PiArrowRightBold,
 } from "react-icons/pi";
 
+const features = [
+  {
+    Icon: PiBriefcaseDuotone,
+    accent: "#6d5dfc",
+    title: "File Deck",
+    description: "Every file shared in your workspace, in one searchable place. Drop your own files too.",
+  },
+  {
+    Icon: PiArrowClockwiseDuotone,
+    accent: "#ec4899",
+    title: "Recall",
+    description: "Sent the wrong message? Pull it back from both sides — up to ten minutes later.",
+  },
+  {
+    Icon: PiListDuotone,
+    accent: "#0ea5e9",
+    title: "Quick Response Panel",
+    description: "Save snippets, links, images, and replies. Drop them into any chat in one click.",
+  },
+  {
+    Icon: PiColumnsDuotone,
+    accent: "#22c55e",
+    title: "Layout",
+    description: "Reshape your chat workspace. Drag the member list aside for a wider, focused view.",
+  },
+  {
+    Icon: PiPencilDuotone,
+    accent: "#f59e0b",
+    title: "Message Edit",
+    description: "Fix a typo after sending. Edit without deleting — your readers see the latest version.",
+  },
+  {
+    Icon: PiMicrophoneDuotone,
+    accent: "#14b8a6",
+    title: "Audio Messaging",
+    description: "Quick voice notes when typing is slow. Plays back across web, desktop, and mobile.",
+  },
+  {
+    Icon: PiHandPointingDuotone,
+    accent: "#a855f7",
+    title: "Join Now",
+    description: "Walked in late on a group call? Hop into the live session with a single tap.",
+  },
+  {
+    Icon: PiFileTextDuotone,
+    accent: "#0ea5e9",
+    title: "Attachment Preview",
+    description: "Open Docs, Sheets, PDFs, images, and videos inline — no third-party app needed.",
+  },
+  {
+    Icon: PiUsersDuotone,
+    accent: "#ec4899",
+    title: "Airtime Groups",
+    description: "Broadcast company-wide updates without the noise — admins post, members read.",
+  },
+  {
+    Icon: PiFlameDuotone,
+    accent: "#f97316",
+    title: "Burnout",
+    description: "Self-destructing private chats for sensitive material — no backups, no trace.",
+  },
+  {
+    Icon: PiArrowUpRightDuotone,
+    accent: "#22c55e",
+    title: "Forkout",
+    description: "Send one message to many groups and people at once — no copy-paste marathon.",
+  },
+  {
+    Icon: PiCheckSquareDuotone,
+    accent: "#6d5dfc",
+    title: "Read Receipts",
+    description: "Know exactly when each recipient opened your message — opt-in per chat.",
+  },
+  {
+    Icon: PiUserDuotone,
+    accent: "#14b8a6",
+    title: "Guest Members",
+    description: "Invite clients, vendors, and contractors to focused channels — without full access.",
+  },
+  {
+    Icon: PiCodeDuotone,
+    accent: "#a855f7",
+    title: "Jointly Code",
+    description: "A live code editor inside calls. Pair-program with built-in audio and screen share.",
+  },
+  {
+    Icon: PiPenDuotone,
+    accent: "#f59e0b",
+    title: "Self Message",
+    description: "A private notepad inside chat — bookmarks, links, drafts — synced everywhere.",
+  },
+  {
+    Icon: PiSlidersDuotone,
+    accent: "#0ea5e9",
+    title: "Chat Filters",
+    description: "Slice any conversation by files, images, videos, or links — find what you need fast.",
+  },
+  {
+    Icon: PiImageDuotone,
+    accent: "#ec4899",
+    title: "Wallpapers",
+    description: "Personalize your chat backdrop with curated wallpapers or upload your own.",
+  },
+];
+
+const settings = {
+  centerMode: false,
+  dots: true,
+  autoplay: true,
+  autoplaySpeed: 3500,
+  pauseOnHover: true,
+  infinite: true,
+  speed: 600,
+  slidesToShow: 3,
+  arrows: false,
+  slidesToScroll: 1,
+  responsive: [
+    { breakpoint: 1200, settings: { slidesToShow: 3 } },
+    { breakpoint: 992, settings: { slidesToShow: 2 } },
+    { breakpoint: 700, settings: { slidesToShow: 1, dots: true } },
+  ],
+};
+
 const FeaturesCarousel = () => {
-    const features = [
-        {
-          icon: <PiBriefcase size={48} color="#FFFFFF" />,
-          title: "File Deck",
-          description:
-            "Use File Deck to find all the files of this collaboration platform in one place. Also, upload your local files to have anytime access.",
-        },
-        {
-          icon: <PiArrowClockwise size={48} color="#FFFFFF" />,
-          title: "Recall",
-          description:
-            "Did you mistakenly send the wrong message? You can recall it from both sides within ten minutes here in this instant messaging app.",
-        },
-        {
-          icon: <PiList size={48} color="#FFFFFF" />,
-          title: "Quick Response Panel",
-          description:
-            "It stores text files, images, videos, code snippets, URLs, and canned messages! Pick from the QRP and share it across groups or users.",
-        },
-        {
-          icon: <PiColumns size={48} color="#FFFFFF" />,
-          title: "Layout",
-          description:
-            "Play around with your chat area! Drag and drop the chat member list to have a broader chat area.",
-        },
-        {
-          icon: <PiPencil size={48} color="#FFFFFF" />,
-          title: "Message Edit",
-          description:
-            "Want to make corrections to the delivered chat message? Yes, you can do it with TheChatNest! Wondering how? Check it out!",
-        },
-        {
-          icon: <PiMicrophone size={48} color="#FFFFFF" />,
-          title: "Audio Messaging",
-          description:
-            "Don’t have time to type a message? No worries! Send an instant and crisp voice message to your co-worker. Available across all platforms.",
-        },
-        {
-          icon: <PiHandPointing size={48} color="#FFFFFF" />,
-          title: "Join Now",
-          description:
-            "Did you miss joining a group call? However, you can still join an ongoing call with Join Now from TheChatNest!",
-        },
-        {
-          icon: <PiFileText size={48} color="#FFFFFF" />,
-          title: "Attachment Preview",
-          description:
-            "Word Doc, Excel, PPTs, PDFs, Images, Videos, and other types of attachments, view them directly on the UI of TheChatNest.",
-        },
-        {
-          icon: <PiUsers size={48} color="#FFFFFF" />,
-          title: "Airtime Groups",
-          description:
-            "Want to broadcast announcements to a group of users, but you do not want to receive any responses from the members? Start using Airtime groups.",
-        },
-        {
-          icon: <PiFlame size={48} color="#FFFFFF" />,
-          title: "Burnout",
-          description:
-            "Exchange your confidential information in a self-destructible private chat window that doesn’t leave any chat backup.",
-        },
-        {
-          icon: <PiArrowUpRight size={48} color="#FFFFFF" />,
-          title: "Forkout",
-          description:
-            "You can send a message or an attachment to many users and groups in just one go using Forkout.",
-        },
-        {
-          icon: <PiCheckSquare size={48} color="#FFFFFF" />,
-          title: "Read Receipts",
-          description:
-            "Tag read receipt while sending a message and find out whether the recipient has read it or not!",
-        },
-        {
-          icon: <PiUser size={48} color="#FFFFFF" />,
-          title: "Orange Member",
-          description:
-            "It helps you invite your customers, stakeholders, non-employees, etc., to TheChatNest as guest users.",
-        },
-        {
-          icon: <PiCode size={48} color="#FFFFFF" />,
-          title: "Jointly Code",
-          description:
-            "Developers, you have an exclusive code editor in this collaboration tool. Meet in an audio-video conference call to write and edit code.",
-        },
-        {
-          icon: <PiPen size={48} color="#FFFFFF" />,
-          title: "Self Message",
-          description:
-            "Use this window to write something for yourself; it could be a back-up, research material, etc. It's handier than a note-taking app.",
-        },
-        {
-          icon: <PiSliders size={48} color="#FFFFFF" />,
-          title: "Chat Area Filters",
-          description:
-            "In this work chat app, you can filter text files, images, videos, and others, each separately from the chat area.",
-        },
-        {
-          icon: <PiImage size={48} color="#FFFFFF" />,
-          title: "Wallpaper",
-          description:
-            "Make your chat background more interesting with a wide range of wallpapers available within this team chat software.",
-        },
-      ];
-      
-
-  const settings = {
-    centerMode: features.length >= 3, // Enable center mode only if there are 3 or more cards
-    dots: true,
-    autoplay: true,
-    autoplaySpeed: 2000,
-    infinite: true,
-    speed: 500,
-    slidesToShow: Math.min(features.length, 3), // Dynamically adjust visible slides
-    arrows: false,
-    slidesToScroll: 1,
-    
-    responsive: [
-      {
-        breakpoint: 1400,
-        settings: {
-          slidesToShow: Math.min(features.length, 3),
-        },
-      },
-      {
-        breakpoint: 991,
-        settings: {
-          slidesToShow: Math.min(features.length, 2),
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: Math.min(features.length, 1),
-        },
-      },
-      {
-        breakpoint: 576,
-        settings: {
-          slidesToShow: 1,
-          centerMode: false, // Disable center mode on small screens
-          dots: false,
-        },
-      },
-    ],
-  };
-
   return (
-    <section
-      className="features-carousel my-5"
-      style={{ background: "#737888", padding: "50px 20px" }}
-    >
-      <div className="container wrapper">
-        <h2 className="text-center text-white">Unique Productive Features</h2>
-        <p className="text-center text-light mb-5">
-          Work conversations happen faster and better with this unified Business
-          Collaboration Platform!
-        </p>
+    <section className="section-dark tcn-carousel-section" style={{ padding: "6rem 0", position: "relative", overflow: "hidden" }}>
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background:
+            "radial-gradient(800px 400px at 80% 10%, rgba(109,93,252,0.22), transparent 60%), radial-gradient(700px 350px at 10% 90%, rgba(255,213,74,0.08), transparent 60%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div className="container" style={{ position: "relative", zIndex: 1 }}>
+        <div className="section-title">
+          <span
+            className="eyebrow"
+            style={{
+              background: "rgba(255,213,74,0.12)",
+              color: "#ffd54a",
+            }}
+          >
+            Productivity superpowers
+          </span>
+          <h2 style={{ marginTop: "1rem", color: "#fff" }}>
+            17 little features that save your team hours
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.65)" }}>
+            Quick wins, baked right into chat — so your team spends less time switching tools
+            and more time shipping work.
+          </p>
+        </div>
+
         <Slider {...settings}>
-          {features.map((feature, index) => (
-            <div key={index} className="feature-card">
-              <div className="carousel-card p-4">
-                <div className="icon mb-1">{feature.icon}</div>
-                <div>
-                  <span>
-                    <p className="title">{feature.title}</p>
-                    <p
-                      className="my-2"
-                      style={{ fontSize: "14px", color: "#fff" }}
-                    >
-                      {feature.description}
-                    </p>
-                  </span>
-                  <a href="#!" className="fs-6 text-light">
-                    View more
-                  </a>
+          {features.map((f, idx) => (
+            <div key={idx} style={{ padding: "0.75rem" }}>
+              <div className="tcn-feature-slide">
+                <div
+                  className="tcn-feature-icon"
+                  style={{
+                    background: `${f.accent}1a`,
+                    color: f.accent,
+                  }}
+                >
+                  <f.Icon size={28} />
                 </div>
+                <h3 className="tcn-feature-title">{f.title}</h3>
+                <p className="tcn-feature-desc">{f.description}</p>
               </div>
             </div>
           ))}
         </Slider>
+
+        <div style={{ textAlign: "center", marginTop: "2.5rem" }}>
+          <Link
+            to="/features"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "0.7rem 1.4rem",
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.16)",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "0.95rem",
+              backdropFilter: "blur(8px)",
+              textDecoration: "none",
+            }}
+          >
+            Explore all features <PiArrowRightBold size={14} />
+          </Link>
+        </div>
       </div>
+
+      <style>{`
+        .tcn-feature-slide {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: var(--tcn-radius-lg);
+          padding: 1.75rem;
+          height: 100%;
+          min-height: 220px;
+          transition: background 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+          backdrop-filter: blur(8px);
+        }
+        .tcn-feature-slide:hover {
+          background: rgba(255,255,255,0.07);
+          border-color: rgba(255,213,74,0.25);
+          transform: translateY(-4px);
+        }
+        .tcn-feature-icon {
+          width: 52px;
+          height: 52px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 14px;
+          margin-bottom: 1.1rem;
+        }
+        .tcn-feature-title {
+          color: #fff;
+          font-size: 1.15rem;
+          font-weight: 700;
+          margin: 0 0 0.45rem;
+        }
+        .tcn-feature-desc {
+          color: rgba(255,255,255,0.65);
+          font-size: 0.92rem;
+          line-height: 1.6;
+          margin: 0;
+        }
+        .tcn-carousel-section .slick-dots {
+          bottom: -2.5rem;
+        }
+        .tcn-carousel-section .slick-dots li button:before {
+          color: rgba(255,255,255,0.4);
+          font-size: 9px;
+        }
+        .tcn-carousel-section .slick-dots li.slick-active button:before {
+          color: #ffd54a;
+          opacity: 1;
+        }
+      `}</style>
     </section>
   );
 };

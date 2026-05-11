@@ -1083,9 +1083,18 @@ const createCheckoutSession = async (req, res, next) => {
     });
 
     const organization = await billingModel.findOrganizationById(organizationId);
-    const frontendOrigin = String(process.env.FRONTEND_ORIGIN || process.env.CORS_ORIGIN || 'http://localhost:5173').trim();
+    // FRONTEND_ORIGIN can be a comma-separated CORS list — pick the FIRST
+    // entry as the canonical site URL for redirects so Stripe doesn't choke
+    // on "https://a.com,https://b.com" as a URL.
+    const rawFrontendOrigin = String(
+      process.env.FRONTEND_URL ||
+        process.env.FRONTEND_ORIGIN ||
+        process.env.CORS_ORIGIN ||
+        'http://localhost:5173'
+    );
+    const frontendOrigin = (rawFrontendOrigin.split(',')[0] || '').trim().replace(/\/$/, '');
     const successUrl = String(
-      req.body?.success_url || `${frontendOrigin}/app/billing/thank-you?session_id={CHECKOUT_SESSION_ID}`
+      req.body?.success_url || `${frontendOrigin}/billing/thank-you?session_id={CHECKOUT_SESSION_ID}`
     ).trim();
     const cancelUrl = String(req.body?.cancel_url || `${frontendOrigin}/app/admin?billing_checkout=cancel`).trim();
 

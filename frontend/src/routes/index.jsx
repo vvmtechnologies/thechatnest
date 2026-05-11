@@ -66,6 +66,13 @@ export default function Router() {
         element: <GuestMeetingPage />,
       },
       {
+        // Public billing confirmation — Stripe redirects here after payment.
+        // Available without auth so the session_id always gets confirmed even
+        // if the user landed in a fresh browser tab.
+        path: "/billing/thank-you",
+        element: <BillingThankYou />,
+      },
+      {
         path: "/owner-dashboard",
         element: authenticated
           ? (isOwner ? <OwnerDashboard /> : <Navigate to="/app" replace />)

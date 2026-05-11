@@ -126,15 +126,49 @@ const SideBar = () => {
     return null; // Or a loading spinner
   }
 
+  const activePillSx = {
+    background: "linear-gradient(135deg, rgba(255,213,74,0.18), rgba(109,93,252,0.18))",
+    border: "1px solid rgba(255,213,74,0.4)",
+    borderRadius: "12px",
+    height: 44,
+    width: 44,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    boxShadow: "0 6px 18px rgba(255,213,74,0.18), inset 0 1px 0 rgba(255,255,255,0.08)",
+    transition: "all 0.18s ease",
+  };
+
+  const idleBtnSx = {
+    color: "rgba(231,233,243,0.6)",
+    width: 44,
+    height: 44,
+    borderRadius: "12px",
+    transition: "all 0.18s ease",
+    "&:hover": {
+      color: "#ffd54a",
+      background: "rgba(255,255,255,0.05)",
+      transform: "translateY(-1px)",
+    },
+  };
+
+  const activeIconSx = {
+    color: "#ffd54a !important",
+    width: "max-content",
+    "&:hover": { background: "transparent" },
+  };
+
   return (
     <Box
       py={2}
       px={0}
       sx={{
-        backgroundColor: theme.palette.background.default,
+        background:
+          "radial-gradient(400px 200px at 50% 0%, rgba(109,93,252,0.2), transparent 60%), linear-gradient(180deg, #0b0f1e 0%, #11162a 100%)",
         height: "auto",
         width: 80,
-        boxShadow: "inset -1px 0px 0px rgba(0, 0, 0, 0.15)",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+        boxShadow: "inset -1px 0px 0px rgba(0,0,0,0.4)",
       }}
     >
       <Stack
@@ -147,25 +181,21 @@ const SideBar = () => {
         <Stack alignItems={"center"} spacing={2}>
           <Box
             sx={{
-              height: "30px",
-              minHeight: "30px",
+              height: "44px",
+              minHeight: "44px",
               maxHeight: "100%",
-              width: "90%",
-              borderRadius: "8px",
+              width: "44px",
+              borderRadius: "12px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor:
-                themeMode === "dark"
-                  ? "rgba(255, 255, 255, 0.8)"
-                  : "",
-              boxShadow:
-                themeMode === "dark"
-                  ? "inset 0 0 0 1px rgba(255, 255, 255, 0.12)"
-                  : "",
-              padding: "4px",
-              flex: 1,
-              overflow: "hidden"
+              background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+              boxShadow: "0 6px 18px rgba(255,213,74,0.35), inset 0 1px 0 rgba(255,255,255,0.3)",
+              padding: "5px",
+              overflow: "hidden",
+              cursor: "pointer",
+              transition: "transform 0.18s ease",
+              "&:hover": { transform: "translateY(-2px) scale(1.03)" },
             }}
           >
             <img
@@ -175,6 +205,7 @@ const SideBar = () => {
                 width: "100%",
                 height: "100%",
                 objectFit: "contain",
+                filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.2))",
               }}
             />
           </Box>
@@ -192,42 +223,26 @@ const SideBar = () => {
           >
             {Nav_Buttons.map((el) =>
               el.index === selected ? (
-                <Box
-                  sx={{
-                    backgroundColor: theme.palette.primary.main,
-                    borderRadius: 1,
-                    height: 45,
-                    width: 45,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                  key={el.index}
-                >
-                  <IconButton
-                    onClick={() => handleChangeTab(el.index)}
-                    sx={{ width: "max-content", color: "#fff" }}
-                  >
+                <Box sx={activePillSx} key={el.index}>
+                  <IconButton onClick={() => handleChangeTab(el.index)} sx={activeIconSx}>
                     {el.icon}
                   </IconButton>
                 </Box>
               ) : (
                 <Tooltip title={el.title} placement="right" key={el.index}>
                   <Badge
-                    badgeContent={el.index === 0 ? unreadCount : 0} // Show unread count on the first button (e.g., chat)
-                    color="primary"
+                    badgeContent={el.index === 0 ? unreadCount : 0}
                     max={9}
+                    sx={{
+                      "& .MuiBadge-badge": {
+                        background: "linear-gradient(135deg, #ff5b3e, #ff7e5f)",
+                        color: "#fff",
+                        boxShadow: "0 2px 8px rgba(255,91,62,0.45)",
+                        fontWeight: 700,
+                      },
+                    }}
                   >
-                    <IconButton
-                      onClick={() => handleChangeTab(el.index)}
-                      sx={{
-                        width: "max-content",
-                        color:
-                          theme.palette.mode === "light"
-                            ? "#000"
-                            : theme.palette.text.primary,
-                      }}
-                    >
+                    <IconButton onClick={() => handleChangeTab(el.index)} sx={idleBtnSx}>
                       {el.icon}
                     </IconButton>
                   </Badge>
@@ -236,70 +251,29 @@ const SideBar = () => {
             )}
             {/* Meeting quick action — navigates to full-page meeting hub */}
             {location.pathname.startsWith("/app/meeting") ? (
-              <Box
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  borderRadius: 1,
-                  height: 45,
-                  width: 45,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <IconButton
-                  onClick={() => navigate("/app/meeting")}
-                  sx={{ width: "max-content", color: "#fff" }}
-                >
+              <Box sx={activePillSx}>
+                <IconButton onClick={() => navigate("/app/meeting")} sx={activeIconSx}>
                   <PiVideoConferenceFill size={22} />
                 </IconButton>
               </Box>
             ) : (
               <Tooltip title="Meeting" placement="right">
-                <IconButton
-                  onClick={() => navigate("/app/meeting")}
-                  sx={{
-                    width: "max-content",
-                    color:
-                      theme.palette.mode === "light"
-                        ? "#000"
-                        : theme.palette.text.primary,
-                  }}
-                >
+                <IconButton onClick={() => navigate("/app/meeting")} sx={idleBtnSx}>
                   <PiVideoConferenceFill size={22} />
                 </IconButton>
               </Tooltip>
             )}
-            <Divider sx={{ width: "48px" }} />
+            <Divider sx={{ width: "32px", borderColor: "rgba(255,255,255,0.08)" }} />
             {role !== 4 &&
               (selected === 4 ? (
-                <Box
-                  sx={{
-                    backgroundColor: theme.palette.primary.main,
-                    borderRadius: 1,
-                    height: 45,
-                    width: 45,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <IconButton sx={{ width: "max-content", color: "#fff" }}>
+                <Box sx={activePillSx}>
+                  <IconButton sx={activeIconSx}>
                     <MdOutlineDashboardCustomize />
                   </IconButton>
                 </Box>
               ) : (
                 <Tooltip title="Admin" placement="right">
-                  <IconButton
-                    onClick={() => handleChangeTab(4)}
-                    sx={{
-                      width: "max-content",
-                      color:
-                        theme.palette.mode === "light"
-                          ? "#000"
-                          : theme.palette.text.primary,
-                    }}
-                  >
+                  <IconButton onClick={() => handleChangeTab(4)} sx={idleBtnSx}>
                     <MdOutlineDashboardCustomize />
                   </IconButton>
                 </Tooltip>
@@ -308,20 +282,16 @@ const SideBar = () => {
         </Stack>
 
         <Stack alignItems={"center"} spacing={2.5}>
+          <Divider sx={{ width: "32px", borderColor: "rgba(255,255,255,0.08)" }} />
           <Tooltip title="AI Assistant" placement="right">
             {assistantOpen ? (
-              <Box
-                sx={{
-                  borderRadius: "50%",
-                  backgroundColor: theme.palette.primary.main,
-                }}
-              >
+              <Box sx={{ ...activePillSx, borderRadius: "50%" }}>
                 <IconButton
                   onClick={() => {
                     setAssistantOpen(false);
                     window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: false } }));
                   }}
-                  sx={{ color: "#fff" }}
+                  sx={activeIconSx}
                 >
                   <PiSparkle size={20} />
                 </IconButton>
@@ -332,10 +302,7 @@ const SideBar = () => {
                   setAssistantOpen(true);
                   window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: true } }));
                 }}
-                sx={{
-                  width: "max-content",
-                  color: theme.palette.mode === "light" ? "#000" : theme.palette.text.primary,
-                }}
+                sx={{ ...idleBtnSx, borderRadius: "50%" }}
               >
                 <PiSparkle size={20} />
               </IconButton>
@@ -349,20 +316,8 @@ const SideBar = () => {
           <SettingsDrawer open={toggleOpen} setOpen={setToggleOpen} />
           <Tooltip title="Profile" placement="right">
             {selected === 3 ? (
-              <Box
-                sx={{
-                  borderRadius: "50%",
-                  border: selected ? "#fff": `1px solid ${theme.palette.primary.main}`,
-                  backgroundColor: theme.palette.primary.main,
-                }}
-              >
-                <IconButton
-                  id="profile-button"
-                  onClick={() => handleChangeTab(3)}
-                  sx={{
-                    color: selected ? "#fff": theme.palette.primary.main,
-                  }}
-                >
+              <Box sx={{ ...activePillSx, borderRadius: "50%" }}>
+                <IconButton id="profile-button" onClick={() => handleChangeTab(3)} sx={activeIconSx}>
                   <PiUserGear size={20} />
                 </IconButton>
               </Box>
@@ -371,16 +326,9 @@ const SideBar = () => {
                 id="profile-button"
                 onClick={() => handleChangeTab(3)}
                 sx={{
-                  width: "max-content",
-                  color:
-                    theme.palette.mode === "light"
-                      ? "#000"
-                      : theme.palette.text.primary,
+                  ...idleBtnSx,
                   borderRadius: "50%",
-                  border:
-                    theme.palette.mode === "light"
-                      ? "1px solid #000"
-                      : "1px solid #ddd",
+                  border: "1px solid rgba(255,255,255,0.14)",
                 }}
               >
                 <PiUserGear size={18} />

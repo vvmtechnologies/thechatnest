@@ -15,6 +15,10 @@ import {
   PiLockKeyOpen,
   PiSignOut,
   PiWifiSlash,
+  PiWarningCircleDuotone,
+  PiClockCountdownDuotone,
+  PiSparkleDuotone,
+  PiCrownSimpleDuotone,
 } from "react-icons/pi";
 import authStore from "../../utils/auth";
 import secureStorage from "../../utils/secureStorage";
@@ -24,6 +28,7 @@ import { DEFAULT_WALLPAPER_SELECTION } from "../../pages/dashboard/settings/defa
 import { useConnectivity } from "../../contexts/ConnectivityContext.jsx";
 import DownloadToasts from "../../components/DownloadToasts.jsx";
 import useCurrentUser from "../../hooks/useCurrentUser.js";
+import usePlanStatus from "../../hooks/usePlanStatus.js";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { getOrCreateClientDeviceId } from "../../utils/deviceId.js";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
@@ -33,6 +38,7 @@ const TopBar = () => {
   const theme = useTheme();
   const navigate = useNavigate();
   const currentUser = useCurrentUser();
+  const plan = usePlanStatus();
   const displayName = String(currentUser?.displayName || "Myself").trim() || "Myself";
 
   const { online } = useConnectivity();
@@ -205,7 +211,17 @@ const TopBar = () => {
         sx={dragRegionSx}
       >
         {/* Left chunk */}
-        <Stack spacing={1.25} direction="row" alignItems="center">
+        <Stack
+          spacing={1.25}
+          direction="row"
+          alignItems="center"
+          sx={{
+            flexWrap: { xs: "wrap", md: "nowrap" },
+            rowGap: 0.75,
+            minWidth: 0,
+            flex: 1,
+          }}
+        >
           {/* Branded chip */}
           <Stack
             direction="row"
@@ -243,6 +259,7 @@ const TopBar = () => {
                 fontSize: "12.5px",
                 fontWeight: 700,
                 letterSpacing: 0.4,
+                display: { xs: "none", sm: "inline" },
               }}
             >
               {brandName}
@@ -276,11 +293,157 @@ const TopBar = () => {
                 color: "rgba(231,233,243,0.85)",
                 fontSize: "12.5px",
                 fontWeight: 500,
+                whiteSpace: "nowrap",
+                maxWidth: { xs: 100, md: 180 },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: { xs: "none", sm: "inline-block" },
               }}
             >
               {displayName}
             </Typography>
           </Stack>
+
+          {/* Plan countdown chip */}
+          {plan.loaded && plan.status !== "unknown" && (() => {
+            const r = plan.remainingDays;
+            const isExpired = plan.expired || plan.status === "expired";
+            const isExpiring = plan.status === "expiring";
+            const isTrial = plan.status === "trial";
+
+            const tone = isExpired
+              ? {
+                  bg: "rgba(239,68,68,0.16)",
+                  border: "rgba(239,68,68,0.45)",
+                  color: "#fca5a5",
+                  Icon: PiWarningCircleDuotone,
+                  label: "Plan expired",
+                  sub: "Renew now",
+                  pulse: true,
+                }
+              : isExpiring
+                ? {
+                    bg: "rgba(245,158,11,0.16)",
+                    border: "rgba(245,158,11,0.45)",
+                    color: "#fcd34d",
+                    Icon: PiClockCountdownDuotone,
+                    label: `${r} day${r === 1 ? "" : "s"} left`,
+                    sub: plan.planName,
+                    pulse: true,
+                  }
+                : isTrial
+                  ? {
+                      bg: "rgba(109,93,252,0.16)",
+                      border: "rgba(109,93,252,0.45)",
+                      color: "#a99dff",
+                      Icon: PiSparkleDuotone,
+                      label:
+                        r !== null && r >= 0 ? `Trial · ${r}d left` : "Trial",
+                      sub: plan.planName,
+                      pulse: false,
+                    }
+                  : {
+                      bg: "rgba(255,213,74,0.12)",
+                      border: "rgba(255,213,74,0.35)",
+                      color: "#ffd54a",
+                      Icon: PiCrownSimpleDuotone,
+                      label: plan.planName,
+                      sub:
+                        r !== null && r >= 0 ? `${r} days left` : "Active",
+                      pulse: false,
+                    };
+
+            return (
+              <Box
+                onClick={() => navigate("/app/admin?tab=billing")}
+                sx={{
+                  ml: 1,
+                  pl: 1.1,
+                  pr: 1.3,
+                  py: 0.45,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.85,
+                  flexShrink: 0,
+                  borderRadius: 9999,
+                  background: tone.bg,
+                  border: `1px solid ${tone.border}`,
+                  color: tone.color,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "transform 0.18s ease, background 0.18s ease",
+                  ...noDragRegionSx,
+                  "&:hover": {
+                    transform: "translateY(-1px)",
+                    background: tone.bg
+                      .replace("0.16", "0.24")
+                      .replace("0.12", "0.2"),
+                  },
+                  ...(tone.pulse && {
+                    animation: "tcnPlanPulse 2.2s ease-in-out infinite",
+                    "@keyframes tcnPlanPulse": {
+                      "0%, 100%": {
+                        boxShadow: `0 0 0 0 ${tone.border}`,
+                      },
+                      "50%": { boxShadow: `0 0 0 5px transparent` },
+                    },
+                  }),
+                }}
+                title={
+                  plan.endDate
+                    ? `${plan.planName} · ends ${new Date(
+                        plan.endDate
+                      ).toLocaleDateString()}`
+                    : plan.planName
+                }
+              >
+                <Box
+                  sx={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: "50%",
+                    background: tone.border,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    flexShrink: 0,
+                  }}
+                >
+                  <tone.Icon size={13} />
+                </Box>
+                <Stack
+                  spacing={0}
+                  direction="row"
+                  alignItems="baseline"
+                  sx={{ minWidth: 0, gap: 0.6 }}
+                >
+                  <Typography
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: 11,
+                      lineHeight: 1,
+                      letterSpacing: 0.04,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {tone.label}
+                  </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: 10,
+                      lineHeight: 1,
+                      opacity: 0.75,
+                      whiteSpace: "nowrap",
+                      display: { xs: "none", md: "inline" },
+                    }}
+                  >
+                    · {tone.sub}
+                  </Typography>
+                </Stack>
+              </Box>
+            );
+          })()}
 
           {/* No Internet pill */}
           {!netOK && (
@@ -311,8 +474,8 @@ const TopBar = () => {
         </Stack>
 
         {/* Right chunk */}
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Box sx={{ ...noDragRegionSx }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
+          <Box sx={{ ...noDragRegionSx, display: { xs: "none", md: "block" } }}>
             <DownloadToasts />
           </Box>
 
@@ -321,6 +484,11 @@ const TopBar = () => {
             onClick={handleLockToggle}
             sx={{
               ...pillBtnSx,
+              minWidth: { xs: 34, md: "auto" },
+              "& .MuiButton-startIcon": {
+                marginRight: { xs: 0, md: "8px" },
+                marginLeft: { xs: 0, md: 0 },
+              },
               ...(lockState.locked && {
                 background: "rgba(34,197,94,0.12)",
                 borderColor: "rgba(34,197,94,0.35)",
@@ -333,7 +501,9 @@ const TopBar = () => {
               }),
             }}
           >
-            {lockLabel}
+            <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+              {lockLabel}
+            </Box>
           </Button>
 
           {/* Desktop App CTA (browser only) */}
@@ -343,9 +513,18 @@ const TopBar = () => {
               href={appUrl}
               target="_blank"
               rel="noopener noreferrer"
-              sx={pillBtnSx}
+              sx={{
+                ...pillBtnSx,
+                minWidth: { xs: 34, md: "auto" },
+                "& .MuiButton-startIcon": {
+                  marginRight: { xs: 0, md: "8px" },
+                  marginLeft: { xs: 0, md: 0 },
+                },
+              }}
             >
-              Desktop App
+              <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+                Desktop App
+              </Box>
             </Button>
           )}
 
@@ -361,12 +540,17 @@ const TopBar = () => {
               letterSpacing: 0.02,
               background: "linear-gradient(135deg, #ff5b3e, #ff7e5f)",
               borderRadius: "999px",
-              px: 1.6,
+              px: { xs: 1, md: 1.6 },
               py: 0.5,
               minHeight: 0,
+              minWidth: { xs: 34, md: "auto" },
               ml: 0.5,
               boxShadow: "0 4px 14px rgba(255,91,62,0.35)",
               transition: "all 0.18s ease",
+              "& .MuiButton-endIcon": {
+                marginLeft: { xs: 0, md: "8px" },
+                marginRight: 0,
+              },
               "&:hover": {
                 background: "linear-gradient(135deg, #ff7e5f, #ff5b3e)",
                 transform: "translateY(-1px)",
@@ -374,7 +558,9 @@ const TopBar = () => {
               },
             }}
           >
-            Logout
+            <Box component="span" sx={{ display: { xs: "none", md: "inline" } }}>
+              Logout
+            </Box>
           </Button>
         </Stack>
       </Stack>

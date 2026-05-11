@@ -249,35 +249,41 @@ const ChatList = ({
           sx={{
             display: "flex",
             alignItems: "center",
+            gap: 0.75,
             backgroundColor:
               theme.palette.mode === "light"
-                ? "#f0f0f0"
-                : theme.palette.background.default,
-            borderRadius: "4px",
+                ? "#f3f4f8"
+                : "rgba(255,255,255,0.04)",
+            border:
+              theme.palette.mode === "light"
+                ? "1px solid #e5e7eb"
+                : "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "999px",
+            px: 1,
+            transition: "all 0.18s ease",
+            "&:focus-within": {
+              borderColor: "#6d5dfc",
+              boxShadow: "0 0 0 3px rgba(109,93,252,0.16)",
+              backgroundColor: theme.palette.mode === "light" ? "#fff" : "rgba(255,255,255,0.06)",
+            },
           }}
         >
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search..."
+              placeholder="Search conversations…"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               autoComplete="off"
               sx={{
-                
                 padding: "0px 0px !important",
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: 1,
-                  "& fieldset": {
-                    border: "none",
-                  },
-                  "&:hover fieldset": {
-                    border: "none",
-                  },
-                  "&.Mui-focused fieldset": {
-                    border: "none",
-                  },
+                  borderRadius: "999px",
+                  fontSize: "0.92rem",
+                  "& fieldset": { border: "none" },
+                  "&:hover fieldset": { border: "none" },
+                  "&.Mui-focused fieldset": { border: "none" },
                   "& .MuiOutlinedInput-input": {
                     padding: "10px 8px",
                     paddingLeft: 0,
@@ -288,12 +294,13 @@ const ChatList = ({
                 startAdornment: (
                   <InputAdornment position="start">
                     <PiMagnifyingGlass
-                      size={25}
+                      size={20}
                       style={{
                         color:
                           theme.palette.mode === "light"
-                            ? theme.palette.text.secondary
-                            : "#ddd",
+                            ? "#8189a8"
+                            : "rgba(255,255,255,0.55)",
+                        marginLeft: 6,
                       }}
                     />
                   </InputAdornment>

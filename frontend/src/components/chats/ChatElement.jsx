@@ -562,17 +562,18 @@ const ChatElement = ({
       sx={{
         cursor: disabled ? "not-allowed" : "pointer",
         width: "100%",
-        borderRadius: 0.5,
+        borderRadius: "12px",
         borderLeft: statusBorder(theme, status),
         p: 0.4,
-        // transition: "background-color 0.1s ease, box-shadow 0.1s ease",
+        my: 0.35,
+        transition: "transform 0.18s ease, box-shadow 0.18s ease",
         pointerEvents: disabled ? "none" : "auto",
-        boxShadow:
-          theme.palette.mode === "light"
-            ? "0px 1px 1px rgba(0, 0, 0, 0.08)"
-            : "0px 1px 1px rgba(255, 255, 255, 0.08)",
+        boxShadow: "none",
         "&:hover .avatar-hover": {
-          transform: "scale(1.1)", // Scale avatar on hover
+          transform: "scale(1.08)",
+        },
+        "&:hover": {
+          transform: "translateY(-1px)",
         },
         userSelect: "none",
       }}
@@ -582,23 +583,28 @@ const ChatElement = ({
         spacing={2}
         alignItems="center"
         sx={{
-          py: 1.5,
-          px: 1,
-          borderRadius: 1,
-
+          py: 1.25,
+          px: 1.25,
+          borderRadius: "12px",
+          position: "relative",
           bgcolor: isDragOver
-            ? theme.palette.action.hover
+            ? alpha("#6d5dfc", 0.12)
             : isActive
-              ? theme.palette.mode === "light"
-                ? alpha(theme.palette.primary.main, 0.2)
-                : alpha(theme.palette.primary.main, 0.2)
+              ? alpha("#6d5dfc", theme.palette.mode === "light" ? 0.1 : 0.18)
               : "background.paper",
           color: "text.primary",
+          border: isActive
+            ? `1px solid ${alpha("#6d5dfc", 0.35)}`
+            : `1px solid ${theme.palette.mode === "light" ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
+          ...(isActive && {
+            boxShadow: "inset 3px 0 0 #6d5dfc, 0 4px 14px rgba(109,93,252,0.12)",
+          }),
           ...(isActive || disabled
             ? {}
             : {
                 "&:hover": {
-                  backgroundColor: theme.palette.background.neutral,
+                  backgroundColor: theme.palette.mode === "light" ? "#fafbff" : "rgba(255,255,255,0.04)",
+                  borderColor: theme.palette.mode === "light" ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.1)",
                 },
               }),
         }}

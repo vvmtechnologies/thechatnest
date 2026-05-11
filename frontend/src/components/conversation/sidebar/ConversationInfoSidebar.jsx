@@ -1201,46 +1201,69 @@ const ConversationInfoSidebar = ({
                     <Stack spacing={1}>
                       {activeMemberProfile ? (
                         <>
-                          <Stack
-                            direction="row"
-                            spacing={1.5}
-                            alignItems="center"
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: "16px",
+                              background:
+                                "linear-gradient(135deg, rgba(109,93,252,0.05), rgba(255,213,74,0.04))",
+                              border: "1px solid rgba(109,93,252,0.12)",
+                            }}
                           >
-                            <Avatar
-                              src={memberProfileAvatar || undefined}
-                              alt={memberDisplayName || "Member"}
-                              sx={{
-                                width: 52,
-                                height: 52,
-                                bgcolor: memberProfileAvatar
-                                  ? "transparent"
-                                  : "primary.main",
-                                color: memberProfileAvatar
-                                  ? "inherit"
-                                  : "primary.contrastText",
-                                fontWeight: 600,
-                              }}
+                            <Stack
+                              direction="row"
+                              spacing={1.75}
+                              alignItems="center"
                             >
-                              {!memberProfileAvatar
-                                ? getInitials(memberDisplayName || "Member")
-                                : null}
-                            </Avatar>
-                            <Box>
-                              <Typography
-                                variant="subtitle1"
-                                sx={{ fontWeight: 600 }}
-                                color="text.primary"
-                              >
-                                {memberDisplayName || "Member"}
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {memberProfileSubtitle}
-                              </Typography>
-                            </Box>
-                          </Stack>
+                              <Box sx={{ position: "relative" }}>
+                                <Avatar
+                                  src={memberProfileAvatar || undefined}
+                                  alt={memberDisplayName || "Member"}
+                                  sx={{
+                                    width: 58,
+                                    height: 58,
+                                    borderRadius: "16px",
+                                    background: memberProfileAvatar
+                                      ? "transparent"
+                                      : "linear-gradient(135deg, #6d5dfc, #8b7cff)",
+                                    color: "#fff",
+                                    fontWeight: 700,
+                                    fontSize: 18,
+                                    boxShadow: "0 6px 18px rgba(109,93,252,0.3)",
+                                  }}
+                                >
+                                  {!memberProfileAvatar
+                                    ? getInitials(memberDisplayName || "Member")
+                                    : null}
+                                </Avatar>
+                              </Box>
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  sx={{
+                                    fontWeight: 800,
+                                    fontSize: 16,
+                                    letterSpacing: "-0.01em",
+                                    color: "text.primary",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {memberDisplayName || "Member"}
+                                </Typography>
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: "#6d5dfc",
+                                    fontWeight: 600,
+                                    fontSize: 12.5,
+                                  }}
+                                >
+                                  {memberProfileSubtitle}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Box>
 
                           <Divider />
 

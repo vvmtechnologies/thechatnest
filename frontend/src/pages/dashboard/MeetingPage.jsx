@@ -281,17 +281,75 @@ const MeetingPage = () => {
   };
 
   return (
-    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", bgcolor: theme.palette.background.default, overflow: "auto" }}>
-      {/* Header */}
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 3, py: 2, borderBottom: `1px solid ${theme.palette.divider}` }}>
-        <IconButton onClick={() => navigate("/app")} size="small"><PiArrowLeftBold /></IconButton>
-        <PiVideoConferenceFill size={28} color={theme.palette.primary.main} />
-        <Typography variant="h5" fontWeight={700}>Meetings</Typography>
-      </Stack>
+    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", bgcolor: theme.palette.mode === "light" ? "#fafbff" : theme.palette.background.default, overflow: "auto" }}>
+      {/* Hero header with gradient accent */}
+      <Box
+        sx={{
+          px: 3,
+          py: 2.5,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          background:
+            theme.palette.mode === "light"
+              ? "linear-gradient(135deg, rgba(109,93,252,0.06), rgba(255,213,74,0.05))"
+              : "linear-gradient(135deg, rgba(109,93,252,0.12), rgba(255,213,74,0.06))",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1.5}>
+          <IconButton
+            onClick={() => navigate("/app")}
+            size="small"
+            sx={{
+              borderRadius: "10px",
+              border: `1px solid ${theme.palette.divider}`,
+              background: theme.palette.background.paper,
+              "&:hover": { background: "rgba(109,93,252,0.08)", borderColor: "#6d5dfc", color: "#6d5dfc" },
+            }}
+          >
+            <PiArrowLeftBold />
+          </IconButton>
+          <Box
+            sx={{
+              width: 44,
+              height: 44,
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
+              boxShadow: "0 8px 22px rgba(109,93,252,0.35)",
+            }}
+          >
+            <PiVideoConferenceFill size={24} />
+          </Box>
+          <Box>
+            <Typography variant="h5" fontWeight={800} sx={{ letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+              Meetings
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>
+              Start an instant call, schedule for later, or join by code
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
 
       <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, p: 3, maxWidth: 1400, width: "100%", mx: "auto" }}>
         {/* Left: form */}
-        <Paper elevation={0} sx={{ flex: 2, p: 3, border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            flex: 2,
+            p: 3,
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: "20px",
+            boxShadow:
+              theme.palette.mode === "light"
+                ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 14px rgba(15,23,42,0.04)"
+                : "none",
+          }}
+        >
           {createdMeeting ? (
             <Stack spacing={2} alignItems="center" textAlign="center">
               <PiVideoConferenceFill size={56} color={theme.palette.success.main} />
@@ -326,10 +384,30 @@ const MeetingPage = () => {
             </Stack>
           ) : (
             <>
-              <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                <Tab icon={<PiVideoCameraBold size={18} />} iconPosition="start" label="Instant" sx={{ minHeight: 48, textTransform: "none" }} />
-                <Tab icon={<PiCalendarBold size={18} />} iconPosition="start" label="Schedule" sx={{ minHeight: 48, textTransform: "none" }} />
-                <Tab icon={<PiLinkBold size={18} />} iconPosition="start" label="Join" sx={{ minHeight: 48, textTransform: "none" }} />
+              <Tabs
+                value={tab}
+                onChange={(_, v) => setTab(v)}
+                sx={{
+                  mb: 3,
+                  borderBottom: `1px solid ${theme.palette.divider}`,
+                  "& .MuiTab-root": {
+                    minHeight: 48,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: 14,
+                    color: theme.palette.text.secondary,
+                  },
+                  "& .MuiTab-root.Mui-selected": { color: "#6d5dfc" },
+                  "& .MuiTabs-indicator": {
+                    background: "linear-gradient(90deg, #6d5dfc, #ffd54a)",
+                    height: 3,
+                    borderRadius: 3,
+                  },
+                }}
+              >
+                <Tab icon={<PiVideoCameraBold size={17} />} iconPosition="start" label="Instant" />
+                <Tab icon={<PiCalendarBold size={17} />} iconPosition="start" label="Schedule" />
+                <Tab icon={<PiLinkBold size={17} />} iconPosition="start" label="Join" />
               </Tabs>
 
               {tab === 2 ? (
@@ -446,16 +524,53 @@ const MeetingPage = () => {
                   <Divider />
                   <Stack direction="row" justifyContent="flex-end" spacing={2}>
                     {tab === 0 && (
-                      <Button variant="contained" size="large" startIcon={<PiVideoCameraBold />}
-                        onClick={() => handleCreate("instant")} disabled={loading}>
-                        {loading ? "Creating..." : "Start Meeting"}
+                      <Button
+                        size="large"
+                        startIcon={<PiVideoCameraBold />}
+                        onClick={() => handleCreate("instant")}
+                        disabled={loading}
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 700,
+                          borderRadius: "999px",
+                          px: 3,
+                          py: 1.1,
+                          background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
+                          color: "#fff",
+                          boxShadow: "0 8px 22px rgba(109,93,252,0.4)",
+                          "&:hover": {
+                            background: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
+                            transform: "translateY(-1px)",
+                          },
+                          "&.Mui-disabled": { background: "#e5e7eb", color: "#b4bacf", boxShadow: "none" },
+                        }}
+                      >
+                        {loading ? "Creating..." : "Start meeting"}
                       </Button>
                     )}
                     {tab === 1 && (
-                      <Button variant="contained" size="large" startIcon={<PiCalendarBold />}
+                      <Button
+                        size="large"
+                        startIcon={<PiCalendarBold />}
                         onClick={() => handleCreate("scheduled")}
-                        disabled={loading || !scheduledDate || !scheduledTime}>
-                        {loading ? "Scheduling..." : "Schedule Meeting"}
+                        disabled={loading || !scheduledDate || !scheduledTime}
+                        sx={{
+                          textTransform: "none",
+                          fontWeight: 700,
+                          borderRadius: "999px",
+                          px: 3,
+                          py: 1.1,
+                          background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                          color: "#1a1f3a",
+                          boxShadow: "0 8px 22px rgba(255,213,74,0.4)",
+                          "&:hover": {
+                            background: "linear-gradient(135deg, #ffe082, #ffd54a)",
+                            transform: "translateY(-1px)",
+                          },
+                          "&.Mui-disabled": { background: "#e5e7eb", color: "#b4bacf", boxShadow: "none" },
+                        }}
+                      >
+                        {loading ? "Scheduling..." : "Schedule meeting"}
                       </Button>
                     )}
                   </Stack>
@@ -467,8 +582,38 @@ const MeetingPage = () => {
 
         {/* Right: upcoming meetings */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Paper elevation={0} sx={{ p: 2, border: `1px solid ${theme.palette.divider}`, borderRadius: 2, height: "100%" }}>
-            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>Upcoming Meetings</Typography>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2.25,
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: "20px",
+              height: "100%",
+              boxShadow:
+                theme.palette.mode === "light"
+                  ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 14px rgba(15,23,42,0.04)"
+                  : "none",
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 2 }}>
+              <Box
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: "9px",
+                  background: "rgba(109,93,252,0.12)",
+                  color: "#6d5dfc",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <PiCalendarBold size={16} />
+              </Box>
+              <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: "-0.01em" }}>
+                Upcoming meetings
+              </Typography>
+            </Stack>
             <MeetingsList
               onJoinMeeting={async (m) => {
                 // Validate the meeting is still active. The host may have

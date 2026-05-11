@@ -2544,12 +2544,97 @@ const ConversationFooter = ({
             />
           </Stack>
         ) : null}
+        {/* Plan-expired banner — shows above composer when account is locked due to expiry */}
+        {inputReadOnly && placeholderOverride && /plan has expired/i.test(placeholderOverride) ? (
+          <Box
+            sx={{
+              mx: 1.25,
+              mt: 1,
+              mb: 0.5,
+              px: 1.75,
+              py: 1.1,
+              borderRadius: "14px",
+              background:
+                "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.08))",
+              border: "1px solid rgba(239,68,68,0.25)",
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
+            }}
+          >
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background:
+                  "linear-gradient(135deg, rgba(239,68,68,0.95), rgba(245,158,11,0.95))",
+                color: "#fff",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                fontWeight: 800,
+              }}
+            >
+              !
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ fontWeight: 700, fontSize: 13.5, color: theme.palette.text.primary, lineHeight: 1.25 }}>
+                Your plan has expired
+              </Box>
+              <Box sx={{ fontSize: 12, color: theme.palette.text.secondary, lineHeight: 1.4 }}>
+                Renew now to keep your team chatting.
+              </Box>
+            </Box>
+            <Box
+              component="a"
+              href="/app/admin?tab=billing"
+              sx={{
+                flexShrink: 0,
+                px: 1.4,
+                py: 0.6,
+                borderRadius: "999px",
+                background: "linear-gradient(135deg, #ef4444, #f59e0b)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 12,
+                textDecoration: "none",
+                boxShadow: "0 6px 16px rgba(239,68,68,0.3)",
+                transition: "transform 0.18s ease",
+                "&:hover": { transform: "translateY(-1px)" },
+              }}
+            >
+              Renew plan
+            </Box>
+          </Box>
+        ) : null}
+
         <Box
           sx={{
             display: "flex",
             alignItems: "flex-start",
-            gap: 2,
-            margin: 1,
+            gap: 1,
+            mx: 1.25,
+            my: 1,
+            px: 1,
+            py: 0.5,
+            borderRadius: "16px",
+            background: theme.palette.mode === "light" ? "#f3f4f8" : "rgba(255,255,255,0.04)",
+            border:
+              theme.palette.mode === "light"
+                ? "1px solid #e5e7eb"
+                : "1px solid rgba(255,255,255,0.08)",
+            transition: "border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease",
+            ...(inputReadOnly
+              ? { opacity: 0.7 }
+              : {
+                  "&:focus-within": {
+                    borderColor: "#6d5dfc",
+                    boxShadow: "0 0 0 3px rgba(109,93,252,0.18)",
+                    background: theme.palette.mode === "light" ? "#fff" : "rgba(255,255,255,0.06)",
+                  },
+                }),
           }}
         >
           <Box sx={{ flex: 1, position: "relative" }}>
@@ -2567,8 +2652,8 @@ const ConversationFooter = ({
                 width: "100%",
                 maxHeight: 250,
                 overflowY: "auto",
-                p: 1,
-                fontSize: 16,
+                p: 1.25,
+                fontSize: 15,
                 color: theme.palette.text.primary,
                 outline: "none",
                 borderRadius: 1,
@@ -2589,47 +2674,57 @@ const ConversationFooter = ({
               <Box
                 sx={{
                   position: "absolute",
-                  top: 8,
-                  left: 12,
-                  right: 12,
+                  top: 10,
+                  left: 14,
+                  right: 14,
                   color: theme.palette.text.secondary,
-                  opacity: theme.palette.mode === "dark" ? 0.7 : 0.8,
+                  opacity: theme.palette.mode === "dark" ? 0.55 : 0.7,
                   pointerEvents: "none",
-                  fontStyle: placeholderOverride ? "italic" : "normal",
+                  fontSize: 15,
+                  fontStyle:
+                    placeholderOverride && !/plan has expired/i.test(placeholderOverride)
+                      ? "italic"
+                      : "normal",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
               >
-                {placeholderOverride || "Type your message.."}
+                {placeholderOverride && /plan has expired/i.test(placeholderOverride)
+                  ? "Renew to continue messaging…"
+                  : placeholderOverride || "Type a message…"}
               </Box>
             ) : null}
           </Box>
 
-          <Stack direction="row" spacing={0} alignItems="flex-start">
+          <Stack direction="row" spacing={0} alignItems="flex-end">
             <IconButton
               disableRipple
               disabled={inputReadOnly}
               sx={{
-                alignSelf: "flex-start",
-                width: 45,
-                height: 45,
-                borderRadius: "6px",
-                backgroundColor: "primary.main",
+                alignSelf: "center",
+                width: 42,
+                height: 42,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
                 color: "#fff",
+                boxShadow: "0 8px 20px rgba(109,93,252,0.4)",
+                transition: "transform 0.18s ease, box-shadow 0.18s ease",
                 "&:hover": {
-                  backgroundColor: "primary.dark",
+                  background: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
+                  transform: "translateY(-1px) scale(1.04)",
+                  boxShadow: "0 10px 24px rgba(109,93,252,0.5)",
                 },
                 "&.Mui-disabled": {
-                  backgroundColor: "primary.main",
-                  color: "#fff",
-                  opacity: 0.5,
+                  background: theme.palette.mode === "light" ? "#e5e7eb" : "rgba(255,255,255,0.08)",
+                  color: theme.palette.mode === "light" ? "#b4bacf" : "rgba(255,255,255,0.35)",
+                  boxShadow: "none",
                   cursor: "not-allowed",
                 },
               }}
               onClick={inputReadOnly ? undefined : handleSendMessage}
             >
-              <PiPaperPlaneRight size={20} />
+              <PiPaperPlaneRight size={18} />
             </IconButton>
             {/* Schedule send button hidden */}
           </Stack>

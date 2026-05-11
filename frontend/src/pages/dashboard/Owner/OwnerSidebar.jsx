@@ -99,12 +99,12 @@ const OwnerSidebar = ({
   const primaryLight = theme.palette.primary.light || theme.palette.primary.main;
   const resolvedBrandName = String(brandName || "").trim() || "Owner Console";
   const sidebarBg = isDark
-    ? "linear-gradient(180deg, #0f172a 0%, #111827 100%)"
-    : "linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)";
-  const sidebarBorder = isDark ? "rgba(71,85,105,0.55)" : "rgba(148,163,184,0.35)";
-  const textPrimary = isDark ? "#e6edf8" : "#0f172a";
-  const textSecondary = isDark ? "rgba(191,219,254,0.88)" : "#64748b";
-  const hoverBg = isDark ? "rgba(148,163,184,0.14)" : "rgba(148,163,184,0.16)";
+    ? "radial-gradient(500px 250px at 50% 0%, rgba(109,93,252,0.2), transparent 60%), linear-gradient(180deg, #0b0f1e 0%, #11162a 100%)"
+    : "linear-gradient(180deg, #ffffff 0%, #fafbff 100%)";
+  const sidebarBorder = isDark ? "rgba(255,255,255,0.08)" : "rgba(15,23,42,0.08)";
+  const textPrimary = isDark ? "#e6e6ea" : "#0a0e1f";
+  const textSecondary = isDark ? "rgba(231,233,243,0.65)" : "#5b6280";
+  const hoverBg = isDark ? "rgba(109,93,252,0.12)" : "rgba(109,93,252,0.06)";
 
   const hiddenSet = useMemo(
     () => (Array.isArray(hiddenItemIds) ? new Set(hiddenItemIds) : null),
@@ -162,36 +162,58 @@ const OwnerSidebar = ({
       <Stack spacing={2.2}>
         <Box
           sx={{
-            p: 1.4,
-            borderRadius: 2.2,
-            border: `1px solid ${isDark ? "rgba(71,85,105,0.5)" : "rgba(148,163,184,0.35)"}`,
+            p: 1.6,
+            borderRadius: "16px",
+            border: `1px solid ${isDark ? "rgba(255,213,74,0.2)" : "rgba(109,93,252,0.18)"}`,
             background: isDark
-              ? `linear-gradient(135deg, rgba(30,41,59,0.92), rgba(15,23,42,0.92))`
-              : "linear-gradient(135deg, #ffffff, #f8fafc)",
-            boxShadow: isDark ? "0 10px 24px rgba(2,6,23,0.28)" : "0 8px 18px rgba(15,23,42,0.08)",
+              ? "linear-gradient(135deg, rgba(255,213,74,0.08), rgba(109,93,252,0.1))"
+              : "linear-gradient(135deg, rgba(109,93,252,0.05), rgba(255,213,74,0.05))",
+            boxShadow: isDark
+              ? "0 12px 28px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04)"
+              : "0 8px 22px rgba(109,93,252,0.08)",
           }}
         >
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1.25} alignItems="center">
             <Box
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: 1.8,
-                bgcolor: isDark ? "rgba(15,23,42,0.45)" : alpha(primaryMain, 0.1),
+                width: 38,
+                height: 38,
+                borderRadius: "11px",
+                background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                color: "#1a1f3a",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                border: `1px solid ${isDark ? alpha(primaryLight, 0.32) : alpha(primaryMain, 0.2)}`,
+                boxShadow: "0 6px 16px rgba(255,213,74,0.35)",
               }}
             >
-              <FiShield size={16} />
+              <FiShield size={17} />
             </Box>
-            <Stack spacing={0.2}>
-              <Typography fontWeight={800} letterSpacing={0.25} fontSize={13.5} sx={{ textTransform: "uppercase" }}>
+            <Stack spacing={0.2} sx={{ minWidth: 0 }}>
+              <Typography
+                fontWeight={800}
+                letterSpacing={0.15}
+                fontSize={14}
+                sx={{
+                  color: isDark ? "#fff" : "#0a0e1f",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
                 {resolvedBrandName}
               </Typography>
-              <Typography variant="caption" sx={{ color: isDark ? "#a5b4fc" : "#64748b" }}>
-                Owner Control Center
+              <Typography
+                variant="caption"
+                sx={{
+                  color: isDark ? "#ffd54a" : "#6d5dfc",
+                  fontWeight: 600,
+                  letterSpacing: 0.08,
+                  textTransform: "uppercase",
+                  fontSize: 10,
+                }}
+              >
+                Owner control center
               </Typography>
             </Stack>
           </Stack>
@@ -254,25 +276,32 @@ const OwnerSidebar = ({
                         onClick={() => handleSelect(item.id, group.key)}
                         sx={{
                           position: "relative",
-                          px: 1.1,
-                          py: 0.95,
-                          borderRadius: 1.4,
+                          px: 1.2,
+                          py: 1.05,
+                          borderRadius: "12px",
                           backgroundColor: selected
                             ? isDark
-                              ? alpha(primaryMain, 0.24)
-                              : alpha(primaryMain, 0.12)
+                              ? "rgba(255,213,74,0.1)"
+                              : "rgba(109,93,252,0.08)"
                             : "transparent",
                           border: selected
-                            ? isDark
-                              ? `1px solid ${alpha(primaryLight, 0.45)}`
-                              : `1px solid ${alpha(primaryMain, 0.35)}`
+                            ? `1px solid ${isDark ? "rgba(255,213,74,0.32)" : "rgba(109,93,252,0.3)"}`
                             : "1px solid transparent",
+                          color: selected ? (isDark ? "#ffd54a" : "#4d3eff") : textPrimary,
                           cursor: "pointer",
                           transition: "all .18s ease",
+                          boxShadow: selected
+                            ? isDark
+                              ? "inset 3px 0 0 #ffd54a, 0 4px 14px rgba(255,213,74,0.1)"
+                              : "inset 3px 0 0 #6d5dfc, 0 4px 14px rgba(109,93,252,0.1)"
+                            : "none",
                           "&:hover": {
                             backgroundColor: selected
-                              ? alpha(primaryMain, 0.3)
+                              ? isDark
+                                ? "rgba(255,213,74,0.16)"
+                                : "rgba(109,93,252,0.12)"
                               : hoverBg,
+                            transform: selected ? "none" : "translateX(2px)",
                           },
                         }}
                       >

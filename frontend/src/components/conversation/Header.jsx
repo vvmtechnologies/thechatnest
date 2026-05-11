@@ -319,6 +319,35 @@ const ConversationHeader = ({
     </Stack>
   );
 
+  // Determine presence dot color
+  const lowerStatus = String(statusText || "").toLowerCase();
+  const isOnline = /online|active|available/.test(lowerStatus);
+  const isAway = /away|idle/.test(lowerStatus);
+  const presenceColor = isOnline ? "#22c55e" : isAway ? "#f59e0b" : "#8189a8";
+
+  const headerIconBtnSx = {
+    color: theme.palette.text.primary,
+    width: 38,
+    height: 38,
+    borderRadius: "12px",
+    border:
+      theme.palette.mode === "light"
+        ? "1px solid #e5e7eb"
+        : "1px solid rgba(255,255,255,0.08)",
+    background:
+      theme.palette.mode === "light" ? "#fff" : "rgba(255,255,255,0.02)",
+    transition: "all 0.18s ease",
+    "&:hover": {
+      background:
+        theme.palette.mode === "light"
+          ? "rgba(109,93,252,0.08)"
+          : "rgba(109,93,252,0.15)",
+      borderColor: "#6d5dfc",
+      color: "#6d5dfc",
+      transform: "translateY(-1px)",
+    },
+  };
+
   return (
     <Stack
       direction="row"
@@ -326,136 +355,214 @@ const ConversationHeader = ({
       justifyContent="space-between"
       spacing={2}
       sx={{
-        px: 2,
-        py: 1.5,
+        px: 2.25,
+        py: 1.4,
         borderBottom: 1,
         borderColor: "divider",
-        background: theme.palette.background.default,
+        background:
+          theme.palette.mode === "light"
+            ? "linear-gradient(180deg, #ffffff 0%, #fafbff 100%)"
+            : "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%)",
+        backdropFilter: "blur(10px)",
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ flex: 1 }}>
+      <Stack direction="row" alignItems="center" spacing={1.75} sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ position: "relative" }}>
           <Avatar
             src={profilePicture ?? undefined}
             alt={displayLabel}
             onClick={handleOpenSidebar}
             sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "50%",
+              width: 46,
+              height: 46,
+              borderRadius: "14px",
               cursor: "pointer",
-              bgcolor: profilePicture ? "transparent" : "primary.main",
-              color: profilePicture ? "inherit" : "primary.contrastText",
-              fontWeight: 500,
+              bgcolor: profilePicture ? "transparent" : "#6d5dfc",
+              background: profilePicture
+                ? "transparent"
+                : "linear-gradient(135deg, #6d5dfc, #8b7cff)",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: 16,
+              boxShadow: "0 4px 14px rgba(109,93,252,0.25)",
+              transition: "transform 0.18s ease",
+              "&:hover": { transform: "scale(1.04)" },
             }}
           >
             {!profilePicture ? (
-              isGroupThread ? <PiUsersThreeBold size={20} /> : initials
+              isGroupThread ? <PiUsersThreeBold size={22} /> : initials
             ) : null}
           </Avatar>
-          {!isGroupThread && (thread?.isGlobalMember || thread?.isGlobal || thread?.is_global) && (
-            <Box sx={{ position: "absolute", bottom: 0, right: 0, width: 12, height: 12, borderRadius: "50%", bgcolor: "#FFB020", border: `2px solid ${theme.palette.background.paper}` }} />
+          {/* Presence dot for DMs */}
+          {!isGroupThread && (
+            <Box
+              sx={{
+                position: "absolute",
+                bottom: -2,
+                right: -2,
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                bgcolor: presenceColor,
+                border: `2.5px solid ${theme.palette.background.paper}`,
+                boxShadow: isOnline
+                  ? "0 0 0 3px rgba(34,197,94,0.18)"
+                  : "none",
+              }}
+            />
           )}
+          {!isGroupThread &&
+            (thread?.isGlobalMember || thread?.isGlobal || thread?.is_global) && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: -2,
+                  right: -2,
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  bgcolor: "#ffd54a",
+                  border: `2px solid ${theme.palette.background.paper}`,
+                }}
+              />
+            )}
         </Box>
-        <Box onClick={handleOpenSidebar} sx={{ cursor: "pointer" }}>
+
+        <Box onClick={handleOpenSidebar} sx={{ cursor: "pointer", minWidth: 0, flex: 1 }}>
           <Typography
-            variant="subtitle2"
             sx={{
-              color: theme.palette.mode === "light" ? "#333" : "#fff",
+              color: theme.palette.mode === "light" ? "#0a0e1f" : "#fff",
+              fontWeight: 700,
+              fontSize: 15,
+              letterSpacing: "-0.01em",
+              lineHeight: 1.2,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
             {displayLabel}
           </Typography>
-          <Typography
-            variant="caption"
-            component="div"
+          <Box
             sx={{
-              fontStyle: "italic",
-              fontSize: "14px",
+              mt: 0.4,
+              fontSize: 12,
               color: theme.palette.text.secondary,
+              display: "flex",
+              alignItems: "center",
+              gap: 0.75,
             }}
           >
             {isTyping && typingSummary ? (
               <Stack direction="row" spacing={0.75} alignItems="center">
                 <BeatLoader
-                  size={6}
+                  size={5}
                   speedMultiplier={0.9}
-                  color={typingLoaderColor}
+                  color="#6d5dfc"
                 />
-                <Box component="span" fontStyle={"italic"}>
+                <Box component="span" sx={{ color: "#6d5dfc", fontWeight: 600 }}>
                   {typingSummary}
                 </Box>
               </Stack>
-            ) : (
-              isGroupThread ? (
+            ) : isGroupThread ? (
+              <>
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    bgcolor: "#6d5dfc",
+                  }}
+                />
                 <Box component="span">{groupMemberCount} members</Box>
-              ) : (
-                <Stack direction="row" spacing={0.75} alignItems="center">
-                  <Tooltip title={deviceIndicator.label} placement="right" arrow>
-                    <Box
-                      component="span"
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        color: theme.palette.text.secondary,
-                      }}
-                    >
-                      <DeviceIcon size={14} />
-                    </Box>
-                  </Tooltip>
-                  <Box component="span">{statusText}</Box>
-                </Stack>
-              )
+              </>
+            ) : (
+              <Stack direction="row" spacing={0.75} alignItems="center">
+                <Box
+                  sx={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    bgcolor: presenceColor,
+                    boxShadow: isOnline ? "0 0 0 2.5px rgba(34,197,94,0.2)" : "none",
+                  }}
+                />
+                <Tooltip title={deviceIndicator.label} placement="right" arrow>
+                  <Box
+                    component="span"
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      color: theme.palette.text.secondary,
+                    }}
+                  >
+                    <DeviceIcon size={13} />
+                  </Box>
+                </Tooltip>
+                <Box
+                  component="span"
+                  sx={{
+                    fontWeight: 500,
+                    textTransform: "capitalize",
+                    color: isOnline ? "#22c55e" : theme.palette.text.secondary,
+                  }}
+                >
+                  {statusText}
+                </Box>
+              </Stack>
             )}
-          </Typography>
+          </Box>
         </Box>
       </Stack>
+
       {/* actions when user select a message */}
       {selectionActive ? (
         selectionToolbar
       ) : (
-        // render all elements in header right side by default
-        <Stack direction="row" spacing={0.5} alignItems="center">
+        <Stack direction="row" spacing={0.75} alignItems="center">
           {canCall && (
             <>
-              <Tooltip title="Audio Call" placement="bottom">
+              <Tooltip title="Audio call" placement="bottom">
                 <IconButton
                   onClick={() => {
                     const targetUserId = thread.id.replace("dm-", "");
                     startCall(targetUserId, "audio", displayLabel);
                   }}
-                  sx={{ color: theme.palette.text.primary }}
+                  sx={headerIconBtnSx}
                 >
-                  <PiPhone size={18} />
+                  <PiPhone size={17} />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="Video Call" placement="bottom">
+              <Tooltip title="Video call" placement="bottom">
                 <IconButton
                   onClick={() => {
                     const targetUserId = thread.id.replace("dm-", "");
                     startCall(targetUserId, "video", displayLabel);
                   }}
-                  sx={{ color: theme.palette.text.primary }}
+                  sx={headerIconBtnSx}
                 >
-                  <PiVideoCamera size={18} />
+                  <PiVideoCamera size={17} />
                 </IconButton>
               </Tooltip>
             </>
           )}
-          <Tooltip title="Press Ctrl+F" placement="bottom">
+          <Tooltip title="Search · Ctrl+F" placement="bottom">
             <IconButton
               onClick={() => onSearchToggle?.()}
               sx={{
-                color: searchOpen
-                  ? theme.palette.primary.main
-                  : theme.palette.text.primary,
+                ...headerIconBtnSx,
+                ...(searchOpen && {
+                  background: "rgba(109,93,252,0.12)",
+                  borderColor: "#6d5dfc",
+                  color: "#6d5dfc",
+                }),
               }}
             >
-              <BsSearch size={18} />
+              <BsSearch size={15} />
             </IconButton>
           </Tooltip>
-          <IconButton onClick={openMenu}>
-            <PiDotsThreeOutlineVertical size={18} />
+          <IconButton onClick={openMenu} sx={headerIconBtnSx}>
+            <PiDotsThreeOutlineVertical size={16} />
           </IconButton>
         </Stack>
       )}

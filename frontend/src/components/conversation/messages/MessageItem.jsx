@@ -85,46 +85,61 @@ const getStatusIcon = (status, theme) => {
   return factory(theme);
 };
 
-// Shared speech-bubble surface. Incoming/outgoing + emoji-only states share
-// the same formatter so tweaks do not drift across message types.
+// Shared speech-bubble surface. Modern violet-gradient outgoing /
+// glass-card incoming. Designed to feel fresh against legacy chat apps.
 const bubbleStyles = (theme, own, { isEmojiOnly = false } = {}) => {
-  const { palette } = theme;
-  const isLight = palette.mode === "light";
-  const outgoingBackground = isLight
-    ? lighten(palette.primary.main, 0.8)
-    : darken(palette.primary.light, 0.6);
+  const isLight = theme.palette.mode === "light";
 
-  const incomingBackground = isLight
-    ? lighten(palette.primary.main, 0.99)
-    : darken(palette.primary.light, 0.8);
+  if (isEmojiOnly) {
+    return {
+      position: "relative",
+      px: 0,
+      py: 0,
+      pb: 0,
+      borderRadius: 0,
+      backgroundColor: "transparent",
+      border: "none",
+      maxWidth: "min(45vw, 75vw)",
+    };
+  }
 
-  const background = isEmojiOnly
-    ? "transparent"
-    : own
-      ? outgoingBackground
-      : incomingBackground;
-  const color = palette.text.primary;
-  const borderColor = isEmojiOnly
-    ? "transparent"
-    : isLight
-      ? lighten(palette.primary.main, own ? 0.7 : 0.75)
-      : alpha(palette.primary.light, 0.35);
+  // Outgoing — violet gradient with subtle inner highlight and lift
+  if (own) {
+    return {
+      position: "relative",
+      px: 1.4,
+      py: 1,
+      pb: 0.4,
+      borderRadius: "18px 18px 4px 18px",
+      background: "linear-gradient(135deg, #6d5dfc 0%, #4d3eff 100%)",
+      color: "#fff",
+      border: "1px solid rgba(255,255,255,0.08)",
+      boxShadow:
+        "0 8px 22px rgba(109, 93, 252, 0.28), inset 0 1px 0 rgba(255,255,255,0.14)",
+      minWidth: 110,
+      maxWidth: "min(45vw, 75vw)",
+      // Children text/links should also adopt white
+      "& a": { color: "#ffd54a", textDecoration: "underline" },
+      "& .MuiTypography-root": { color: "inherit" },
+    };
+  }
 
+  // Incoming — soft surface with hairline border + subtle shadow
   return {
     position: "relative",
-    px: isEmojiOnly ? 0 : 1,
-    py: isEmojiOnly ? 0 : 1,
-    pb: 0,
-    pr: own ? (isEmojiOnly ? 0 : 1) : isEmojiOnly ? 0 : 1,
-    borderRadius: isEmojiOnly
-      ? 0
-      : own
-        ? "16px 16px 0px 16px"
-        : "16px 16px 16px 0px",
-    backgroundColor: background,
-    color,
-    border: isEmojiOnly ? "none" : `1px solid ${borderColor}`,
-    minWidth: isEmojiOnly ? "auto" : 120,
+    px: 1.4,
+    py: 1,
+    pb: 0.4,
+    borderRadius: "18px 18px 18px 4px",
+    background: isLight ? "#ffffff" : "rgba(255,255,255,0.04)",
+    color: theme.palette.text.primary,
+    border: isLight
+      ? "1px solid rgba(15,23,42,0.08)"
+      : "1px solid rgba(255,255,255,0.08)",
+    boxShadow: isLight
+      ? "0 4px 14px rgba(15,23,42,0.06)"
+      : "0 4px 14px rgba(0,0,0,0.3)",
+    minWidth: 110,
     maxWidth: "min(45vw, 75vw)",
   };
 };

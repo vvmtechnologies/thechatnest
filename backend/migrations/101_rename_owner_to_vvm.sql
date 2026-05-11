@@ -168,13 +168,10 @@ BEGIN
   PERFORM 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='payment_gateways';
   IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.payment_gateways RESTART IDENTITY CASCADE'; END IF;
 
-  -- 6. Bypass FK enforcement for the user/org wipe so we don't have to
-  --    chase every NO ACTION constraint on every legacy table.
-  SET LOCAL session_replication_role = replica;
+  -- 6. All blocking tables truncated above; safe to drop in this order.
   DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
   DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
   DELETE FROM public.users WHERE user_id <> owner_user_id;
-  SET LOCAL session_replication_role = origin;
 
   RAISE NOTICE 'Owner now: % (user_id=%, org_id=%). All other tenant data wiped.',
     owner_email, owner_user_id, owner_org_id;

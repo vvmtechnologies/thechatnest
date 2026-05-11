@@ -144,13 +144,10 @@ BEGIN
     WHERE organization_id = owner_org_id;
   END IF;
 
-  -- 4b. Bypass FK enforcement so any unknown NO ACTION constraint can't
-  --     block us. Restored at end of block.
-  SET LOCAL session_replication_role = replica;
+  -- 4b. All blocking tables truncated above; safe to drop in this order.
   DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
   DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
   DELETE FROM public.users WHERE user_id <> owner_user_id;
-  SET LOCAL session_replication_role = origin;
 
   -- 5. Re-affirm owner credentials so login keeps working post-truncate
   UPDATE public.users

@@ -233,21 +233,12 @@ BEGIN
     WHERE organization_id = owner_org_id;
   END IF;
 
-  -- 4. Temporarily bypass FK triggers in this session so we don't have to
-  --    hunt down every NO ACTION / RESTRICT constraint on every dependent
-  --    table. Re-enabled at the end. Requires the role have replication
-  --    or BYPASSRLS — neondb_owner does.
-  SET LOCAL session_replication_role = replica;
-
-  -- 5. Drop memberships, non-owner organizations, then non-owner users.
-  --    Order still matters for fk_org_owner specifically (ours is now
-  --    self-referential so safe).
+  -- 4. All blocking tables are already truncated above. Now safe to drop
+  --    non-owner data in FK-friendly order:
+  --      memberships → non-owner orgs → non-owner users
   DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
   DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
   DELETE FROM public.users WHERE user_id <> owner_user_id;
-
-  -- 6. Restore FK enforcement
-  SET LOCAL session_replication_role = origin;
 
   -- 7. Reset sequences cleanly on tables we kept
   PERFORM setval(

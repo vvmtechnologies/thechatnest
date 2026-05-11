@@ -128,10 +128,17 @@ BEGIN
   PERFORM 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='contact_us_requests';
   IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.contact_us_requests RESTART IDENTITY CASCADE'; END IF;
 
-  -- 4. Drop everyone except owner
+  -- 4a. Re-point owner FK on surviving org so we can drop other users
+  --     (fk_org_owner is ON DELETE RESTRICT)
+  IF owner_org_id IS NOT NULL THEN
+    UPDATE public.organizations SET owner_id = owner_user_id
+    WHERE organization_id = owner_org_id;
+  END IF;
+
+  -- 4b. Drop everyone except owner (order matters: memberships → orgs → users)
   DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
-  DELETE FROM public.users WHERE user_id <> owner_user_id;
   DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
+  DELETE FROM public.users WHERE user_id <> owner_user_id;
 
   -- 5. Re-affirm owner credentials so login keeps working post-truncate
   UPDATE public.users

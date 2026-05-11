@@ -152,12 +152,17 @@ BEGIN
   PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'contact_us_requests';
   IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.contact_us_requests RESTART IDENTITY CASCADE'; END IF;
 
-  -- 5. Drop every other user and their memberships
-  DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
-  DELETE FROM public.users WHERE user_id <> owner_user_id;
+  -- 5. Re-point owner FK on surviving org before dropping other users
+  --    (fk_org_owner is ON DELETE RESTRICT)
+  IF owner_org_id IS NOT NULL THEN
+    UPDATE public.organizations SET owner_id = owner_user_id
+    WHERE organization_id = owner_org_id;
+  END IF;
 
-  -- 6. Drop every other organization
+  -- 6. Drop memberships → other orgs → other users (order matters for FKs)
+  DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
   DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
+  DELETE FROM public.users WHERE user_id <> owner_user_id;
 
   RAISE NOTICE 'Owner now: % (user_id=%, org_id=%). All other tenant data wiped.',
     owner_email, owner_user_id, owner_org_id;

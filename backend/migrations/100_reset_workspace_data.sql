@@ -213,19 +213,29 @@ BEGIN
   PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'contact_us_requests';
   IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.contact_us_requests RESTART IDENTITY CASCADE'; END IF;
 
-  -- 3. Delete non-owner organization_members (membership rows)
+  -- 3. Re-point the surviving organization's owner FK to our owner so it
+  --    doesn't break when we drop other users. fk_org_owner is ON DELETE
+  --    RESTRICT so we must do this *before* the user delete.
+  IF owner_org_id IS NOT NULL THEN
+    UPDATE public.organizations
+    SET owner_id = owner_user_id
+    WHERE organization_id = owner_org_id;
+  END IF;
+
+  -- 4. Drop memberships that don't belong to the owner
   DELETE FROM public.organization_members
   WHERE user_id <> owner_user_id;
 
-  -- 4. Delete non-owner users
-  DELETE FROM public.users
-  WHERE user_id <> owner_user_id;
-
-  -- 5. Delete non-owner organizations (keep owner's org)
+  -- 5. Drop non-owner organizations FIRST (their owner_id FK references
+  --    users; if we delete users before this, RESTRICT blocks us).
   DELETE FROM public.organizations
   WHERE organization_id <> COALESCE(owner_org_id, -1);
 
-  -- 6. Reset sequences cleanly on tables we kept
+  -- 6. Now safe to delete non-owner users
+  DELETE FROM public.users
+  WHERE user_id <> owner_user_id;
+
+  -- 7. Reset sequences cleanly on tables we kept
   PERFORM setval(
     pg_get_serial_sequence('public.users', 'user_id'),
     COALESCE((SELECT MAX(user_id) FROM public.users), 1),

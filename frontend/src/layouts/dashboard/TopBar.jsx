@@ -313,9 +313,11 @@ const TopBar = () => {
 
             const tone = isExpired
               ? {
-                  bg: "rgba(239,68,68,0.16)",
-                  border: "rgba(239,68,68,0.45)",
-                  color: "#fca5a5",
+                  bg: "rgba(239,68,68,0.22)",
+                  border: "rgba(239,68,68,0.6)",
+                  color: "#ffffff",
+                  iconBg: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  iconColor: "#ffffff",
                   Icon: PiWarningCircleDuotone,
                   label: "Plan expired",
                   sub: "Renew now",
@@ -323,9 +325,11 @@ const TopBar = () => {
                 }
               : isExpiring
                 ? {
-                    bg: "rgba(245,158,11,0.16)",
-                    border: "rgba(245,158,11,0.45)",
-                    color: "#fcd34d",
+                    bg: "rgba(245,158,11,0.22)",
+                    border: "rgba(245,158,11,0.6)",
+                    color: "#ffffff",
+                    iconBg: "linear-gradient(135deg, #f59e0b, #d97706)",
+                    iconColor: "#ffffff",
                     Icon: PiClockCountdownDuotone,
                     label: `${r} day${r === 1 ? "" : "s"} left`,
                     sub: plan.planName,
@@ -333,9 +337,11 @@ const TopBar = () => {
                   }
                 : isTrial
                   ? {
-                      bg: "rgba(109,93,252,0.16)",
-                      border: "rgba(109,93,252,0.45)",
-                      color: "#a99dff",
+                      bg: "rgba(109,93,252,0.22)",
+                      border: "rgba(109,93,252,0.6)",
+                      color: "#ffffff",
+                      iconBg: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
+                      iconColor: "#ffffff",
                       Icon: PiSparkleDuotone,
                       label:
                         r !== null && r >= 0 ? `Trial · ${r}d left` : "Trial",
@@ -343,9 +349,11 @@ const TopBar = () => {
                       pulse: false,
                     }
                   : {
-                      bg: "rgba(255,213,74,0.12)",
-                      border: "rgba(255,213,74,0.35)",
-                      color: "#ffd54a",
+                      bg: "rgba(255,213,74,0.2)",
+                      border: "rgba(255,213,74,0.55)",
+                      color: "#ffffff",
+                      iconBg: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                      iconColor: "#1a1f3a",
                       Icon: PiCrownSimpleDuotone,
                       label: plan.planName,
                       sub:
@@ -399,18 +407,19 @@ const TopBar = () => {
               >
                 <Box
                   sx={{
-                    width: 22,
-                    height: 22,
+                    width: 24,
+                    height: 24,
                     borderRadius: "50%",
-                    background: tone.border,
+                    background: tone.iconBg,
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "#fff",
+                    color: tone.iconColor,
                     flexShrink: 0,
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
                   }}
                 >
-                  <tone.Icon size={13} />
+                  <tone.Icon size={14} weight="fill" />
                 </Box>
                 <Stack
                   spacing={0}
@@ -421,20 +430,23 @@ const TopBar = () => {
                   <Typography
                     sx={{
                       fontWeight: 800,
-                      fontSize: 11,
+                      fontSize: 11.5,
                       lineHeight: 1,
                       letterSpacing: 0.04,
                       whiteSpace: "nowrap",
+                      color: "#ffffff",
+                      textShadow: "0 1px 2px rgba(0,0,0,0.4)",
                     }}
                   >
                     {tone.label}
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: 10,
+                      fontSize: 10.5,
                       lineHeight: 1,
-                      opacity: 0.75,
                       whiteSpace: "nowrap",
+                      color: "rgba(255,255,255,0.85)",
+                      fontWeight: 500,
                       display: { xs: "none", md: "inline" },
                     }}
                   >

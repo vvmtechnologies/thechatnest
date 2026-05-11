@@ -45,7 +45,7 @@ const Security = () => {
   return (
     <section className="section-dark" style={{ padding: "6rem 0" }}>
       <div className="container">
-        <div className="section-title">
+        <div className="section-title" style={{ textAlign: "center" }}>
           <span
             className="eyebrow"
             style={{
@@ -55,10 +55,10 @@ const Security = () => {
           >
             Security & Scale
           </span>
-          <h2 style={{ marginTop: "1rem", color: "#fff" }}>
+          <h2 style={{ marginTop: "1rem", color: "#fff", textAlign: "center" }}>
             Built for teams that take privacy seriously
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.65)" }}>
+          <p style={{ color: "rgba(255,255,255,0.65)", textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
             Bank-grade encryption, granular admin controls, and self-hosted options —
             so your conversations stay yours.
           </p>

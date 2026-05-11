@@ -72,20 +72,33 @@ const formatAddress = (addr) =>
         .join(", ")
     : "";
 
+const cleanLegacyEmail = (value) =>
+  String(value || "")
+    .trim()
+    .replace(/@teamchatx\.com$/i, "@thechatnest.com")
+    .replace(/@aabhyasa\.com$/i, "@thechatnest.com");
+
+const cleanLegacyText = (value) =>
+  String(value || "")
+    .replace(/TeamChatX|TeamChatx|Teamchatx/g, "TheChatNest")
+    .replace(/teamChatx|teamchatX|teamchatx/g, "thechatnest")
+    .replace(/Aabhyasa/g, "Thechatnest")
+    .replace(/aabhyasa/g, "thechatnest");
+
 const normalize = (row) => {
   if (!row) return null;
   const primaryEmail = pickPrimary(row.emails);
   const primaryPhone = pickPrimary(row.phones);
   const primaryAddress = pickPrimary(row.addresses);
-  const brandName = String(row.brand_name || "").trim() || DEFAULT_BRANDING.brandName;
+  const brandName = cleanLegacyText(String(row.brand_name || "").trim() || DEFAULT_BRANDING.brandName);
   return {
     brandName,
     brandShort: initials(brandName),
     logoUrl: String(row.logo_url || "").trim(),
     mascotUrl: String(row.mascot_url || "").trim(),
-    primaryEmail: String(primaryEmail?.email_address || "").trim(),
+    primaryEmail: cleanLegacyEmail(primaryEmail?.email_address),
     primaryPhone: String(primaryPhone?.phone_number || "").trim(),
-    address: formatAddress(primaryAddress),
+    address: cleanLegacyText(formatAddress(primaryAddress)),
     social: {
       facebook: String(row.google_plus_url || "").trim(),
       twitter: String(row.twitter_url || "").trim(),
@@ -94,7 +107,13 @@ const normalize = (row) => {
       instagram: "",
       pinterest: "",
     },
-    emails: Array.isArray(row.emails) ? row.emails : [],
+    emails: Array.isArray(row.emails)
+      ? row.emails.map((e) => ({
+          ...e,
+          email_address: cleanLegacyEmail(e?.email_address),
+          label: cleanLegacyText(e?.label),
+        }))
+      : [],
     phones: Array.isArray(row.phones) ? row.phones : [],
     addresses: Array.isArray(row.addresses) ? row.addresses : [],
     raw: row,

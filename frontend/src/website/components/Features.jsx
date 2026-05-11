@@ -51,10 +51,10 @@ const Features = () => {
   return (
     <section className="section-soft" style={{ padding: "6rem 0" }}>
       <div className="container">
-        <div className="section-title">
+        <div className="section-title" style={{ textAlign: "center" }}>
           <span className="eyebrow">Features</span>
-          <h2 style={{ marginTop: "1rem" }}>Everything your team needs, in one place</h2>
-          <p>
+          <h2 style={{ marginTop: "1rem", textAlign: "center" }}>Everything your team needs, in one place</h2>
+          <p style={{ textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
             From quick 1:1 chats to all-hands broadcasts, secure file transfers, AI shortcuts,
             and HD calls — TheChatNest replaces a dozen tools with one focused workspace.
           </p>

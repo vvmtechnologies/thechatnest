@@ -160,7 +160,7 @@ const FeaturesCarousel = () => {
         }}
       />
       <div className="container" style={{ position: "relative", zIndex: 1 }}>
-        <div className="section-title">
+        <div className="section-title" style={{ textAlign: "center" }}>
           <span
             className="eyebrow"
             style={{
@@ -170,10 +170,10 @@ const FeaturesCarousel = () => {
           >
             Productivity superpowers
           </span>
-          <h2 style={{ marginTop: "1rem", color: "#fff" }}>
+          <h2 style={{ marginTop: "1rem", color: "#fff", textAlign: "center" }}>
             17 little features that save your team hours
           </h2>
-          <p style={{ color: "rgba(255,255,255,0.65)" }}>
+          <p style={{ color: "rgba(255,255,255,0.65)", textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
             Quick wins, baked right into chat — so your team spends less time switching tools
             and more time shipping work.
           </p>

@@ -74,6 +74,17 @@ p { color: var(--tcn-ink-700); }
 a { color: var(--tcn-violet-600); text-decoration: none; }
 a:hover { color: var(--tcn-violet-500); }
 
+/* Buttons-as-links never inherit underline / link color */
+a.main-btn,
+a.tcn-btn-gold,
+a.tcn-btn-ghost,
+a.btn-primary,
+a.btn-ghost,
+.tcn-final-cta a,
+.tcn-feat-cta a {
+  text-decoration: none !important;
+}
+
 /* ============ Navbar (refine over earlier dark navy) ============ */
 .navbar {
   background-color: rgba(11, 15, 30, 0.85) !important;
@@ -168,22 +179,64 @@ button.main-btn {
 
 .hero-section .content { text-align: center; max-width: 920px; margin: 0 auto; }
 
-.hero-section h1, .hero-section h1 p {
+.hero-section h1 {
   color: #fff !important;
-  font-size: clamp(2.5rem, 6vw, 5rem) !important;
+  font-size: clamp(2.4rem, 5.5vw, 4.6rem) !important;
   font-weight: 800 !important;
-  line-height: 1.04 !important;
+  line-height: 1.08 !important;
   letter-spacing: -0.025em;
   margin: 0;
-  display: inline;
+  max-width: 920px;
+  margin-left: auto;
+  margin-right: auto;
 }
-.hero-section h1 p::after { content: " "; }
+.hero-section h1 p {
+  color: #fff !important;
+  display: inline;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  margin: 0;
+}
 .hero-section .superscript {
   background: linear-gradient(135deg, var(--tcn-gold-500), var(--tcn-gold-400));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
   -webkit-text-fill-color: transparent;
+}
+
+/* Rotating headline word */
+.tcn-hero-rotator {
+  display: inline-block;
+  position: relative;
+  min-width: 4ch;
+  text-align: left;
+  vertical-align: top;
+  height: 1.1em;
+  overflow: hidden;
+}
+.tcn-hero-word {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: linear-gradient(135deg, #ffd54a, #ffb74d);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  opacity: 0;
+  transform: translateY(100%);
+  animation: tcnRotateWord 8s infinite;
+  white-space: nowrap;
+}
+.tcn-hero-word:nth-child(1) { animation-delay: 0s; }
+.tcn-hero-word:nth-child(2) { animation-delay: 2s; }
+.tcn-hero-word:nth-child(3) { animation-delay: 4s; }
+.tcn-hero-word:nth-child(4) { animation-delay: 6s; }
+
+@keyframes tcnRotateWord {
+  0%, 22% { opacity: 1; transform: translateY(0); }
+  25%, 100% { opacity: 0; transform: translateY(-100%); }
 }
 
 .hero-section .chat-window-img {
@@ -825,16 +878,30 @@ section {
 
 /* ============ Section heading helpers ============ */
 .section-title {
-  text-align: center;
-  margin: 0 auto 3rem;
-  max-width: 720px;
+  text-align: center !important;
+  margin: 0 auto 3rem !important;
+  max-width: 720px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+.section-title h2,
+.section-title p,
+.section-title .eyebrow {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 .section-title h2 {
-  margin-bottom: 1rem;
+  margin-bottom: 1rem !important;
 }
 .section-title p {
   font-size: 1.125rem;
   color: var(--tcn-ink-500);
+  max-width: 640px;
+}
+.section-dark .section-title p {
+  color: rgba(255,255,255,0.65) !important;
 }
 
 /* ============ Forms ============ */

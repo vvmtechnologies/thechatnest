@@ -71,10 +71,10 @@ const HomePriceComponent = () => {
   return (
     <section className="section-soft" style={{ padding: "6rem 0" }}>
       <div className="container">
-        <div className="section-title">
+        <div className="section-title" style={{ textAlign: "center" }}>
           <span className="eyebrow">Pricing</span>
-          <h2 style={{ marginTop: "1rem" }}>Simple pricing that scales with you</h2>
-          <p>
+          <h2 style={{ marginTop: "1rem", textAlign: "center" }}>Simple pricing that scales with you</h2>
+          <p style={{ textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
             Start free for 14 days — no credit card needed. Choose monthly or save 20% with yearly billing.
             Cancel anytime.
           </p>

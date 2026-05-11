@@ -32,8 +32,13 @@ const Hero = () => {
           </span>
 
           <h1 className="fade-up fade-up-d1" style={{ marginTop: "1.25rem" }}>
-            One workspace to <span className="superscript">Chat</span>,<br />
-            Meet, Share &amp; Create.
+            One workspace to{" "}
+            <span className="tcn-hero-rotator">
+              <span className="tcn-hero-word">Chat</span>
+              <span className="tcn-hero-word">Meet</span>
+              <span className="tcn-hero-word">Share</span>
+              <span className="tcn-hero-word">Create</span>
+            </span>
           </h1>
 
           <p

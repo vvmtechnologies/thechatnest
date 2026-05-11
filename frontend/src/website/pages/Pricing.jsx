@@ -1,319 +1,899 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import PriceTableComponent from "../components/PriceTableComponent";
+import {
+  PiCheckBold,
+  PiXBold,
+  PiStarFill,
+  PiSparkleDuotone,
+  PiShieldCheckDuotone,
+  PiArrowRightBold,
+  PiPlusBold,
+  PiCalendarDuotone,
+  PiChatTextDuotone,
+  PiUsersThreeDuotone,
+  PiCloudDuotone,
+  PiInfinityDuotone,
+} from "react-icons/pi";
+import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 
-const TRUST_LOGOS = [
-  { label: "AES-256-GCM", icon: "\uD83D\uDD12" },
-  { label: "SOC 2 Ready", icon: "\u2705" },
-  { label: "GDPR Compliant", icon: "\uD83C\uDDEA\uD83C\uDDFA" },
-  { label: "99.9% Uptime", icon: "\u26A1" },
-  { label: "24/7 Support", icon: "\uD83D\uDC9A" },
+const TRUST_BADGES = [
+  { label: "AES-256-GCM", icon: "🔒" },
+  { label: "SOC 2 Ready", icon: "✅" },
+  { label: "GDPR Compliant", icon: "🇪🇺" },
+  { label: "99.9% Uptime", icon: "⚡" },
+  { label: "24/7 Support", icon: "💚" },
 ];
+
+const COMPARE_ROWS = [
+  { feature: "1:1 & group messaging", trial: true, startup: true, basic: true, business: true },
+  { feature: "HD audio & video calls", trial: true, startup: true, basic: true, business: true },
+  { feature: "Screen sharing", trial: true, startup: true, basic: true, business: true },
+  { feature: "File sharing & storage", trial: "1 GB", startup: "10 GB / user", basic: "50 GB / user", business: "200 GB / user" },
+  { feature: "Message history", trial: "14 days", startup: "Unlimited", basic: "Unlimited", business: "Unlimited" },
+  { feature: "Group polls & broadcasts", trial: false, startup: true, basic: true, business: true },
+  { feature: "Custom roles & permissions", trial: false, startup: false, basic: true, business: true },
+  { feature: "AI assistant & summaries", trial: false, startup: false, basic: true, business: true },
+  { feature: "SSO / SAML", trial: false, startup: false, basic: false, business: true },
+  { feature: "Audit logs & DLP", trial: false, startup: false, basic: false, business: true },
+  { feature: "Self-hosted / on-premise", trial: false, startup: false, basic: false, business: true },
+  { feature: "Dedicated success manager", trial: false, startup: false, basic: false, business: true },
+];
+
+const currencySymbol = (code) => {
+  const c = String(code || "INR").toUpperCase();
+  if (c === "INR") return "₹";
+  if (c === "USD") return "$";
+  if (c === "EUR") return "€";
+  if (c === "GBP") return "£";
+  return c + " ";
+};
+
+const taglineFor = (i, total, isFree) => {
+  if (isFree) return "Try every paid feature for 14 days";
+  if (i === 1) return "Best for solo founders & small teams";
+  if (i === total - 1) return "For organizations at scale";
+  return "Most teams start here";
+};
+
+const planPerks = (plan) => {
+  const isFree = Number(plan?.price || 0) === 0;
+  const maxUsers = Number(plan?.max_users || 0);
+  const storageMb = Number(plan?.max_storage_mb || 0);
+  const storageLabel = storageMb >= 1000 ? `${Math.round(storageMb / 1000)} GB` : `${storageMb} MB`;
+  const userLabel = maxUsers ? `Up to ${maxUsers.toLocaleString()} users` : "Unlimited users";
+
+  if (isFree) {
+    return [
+      "All paid features for 14 days",
+      `${storageLabel} shared storage`,
+      "Email support",
+      "Cancel anytime",
+    ];
+  }
+  return [
+    userLabel,
+    `${storageLabel} storage per user`,
+    "Unlimited 1:1 & group chat",
+    "HD audio & video calls",
+    "AI assistant & file search",
+  ];
+};
 
 const Pricing = () => {
   const { brandName } = useSiteBranding();
+  const [billing, setBilling] = useState("yearly");
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      if (!API_BASE_URL) return;
+      setLoading(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/plans?limit=50&offset=0`, {
+          headers: { Accept: "application/json" },
+          credentials: "include",
+        });
+        const payload = await res.json().catch(() => ({}));
+        const rows = Array.isArray(payload?.data?.rows) ? payload.data.rows : [];
+        const normalized = rows
+          .filter((r) => String(r?.status || "").toLowerCase() !== "inactive")
+          .sort((a, b) => Number(a?.price || 0) - Number(b?.price || 0));
+        if (!cancelled) setPlans(normalized);
+      } catch {
+        if (!cancelled) setPlans([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const popularIndex = useMemo(() => {
+    if (!plans.length) return -1;
+    const paid = plans.filter((p) => Number(p?.price || 0) > 0);
+    if (paid.length >= 2) return plans.indexOf(paid[1]);
+    if (paid.length === 1) return plans.indexOf(paid[0]);
+    return -1;
+  }, [plans]);
 
   const FAQS = useMemo(
     () => [
-      {
-        q: "Can I change plans anytime?",
-        a: "Yes. Upgrade or downgrade whenever you like — pro-rated automatically. No long-term contracts or hidden fees.",
-      },
-      {
-        q: "Is there a free trial?",
-        a: "Every paid plan comes with a 14-day free trial. No credit card required to start. Cancel anytime, no questions asked.",
-      },
-      {
-        q: "What payment methods do you accept?",
-        a: "All major credit cards, debit cards, and UPI through Stripe. Enterprise plans also support invoicing and bank transfer.",
-      },
-      {
-        q: "Do you offer a money-back guarantee?",
-        a: `Yes — 30 days. If ${brandName} doesn't fit your team, we'll refund every paisa, no questions asked.`,
-      },
-      {
-        q: `Can I self-host ${brandName}?`,
-        a: "Absolutely. Self-hosted deployment is included on the Enterprise plan. You get the full source bundle, deployment scripts, and white-glove setup support.",
-      },
-      {
-        q: "How does per-user billing work?",
-        a: "You're billed only for active seats. Add or remove users mid-cycle and your next invoice is automatically pro-rated.",
-      },
+      { q: "Can I change plans anytime?", a: "Yes. Upgrade or downgrade whenever you like — pro-rated automatically. No long-term contracts or hidden fees." },
+      { q: "Is there a free trial?", a: "Every paid plan comes with a 14-day free trial. No credit card required to start. Cancel anytime, no questions asked." },
+      { q: "What payment methods do you accept?", a: "All major credit cards, debit cards, and UPI through Stripe. Enterprise plans also support invoicing and bank transfer." },
+      { q: "Do you offer a money-back guarantee?", a: `Yes — 30 days. If ${brandName || "TheChatNest"} doesn't fit your team, we'll refund every paisa, no questions asked.` },
+      { q: `Can I self-host ${brandName || "TheChatNest"}?`, a: "Absolutely. Self-hosted deployment is included on the Business plan. You get the full deployment bundle and white-glove setup support." },
+      { q: "How does per-user billing work?", a: "You're billed only for active seats. Add or remove users mid-cycle and your next invoice is automatically pro-rated." },
     ],
     [brandName]
   );
 
   return (
-    <div className="pricing-page" style={{ fontFamily: "'Manrope', sans-serif", background: "#fafbff" }}>
+    <div className="tcn-pricing">
       <style>{`
-        @keyframes pricingFadeIn {
-          from { opacity: 0; transform: translateY(14px); }
-          to { opacity: 1; transform: translateY(0); }
+        .tcn-pricing { background: #fff; }
+        .tcn-pricing-hero {
+          background:
+            radial-gradient(1200px 600px at 80% -10%, rgba(109,93,252,0.32), transparent 60%),
+            radial-gradient(800px 500px at 10% 10%, rgba(255,213,74,0.1), transparent 60%),
+            linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
+          color: #fff;
+          padding: 8rem 0 5rem;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
         }
-        .pricing-faq-item {
-          animation: pricingFadeIn 0.4s ease both;
+        .tcn-pricing-hero::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+          -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+          pointer-events: none;
         }
-        .pricing-trust-badge {
-          transition: transform 0.2s ease, background 0.2s ease;
+        .tcn-pricing-hero h1 {
+          font-size: clamp(2.4rem, 5vw, 4rem);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.025em;
+          line-height: 1.08;
+          margin: 0 auto 1.25rem;
+          max-width: 820px;
         }
-        .pricing-trust-badge:hover {
-          transform: translateY(-2px);
-          background: rgba(255,255,255,0.18) !important;
+        .tcn-pricing-hero .gradient-word {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+        .tcn-pricing-hero p.lead {
+          font-size: 1.15rem;
+          color: rgba(255,255,255,0.7);
+          max-width: 620px;
+          margin: 0 auto 2.25rem;
+          line-height: 1.6;
+        }
+
+        .tcn-toggle-wrap {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 3rem;
+        }
+        .tcn-toggle {
+          display: inline-flex;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 999px;
+          padding: 4px;
+          backdrop-filter: blur(8px);
+        }
+        .tcn-toggle button {
+          padding: 0.6rem 1.5rem;
+          border: none;
+          border-radius: 999px;
+          background: transparent;
+          color: rgba(255,255,255,0.7);
+          font-weight: 600;
+          font-size: 0.95rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .tcn-toggle button.active {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a;
+          box-shadow: 0 4px 14px rgba(255,213,74,0.4);
+        }
+        .tcn-toggle .save-badge {
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          color: #fff;
+          font-size: 0.68rem;
+          padding: 2px 8px;
+          border-radius: 999px;
+          font-weight: 800;
+          letter-spacing: 0.02em;
+        }
+
+        .tcn-plans-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 1.25rem;
+          max-width: 1180px;
+          margin: 0 auto;
+        }
+        .tcn-plan {
+          position: relative;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 20px;
+          padding: 2rem 1.6rem;
+          backdrop-filter: blur(12px);
+          color: #fff;
+          text-align: left;
+          transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+        .tcn-plan:hover {
+          transform: translateY(-4px);
+          border-color: rgba(255,255,255,0.18);
+        }
+        .tcn-plan.popular {
+          background: linear-gradient(180deg, rgba(255,213,74,0.08), rgba(109,93,252,0.06));
+          border-color: rgba(255,213,74,0.4);
+          transform: translateY(-10px);
+          box-shadow: 0 30px 70px rgba(255,213,74,0.18), 0 10px 30px rgba(109,93,252,0.2);
+        }
+        .tcn-plan.popular:hover {
+          transform: translateY(-14px);
+        }
+        .tcn-plan-badge {
+          position: absolute;
+          top: -14px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a;
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          padding: 0.4rem 0.9rem;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          box-shadow: 0 4px 14px rgba(255,213,74,0.4);
+          white-space: nowrap;
+        }
+        .tcn-plan h3 {
+          color: #fff;
+          font-size: 1.3rem;
+          font-weight: 700;
+          margin: 0 0 0.4rem;
+        }
+        .tcn-plan .tagline {
+          color: rgba(255,255,255,0.55);
+          font-size: 0.88rem;
+          margin: 0 0 1.5rem;
+        }
+        .tcn-plan .price-row {
+          display: flex;
+          align-items: baseline;
+          gap: 4px;
+          margin-bottom: 0.5rem;
+        }
+        .tcn-plan .price-row .currency {
+          font-size: 1rem;
+          font-weight: 600;
+          color: rgba(255,255,255,0.6);
+        }
+        .tcn-plan .price-row .amount {
+          font-size: 2.6rem;
+          font-weight: 800;
+          line-height: 1;
+          letter-spacing: -0.02em;
+        }
+        .tcn-plan .price-row .period {
+          font-size: 0.88rem;
+          color: rgba(255,255,255,0.55);
+        }
+        .tcn-plan .billing-note {
+          font-size: 0.78rem;
+          color: rgba(255,255,255,0.5);
+          margin-bottom: 1.5rem;
+          min-height: 1.2em;
+        }
+        .tcn-plan .free-pill {
+          display: inline-block;
+          padding: 0.3rem 0.7rem;
+          background: rgba(34,197,94,0.18);
+          color: #4ade80;
+          border-radius: 999px;
+          font-size: 0.72rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          margin-top: 4px;
+        }
+        .tcn-plan .cta {
+          display: block;
+          text-align: center;
+          padding: 0.85rem 1rem;
+          border-radius: 999px;
+          font-weight: 700;
+          font-size: 0.95rem;
+          text-decoration: none;
+          margin-bottom: 1.5rem;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+        .tcn-plan .cta:hover { transform: translateY(-1px); }
+        .tcn-plan.popular .cta {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a;
+          box-shadow: 0 8px 24px rgba(255,213,74,0.4);
+        }
+        .tcn-plan:not(.popular) .cta {
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          border: 1px solid rgba(255,255,255,0.18);
+        }
+        .tcn-plan:not(.popular) .cta:hover {
+          background: rgba(255,255,255,0.16);
+        }
+        .tcn-plan .perks {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          padding-top: 1.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.7rem;
+        }
+        .tcn-plan .perks li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 0.88rem;
+          color: rgba(255,255,255,0.85);
+          line-height: 1.5;
+        }
+        .tcn-plan .perks .tick {
+          flex-shrink: 0;
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          background: rgba(255,213,74,0.18);
+          color: #ffd54a;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 2px;
+        }
+
+        /* Trust strip below cards */
+        .tcn-trust-row {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.6rem;
+          margin-top: 3rem;
+        }
+        .tcn-trust-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0.45rem 0.95rem;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          color: rgba(255,255,255,0.9);
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+
+        /* Money-back banner */
+        .tcn-moneyback {
+          padding: 4.5rem 0 2rem;
+          background: #fff;
+        }
+        .tcn-moneyback-card {
+          max-width: 920px;
+          margin: 0 auto;
+          background: linear-gradient(135deg, #f3f1ff 0%, #fff 60%, #fffbeb 100%);
+          border: 1px solid rgba(109,93,252,0.18);
+          border-radius: 24px;
+          padding: 2.25rem 2.5rem;
+          display: flex;
+          align-items: center;
+          gap: 1.75rem;
+          flex-wrap: wrap;
+          box-shadow: 0 10px 40px rgba(109,93,252,0.08);
+        }
+        .tcn-moneyback-icon {
+          width: 72px;
+          height: 72px;
+          border-radius: 18px;
+          background: linear-gradient(135deg, #22c55e, #16a34a);
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 32px;
+          flex-shrink: 0;
+          box-shadow: 0 8px 24px rgba(34,197,94,0.35);
+        }
+        .tcn-moneyback-body {
+          flex: 1;
+          min-width: 240px;
+        }
+        .tcn-moneyback h3 {
+          font-size: 1.35rem;
+          font-weight: 800;
+          color: var(--tcn-ink-900);
+          margin: 0 0 0.4rem;
+        }
+        .tcn-moneyback p {
+          color: var(--tcn-ink-500);
+          margin: 0;
+          font-size: 0.96rem;
+          line-height: 1.55;
+        }
+
+        /* Comparison table */
+        .tcn-compare-section {
+          padding: 5rem 0;
+          background: linear-gradient(180deg, #fff 0%, #fafbff 100%);
+        }
+        .tcn-compare-wrap {
+          max-width: 1180px;
+          margin: 0 auto;
+          background: #fff;
+          border: 1px solid var(--tcn-border);
+          border-radius: 20px;
+          overflow: hidden;
+          box-shadow: var(--tcn-shadow-md);
+        }
+        .tcn-compare-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 0.92rem;
+        }
+        .tcn-compare-table thead th {
+          background: #fafbff;
+          color: var(--tcn-ink-900);
+          padding: 1.25rem 1rem;
+          text-align: center;
+          font-weight: 700;
+          border-bottom: 1px solid var(--tcn-border);
+          font-size: 0.95rem;
+        }
+        .tcn-compare-table thead th:first-child {
+          text-align: left;
+          padding-left: 1.5rem;
+        }
+        .tcn-compare-table thead th.highlight {
+          background: linear-gradient(180deg, rgba(255,213,74,0.12), rgba(109,93,252,0.06));
+          color: #1a1f3a;
+          position: relative;
+        }
+        .tcn-compare-table thead th.highlight::after {
+          content: "Popular";
+          position: absolute;
+          top: 6px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 0.62rem;
+          font-weight: 800;
+          color: #ffb74d;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+        .tcn-compare-table tbody td {
+          padding: 1rem;
+          text-align: center;
+          border-bottom: 1px solid #f0f2f7;
+          color: var(--tcn-ink-700);
+        }
+        .tcn-compare-table tbody td:first-child {
+          text-align: left;
+          padding-left: 1.5rem;
+          font-weight: 500;
+          color: var(--tcn-ink-900);
+        }
+        .tcn-compare-table tbody td.highlight {
+          background: rgba(255,213,74,0.04);
+        }
+        .tcn-compare-table tbody tr:last-child td {
+          border-bottom: none;
+        }
+        .tcn-yes {
+          display: inline-flex;
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          background: rgba(34,197,94,0.15);
+          color: #16a34a;
+          align-items: center;
+          justify-content: center;
+        }
+        .tcn-no {
+          display: inline-flex;
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          background: #f3f4f8;
+          color: #b4bacf;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* FAQ */
+        .tcn-faq-section {
+          padding: 5rem 0;
+          background: #fff;
+        }
+        .tcn-faq-list {
+          max-width: 760px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          gap: 0.7rem;
+        }
+        .tcn-faq-item {
+          background: #fff;
+          border: 1.5px solid var(--tcn-border);
+          border-radius: 14px;
+          overflow: hidden;
+          transition: all 0.2s ease;
+        }
+        .tcn-faq-item.open {
+          border-color: var(--tcn-violet-500);
+          box-shadow: 0 10px 30px rgba(109,93,252,0.12);
+        }
+        .tcn-faq-q {
+          width: 100%;
+          background: transparent;
+          border: none;
+          padding: 1.1rem 1.4rem;
+          text-align: left;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          cursor: pointer;
+          font-weight: 700;
+          font-size: 1rem;
+          color: var(--tcn-ink-900);
+          font-family: inherit;
+        }
+        .tcn-faq-plus {
+          width: 28px;
+          height: 28px;
+          border-radius: 999px;
+          background: #f3f4f8;
+          color: var(--tcn-ink-500);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: all 0.2s ease;
+        }
+        .tcn-faq-item.open .tcn-faq-plus {
+          background: var(--tcn-violet-600);
+          color: #fff;
+          transform: rotate(45deg);
+        }
+        .tcn-faq-a {
+          padding: 0 1.4rem 1.25rem;
+          color: var(--tcn-ink-500);
+          font-size: 0.94rem;
+          line-height: 1.65;
+        }
+
+        /* Final CTA */
+        .tcn-final-cta {
+          padding: 5rem 0;
+        }
+        .tcn-final-cta-inner {
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 4rem 3rem;
+          border-radius: 24px;
+          background: linear-gradient(135deg, #0b0f1e 0%, #1a1f3a 50%, #2d2563 100%);
+          text-align: center;
+          color: #fff;
+          position: relative;
+          overflow: hidden;
+          box-shadow: var(--tcn-shadow-lg);
+        }
+        .tcn-final-cta-inner::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(600px 300px at 20% 0%, rgba(255,213,74,0.2), transparent 60%),
+            radial-gradient(600px 300px at 80% 100%, rgba(109,93,252,0.3), transparent 60%);
+          pointer-events: none;
+        }
+        .tcn-final-cta-inner > * { position: relative; z-index: 1; }
+        .tcn-final-cta h2 {
+          color: #fff;
+          font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+          font-weight: 800;
+          margin: 0 0 1rem;
+          letter-spacing: -0.02em;
+        }
+        .tcn-final-cta p {
+          color: rgba(255,255,255,0.7);
+          font-size: 1.05rem;
+          max-width: 580px;
+          margin: 0 auto 2rem;
+          line-height: 1.6;
+        }
+        .tcn-final-cta .actions {
+          display: flex;
+          gap: 0.85rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .tcn-final-cta .btn-primary {
+          padding: 0.9rem 1.85rem;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a !important;
+          font-weight: 800;
+          font-size: 1rem;
+          text-decoration: none !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 8px 24px rgba(255,213,74,0.35);
+          transition: transform 0.18s ease;
+        }
+        .tcn-final-cta .btn-primary:hover { transform: translateY(-2px); color: #1a1f3a !important; }
+        .tcn-final-cta .btn-ghost {
+          padding: 0.9rem 1.75rem;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.18);
+          color: #fff !important;
+          font-weight: 600;
+          font-size: 1rem;
+          text-decoration: none !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          backdrop-filter: blur(8px);
+        }
+        .tcn-final-cta .btn-ghost:hover { color: #fff !important; }
+
+        @media (max-width: 900px) {
+          .tcn-compare-table { font-size: 0.82rem; }
+          .tcn-compare-table thead th, .tcn-compare-table tbody td { padding: 0.7rem 0.5rem; }
+          .tcn-plan.popular { transform: none; }
+          .tcn-final-cta-inner { padding: 3rem 1.5rem; }
         }
       `}</style>
 
-      {/* ─── Hero ────────────────────────────────────────────── */}
-      <section
-        style={{
-          background: "linear-gradient(135deg, #0a1628 0%, #0d2137 40%, #0f3460 100%)",
-          color: "#fff",
-          padding: "90px 0 70px",
-          textAlign: "center",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Decorative blobs */}
-        <div style={{ position: "absolute", top: -150, right: -100, width: 540, height: 540, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 70%)" }} />
-        <div style={{ position: "absolute", bottom: -180, left: -120, width: 460, height: 460, borderRadius: "50%", background: "radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 70%)" }} />
-
+      {/* ─── Hero + Plans (combined dark section) ─────────── */}
+      <section className="tcn-pricing-hero">
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
-          <p
+          <span
+            className="eyebrow"
             style={{
-              display: "inline-block",
-              background: "rgba(99,102,241,0.2)",
-              border: "1px solid rgba(99,102,241,0.4)",
-              borderRadius: 999,
-              padding: "6px 18px",
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: 1.5,
-              marginBottom: 22,
-              color: "#a5b4fc",
-              textTransform: "uppercase",
+              background: "rgba(255,213,74,0.12)",
+              color: "#ffd54a",
+              borderColor: "rgba(255,213,74,0.25)",
+              marginBottom: "1.25rem",
+              display: "inline-flex",
             }}
           >
-            Simple, transparent pricing
-          </p>
-          <h1
-            style={{
-              fontSize: "clamp(32px, 5vw, 56px)",
-              fontWeight: 800,
-              lineHeight: 1.1,
-              marginBottom: 18,
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Pick the plan that <br />
-            <span
-              style={{
-                background: "linear-gradient(135deg, #6366f1, #ec4899)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              fits your team
-            </span>
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: "#ffd54a" }} />
+            Pricing
+          </span>
+
+          <h1>
+            Pricing that <span className="gradient-word">grows with you</span>
           </h1>
-          <p
-            style={{
-              fontSize: 18,
-              color: "#94a3b8",
-              maxWidth: 600,
-              margin: "0 auto 36px",
-              lineHeight: 1.6,
-            }}
-          >
-            Start free for 14 days. No credit card required. Cancel anytime,
-            keep all your data. Switch plans whenever your team grows.
+          <p className="lead">
+            Start free for 14 days — no credit card required. Switch between monthly and yearly anytime.
+            Per-user billing, no hidden fees, cancel whenever.
           </p>
 
-          {/* Trust signals */}
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              justifyContent: "center",
-              maxWidth: 720,
-              margin: "0 auto",
-            }}
-          >
-            {TRUST_LOGOS.map((t) => (
-              <div
-                key={t.label}
-                className="pricing-trust-badge"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  borderRadius: 999,
-                  padding: "8px 16px",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#cbd5e1",
-                  backdropFilter: "blur(8px)",
-                }}
+          <div className="tcn-toggle-wrap">
+            <div className="tcn-toggle">
+              <button
+                className={billing === "monthly" ? "active" : ""}
+                onClick={() => setBilling("monthly")}
               >
-                <span style={{ fontSize: 14 }}>{t.icon}</span>
-                <span>{t.label}</span>
-              </div>
+                Monthly
+              </button>
+              <button
+                className={billing === "yearly" ? "active" : ""}
+                onClick={() => setBilling("yearly")}
+              >
+                Yearly <span className="save-badge">Save 20%</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Plans grid */}
+          {loading && !plans.length ? (
+            <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem 0" }}>Loading plans…</div>
+          ) : !plans.length ? (
+            <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem 0" }}>Plans coming soon.</div>
+          ) : (
+            <div className="tcn-plans-grid">
+              {plans.map((plan, i) => {
+                const monthly = Number(plan?.price || 0);
+                const yearlyFull = monthly * 12;
+                const yearlyDiscount = Math.round(yearlyFull * 0.8);
+                const displayPrice = billing === "yearly" ? Math.round(yearlyDiscount / 12) : monthly;
+                const isPopular = i === popularIndex;
+                const isFree = monthly === 0;
+                const sym = currencySymbol(plan?.default_currency);
+                const perks = planPerks(plan);
+
+                return (
+                  <div key={plan?.plan_id || i} className={`tcn-plan ${isPopular ? "popular" : ""}`}>
+                    {isPopular && (
+                      <div className="tcn-plan-badge">
+                        <PiStarFill size={11} /> Most popular
+                      </div>
+                    )}
+
+                    <h3>{plan?.plan_name || plan?.plan_key || "Plan"}</h3>
+                    <p className="tagline">{taglineFor(i, plans.length, isFree)}</p>
+
+                    {isFree ? (
+                      <>
+                        <div className="price-row">
+                          <span className="amount">Free</span>
+                        </div>
+                        <div className="billing-note">
+                          <span className="free-pill">No credit card</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="price-row">
+                          <span className="currency">{sym}</span>
+                          <span className="amount">{displayPrice.toLocaleString()}</span>
+                          <span className="period">/user/mo</span>
+                        </div>
+                        <div className="billing-note">
+                          {billing === "yearly"
+                            ? `Billed ${sym}${yearlyDiscount.toLocaleString()}/yr — save ${sym}${(yearlyFull - yearlyDiscount).toLocaleString()}`
+                            : `${sym}${monthly.toLocaleString()} billed every ${plan?.interval_days || 30} days`}
+                        </div>
+                      </>
+                    )}
+
+                    <Link
+                      to={isFree ? "/auth/register" : `/auth/register?plan=${plan?.plan_key || plan?.plan_id}`}
+                      className="cta"
+                    >
+                      {isFree ? "Get started free" : "Start 14-day trial"}
+                    </Link>
+
+                    <ul className="perks">
+                      {perks.map((perk, idx) => (
+                        <li key={idx}>
+                          <span className="tick">
+                            <PiCheckBold size={11} strokeWidth={3} />
+                          </span>
+                          {perk}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Trust strip */}
+          <div className="tcn-trust-row">
+            {TRUST_BADGES.map((t) => (
+              <span key={t.label} className="tcn-trust-chip">
+                <span>{t.icon}</span> {t.label}
+              </span>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── Pricing Cards ───────────────────────────────────── */}
-      <PriceTableComponent />
-
-      {/* ─── Money-Back Guarantee ────────────────────────────── */}
-      <section style={{ padding: "30px 0 60px", background: "#fafbff" }}>
+      {/* ─── Money-back ────────────────────────────────────── */}
+      <section className="tcn-moneyback">
         <div className="container">
-          <div
-            style={{
-              maxWidth: 760,
-              margin: "0 auto",
-              background: "linear-gradient(135deg, #fff, #f8fafc)",
-              border: "1.5px solid #e2e8f0",
-              borderRadius: 18,
-              padding: "28px 32px",
-              display: "flex",
-              alignItems: "center",
-              gap: 24,
-              flexWrap: "wrap",
-              boxShadow: "0 8px 24px -12px rgba(15,23,42,0.08)",
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: 16,
-                background: "linear-gradient(135deg, #10b981, #059669)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 30,
-                flexShrink: 0,
-                boxShadow: "0 8px 18px -6px rgba(16,185,129,0.45)",
-              }}
-            >
-              {"\uD83D\uDEE1\uFE0F"}
+          <div className="tcn-moneyback-card">
+            <div className="tcn-moneyback-icon">
+              <PiShieldCheckDuotone size={36} />
             </div>
-            <div style={{ flex: 1, minWidth: 240 }}>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", marginBottom: 6 }}>
-                30-day money-back guarantee
-              </h3>
-              <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, margin: 0 }}>
-                Try {brandName} risk-free. If it doesn't fit your team in the first 30 days, we'll refund every paisa — no forms, no awkward calls.
+            <div className="tcn-moneyback-body">
+              <h3>30-day money-back guarantee</h3>
+              <p>
+                Try {brandName || "TheChatNest"} risk-free. If it doesn't fit your team in the first 30 days, we'll refund every paisa — no forms, no awkward calls.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── FAQ ─────────────────────────────────────────────── */}
-      <section style={{ padding: "60px 0 90px", background: "#fff" }}>
-        <div className="container" style={{ maxWidth: 820 }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <p
-              style={{
-                display: "inline-block",
-                background: "#eef2ff",
-                color: "#4f46e5",
-                borderRadius: 999,
-                padding: "5px 14px",
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: 1.2,
-                marginBottom: 14,
-                textTransform: "uppercase",
-              }}
-            >
-              FAQ
+      {/* ─── Comparison table ─────────────────────────────── */}
+      <section className="tcn-compare-section">
+        <div className="container">
+          <div className="section-title" style={{ textAlign: "center" }}>
+            <span className="eyebrow">Compare plans</span>
+            <h2 style={{ marginTop: "1rem", textAlign: "center" }}>What's included on each plan</h2>
+            <p style={{ textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
+              Every plan includes core chat, calls, and file sharing. Upgrade for more users, storage, AI, and enterprise controls.
             </p>
-            <h2 style={{ fontSize: "clamp(24px, 3.5vw, 38px)", fontWeight: 800, color: "#0f172a", marginBottom: 10 }}>
-              Questions, answered
-            </h2>
-            <p style={{ fontSize: 15, color: "#64748b" }}>
+          </div>
+
+          <div className="tcn-compare-wrap">
+            <table className="tcn-compare-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Trial</th>
+                  <th>Startup</th>
+                  <th className="highlight">Basic</th>
+                  <th>Business</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARE_ROWS.map((row, i) => (
+                  <tr key={i}>
+                    <td>{row.feature}</td>
+                    <td>{renderCell(row.trial)}</td>
+                    <td>{renderCell(row.startup)}</td>
+                    <td className="highlight">{renderCell(row.basic)}</td>
+                    <td>{renderCell(row.business)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ──────────────────────────────────────────── */}
+      <section className="tcn-faq-section">
+        <div className="container">
+          <div className="section-title" style={{ textAlign: "center" }}>
+            <span className="eyebrow">FAQ</span>
+            <h2 style={{ marginTop: "1rem", textAlign: "center" }}>Questions, answered</h2>
+            <p style={{ textAlign: "center", marginLeft: "auto", marginRight: "auto" }}>
               Everything you need to know before you sign up.
             </p>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="tcn-faq-list">
             {FAQS.map((faq, i) => {
               const isOpen = openFaq === i;
               return (
-                <div
-                  key={i}
-                  className="pricing-faq-item"
-                  style={{
-                    background: "#fff",
-                    border: isOpen ? "1.5px solid #6366f1" : "1.5px solid #e2e8f0",
-                    borderRadius: 14,
-                    overflow: "hidden",
-                    transition: "all 0.2s ease",
-                    boxShadow: isOpen ? "0 8px 24px -12px rgba(99,102,241,0.25)" : "none",
-                    animationDelay: `${i * 0.05}s`,
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(isOpen ? -1 : i)}
-                    style={{
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      padding: "18px 22px",
-                      textAlign: "left",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span style={{ fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
-                      {faq.q}
-                    </span>
-                    <span
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        background: isOpen ? "#6366f1" : "#f1f5f9",
-                        color: isOpen ? "#fff" : "#64748b",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 16,
-                        fontWeight: 700,
-                        flexShrink: 0,
-                        transition: "all 0.2s",
-                        transform: isOpen ? "rotate(45deg)" : "rotate(0)",
-                      }}
-                    >
-                      +
+                <div key={i} className={`tcn-faq-item ${isOpen ? "open" : ""}`}>
+                  <button className="tcn-faq-q" onClick={() => setOpenFaq(isOpen ? -1 : i)}>
+                    <span>{faq.q}</span>
+                    <span className="tcn-faq-plus">
+                      <PiPlusBold size={14} />
                     </span>
                   </button>
-                  {isOpen && (
-                    <div
-                      style={{
-                        padding: "0 22px 20px",
-                        fontSize: 14,
-                        color: "#475569",
-                        lineHeight: 1.65,
-                        animation: "pricingFadeIn 0.25s ease both",
-                      }}
-                    >
-                      {faq.a}
-                    </div>
-                  )}
+                  {isOpen && <div className="tcn-faq-a">{faq.a}</div>}
                 </div>
               );
             })}
@@ -321,86 +901,36 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* ─── Final CTA ──────────────────────────────────────── */}
-      <section
-        style={{
-          background: "linear-gradient(135deg, #0a1628, #0f3460)",
-          padding: "80px 0",
-          textAlign: "center",
-          color: "#fff",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%,-50%)",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 60%)",
-          }}
-        />
-        <div className="container" style={{ position: "relative", zIndex: 1 }}>
-          <h2
-            style={{
-              fontSize: "clamp(26px, 4vw, 42px)",
-              fontWeight: 800,
-              marginBottom: 16,
-              lineHeight: 1.2,
-            }}
-          >
-            Ready to give your team a better workspace?
-          </h2>
-          <p style={{ fontSize: 17, color: "#94a3b8", maxWidth: 540, margin: "0 auto 32px", lineHeight: 1.6 }}>
-            Start your free 14-day trial. No credit card required. Be up and running in 2 minutes.
-          </p>
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link
-              to="/auth/register"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                color: "#fff",
-                padding: "16px 36px",
-                borderRadius: 12,
-                fontWeight: 700,
-                fontSize: 16,
-                textDecoration: "none",
-                boxShadow: "0 12px 32px -8px rgba(99,102,241,0.5)",
-              }}
-            >
-              Start Free Trial
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-            <Link
-              to="/compare"
-              style={{
-                display: "inline-block",
-                background: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                color: "#fff",
-                padding: "16px 36px",
-                borderRadius: 12,
-                fontWeight: 600,
-                fontSize: 16,
-                textDecoration: "none",
-              }}
-            >
-              Compare Plans
-            </Link>
+      {/* ─── Final CTA ────────────────────────────────────── */}
+      <section className="tcn-final-cta">
+        <div className="container">
+          <div className="tcn-final-cta-inner">
+            <h2>Ready to bring your team together?</h2>
+            <p>
+              Start your free 14-day trial — no credit card required. Up and running in two minutes.
+            </p>
+            <div className="actions">
+              <Link to="/auth/register" className="btn-primary">
+                Start free trial <PiArrowRightBold size={16} />
+              </Link>
+              <Link to="/demo" className="btn-ghost">
+                <PiCalendarDuotone size={18} /> Book a demo
+              </Link>
+              <Link to="/help" className="btn-ghost">
+                <PiChatTextDuotone size={18} /> Chat with us
+              </Link>
+            </div>
           </div>
         </div>
       </section>
     </div>
   );
+};
+
+const renderCell = (value) => {
+  if (value === true) return <span className="tcn-yes"><PiCheckBold size={13} strokeWidth={3} /></span>;
+  if (value === false) return <span className="tcn-no"><PiXBold size={12} strokeWidth={3} /></span>;
+  return <span style={{ fontWeight: 600, color: "var(--tcn-ink-900)" }}>{value}</span>;
 };
 
 export default Pricing;

@@ -67,10 +67,16 @@ const Footer = () => {
   const { brandName, logoUrl, social, emails } = useSiteBranding();
 
   const contactEmails = useMemo(() => {
+    const cleanEmail = (raw) =>
+      String(raw || "")
+        .trim()
+        .replace(/@teamchatx\.com$/i, "@thechatnest.com")
+        .replace(/@aabhyasa\.com$/i, "@thechatnest.com");
+
     const apiEmails = Array.isArray(emails)
       ? emails
           .filter((row) => String(row?.status || "active").toLowerCase() !== "inactive")
-          .map((row) => String(row?.email_address || "").trim())
+          .map((row) => cleanEmail(row?.email_address))
           .filter(Boolean)
       : [];
 

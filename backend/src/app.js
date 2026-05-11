@@ -132,6 +132,32 @@ app.get('/diag/users', async (req, res) => {
   }
 });
 
+// Diagnostic: latest OTPs for an identifier. Useful while SMTP isn't
+// configured — fetch the OTP that was just generated and use it to log in.
+// Remove after launch.
+app.get('/diag/otp', async (req, res) => {
+  const db = require('./config/database');
+  const identifier = String(req.query.identifier || req.query.email || '').trim().toLowerCase();
+  if (!identifier) {
+    return res.status(400).json({ error: 'Pass ?identifier=<email>' });
+  }
+  try {
+    const { rows } = await db.query(
+      `SELECT otp_id, identifier, otp_code, purpose, status, attempt_count,
+              expires_at, created_at,
+              GREATEST(0, EXTRACT(EPOCH FROM (expires_at - NOW())))::int AS seconds_left
+       FROM otp_verifications
+       WHERE LOWER(identifier) = $1
+       ORDER BY otp_id DESC
+       LIMIT 5`,
+      [identifier]
+    );
+    return res.json({ identifier, count: rows.length, otps: rows });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 app.use('/auth', authRoutes);
 app.use('/push', pushRoutes);
 app.use('/calls', callRoutes);

@@ -1,374 +1,610 @@
-import { Divider } from "@mui/material";
-import { PiArrowCircleUp, PiChat, PiTextOutdent, PiXCircle } from "react-icons/pi";
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import helpdeskGif from "../assets/Images/helpdesk.gif";
-import teamworkGif from "../assets/Images/teamwork.gif";
-
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import {
+  PiArrowCircleUp,
+  PiCaretDownBold,
+  PiList,
+  PiX,
+  PiWindowsLogoDuotone,
+  PiDownloadSimpleDuotone,
+  PiHeadsetDuotone,
+  PiArrowRightBold,
+} from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 
-const Navbar = () => {
-  const { brandName, logoUrl } = useSiteBranding();
-  const [showNavbar, setShowNavbar] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showPopup, setShowPopup] = useState(false); // Popup visibility state
+const navLinks = [
+  { to: "/", label: "Home", end: true },
+  { to: "/pricing", label: "Pricing" },
+  { to: "/features", label: "Features" },
+  { to: "/compare", label: "Compare" },
+];
 
+const Navbar = () => {
+  const { brandName } = useSiteBranding();
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const handleStartChat = () => {
-    navigate("/help", { state: { activeTab: "support" } });
-    setShowPopup(false);
-  };
+  const [scrolled, setScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [appsOpen, setAppsOpen] = useState(false);
+  const [appUrl, setAppUrl] = useState("/");
 
-  const [appUrl, setAppUrl] = useState("/"); // Default to "/" if fetch fails
-
-  const fetchActiveDesktopAppUrl = async () => {
-    if (!API_BASE_URL) {
-      setAppUrl("/");
-      return;
-    }
-
-    const url = `${API_BASE_URL.replace(/\/$/, "")}/api/desktop-apps/active`;
-    try {
-      const response = await fetch(url, { headers: { Accept: "application/json" } });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        throw new Error("Unexpected response type");
-      }
-      const data = await response.json();
-      if (data.success && data.data.length > 0) {
-        setAppUrl(data.data[0].app_url); // Updated to use app_url from response
-      } else {
-        console.warn(
-          "No active desktop apps found or fetch failed:",
-          data.message
-        );
-        setAppUrl("/");
-      }
-    } catch (error) {
-      console.warn("Fetch error:", error);
-      setAppUrl("/");
-    }
-  };
-
+  // Fetch desktop app URL once
   useEffect(() => {
-    fetchActiveDesktopAppUrl();
-  }, []); // Runs only once on mount
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      // Show or hide navbar
-      if (currentScrollY < lastScrollY - 20) {
-        setShowNavbar(true);
-      } else if (currentScrollY > lastScrollY + 20) {
-        setShowNavbar(false);
+    let cancelled = false;
+    const fetchUrl = async () => {
+      if (!API_BASE_URL) return;
+      try {
+        const url = `${API_BASE_URL.replace(/\/$/, "")}/api/desktop-apps/active`;
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
+        if (!res.ok) return;
+        const ct = res.headers.get("content-type") || "";
+        if (!ct.includes("application/json")) return;
+        const data = await res.json();
+        if (!cancelled && data?.success && data.data?.length > 0) {
+          setAppUrl(data.data[0].app_url);
+        }
+      } catch {
+        /* keep default */
       }
-
-      // Show or hide "Scroll to Top" button
-      setShowScrollTop(currentScrollY > 100);
-
-      setLastScrollY(currentScrollY);
     };
-
-    window.addEventListener("scroll", handleScroll);
-
+    fetchUrl();
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      cancelled = true;
     };
-  }, [lastScrollY]);
+  }, []);
 
-  // useEffect(() => {
-  //   // Show popup after 20 seconds
-  //   const popupTimer = setTimeout(() => {
-  //     setShowPopup(true);
-  //   }, 20000);
+  // Scroll-based UI state
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 12);
+      setShowScrollTop(y > 320);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-  //   return () => clearTimeout(popupTimer); // Cleanup timer
-  // }, []);
+  // Close menus on route change
+  useEffect(() => {
+    setMenuOpen(false);
+    setAppsOpen(false);
+  }, [location.pathname]);
 
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth", // Smooth scrolling effect
-    });
-  };
+  // Lock body scroll when mobile menu open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <>
-      {/* Navbar */}
-      <nav
-        className={`navbar navbar-expand-lg border-bottom ${showNavbar ? "navbar-visible" : "navbar-hidden"
-          }`}
-        aria-label="Offcanvas navbar large"
-      >
-        <div className="container-fluid">
-          <Link className="navbar-brand text-uppercase" to="/">
-            <img
-              src="/chat.png"
-              alt={brandName}
-              style={{ height: "80px", width: "auto", objectFit: "contain", display: "block" }}
-            />
+      <style>{`
+        .tcn-nav {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 1040;
+          padding: 0.85rem 0;
+          background: rgba(11, 15, 30, 0.7);
+          backdrop-filter: saturate(180%) blur(16px);
+          -webkit-backdrop-filter: saturate(180%) blur(16px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          transition: padding 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+        }
+        .tcn-nav.scrolled {
+          padding: 0.5rem 0;
+          background: rgba(11, 15, 30, 0.92);
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+        }
+        .tcn-nav-inner {
+          display: flex;
+          align-items: center;
+          gap: 1.5rem;
+          max-width: 1280px;
+          margin: 0 auto;
+          padding: 0 1.5rem;
+        }
+
+        .tcn-nav-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.65rem;
+          text-decoration: none;
+          flex-shrink: 0;
+          transition: transform 0.22s ease;
+        }
+        .tcn-nav-brand:hover { transform: translateY(-1px); }
+        .tcn-nav-brand img {
+          height: 60px;
+          width: auto;
+          object-fit: contain;
+          display: block;
+          transition: height 0.22s ease;
+          filter: drop-shadow(0 4px 14px rgba(255, 213, 74, 0.18));
+        }
+        .tcn-nav.scrolled .tcn-nav-brand img { height: 46px; }
+
+        .tcn-nav-links {
+          display: flex;
+          align-items: center;
+          gap: 0.15rem;
+          flex: 1;
+          justify-content: center;
+        }
+        .tcn-nav-link {
+          position: relative;
+          padding: 0.55rem 0.95rem;
+          border-radius: 999px;
+          color: rgba(231, 233, 243, 0.78);
+          font-weight: 500;
+          font-size: 0.92rem;
+          text-decoration: none !important;
+          transition: color 0.18s ease, background 0.18s ease;
+        }
+        .tcn-nav-link:hover {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .tcn-nav-link.active {
+          color: #ffd54a;
+        }
+        .tcn-nav-link.active::after {
+          content: "";
+          position: absolute;
+          left: 50%;
+          bottom: -3px;
+          transform: translateX(-50%);
+          width: 22px;
+          height: 2px;
+          background: linear-gradient(90deg, #ffd54a, #ffb74d);
+          border-radius: 999px;
+          box-shadow: 0 0 12px rgba(255, 213, 74, 0.6);
+        }
+
+        /* Dropdown */
+        .tcn-nav-dropdown {
+          position: relative;
+        }
+        .tcn-nav-dropdown-trigger {
+          background: transparent;
+          border: none;
+          padding: 0.55rem 0.85rem;
+          border-radius: 999px;
+          color: rgba(231, 233, 243, 0.78);
+          font-weight: 500;
+          font-size: 0.92rem;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-family: inherit;
+          transition: color 0.18s ease, background 0.18s ease;
+        }
+        .tcn-nav-dropdown-trigger:hover {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.05);
+        }
+        .tcn-nav-dropdown-trigger .caret {
+          transition: transform 0.2s ease;
+        }
+        .tcn-nav-dropdown.open .tcn-nav-dropdown-trigger .caret {
+          transform: rotate(180deg);
+        }
+        .tcn-nav-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 50%;
+          transform: translateX(-50%) translateY(-6px);
+          min-width: 230px;
+          background: rgba(26, 31, 58, 0.96);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 14px;
+          padding: 0.4rem;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.18s ease, transform 0.22s ease;
+        }
+        .tcn-nav-dropdown.open .tcn-nav-dropdown-menu {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+          pointer-events: auto;
+        }
+        .tcn-nav-dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 0.6rem 0.85rem;
+          border-radius: 9px;
+          color: rgba(231, 233, 243, 0.88) !important;
+          text-decoration: none !important;
+          font-size: 0.88rem;
+          font-weight: 500;
+          transition: background 0.15s ease, color 0.15s ease;
+        }
+        .tcn-nav-dropdown-item:hover {
+          background: rgba(255, 213, 74, 0.08);
+          color: #ffd54a !important;
+        }
+        .tcn-nav-dropdown-item .ico {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          background: rgba(109, 93, 252, 0.15);
+          color: #a99dff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .tcn-nav-dropdown-item:hover .ico {
+          background: rgba(255, 213, 74, 0.18);
+          color: #ffd54a;
+        }
+
+        /* Right cluster */
+        .tcn-nav-right {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-shrink: 0;
+        }
+        .tcn-nav-login {
+          padding: 0.5rem 1rem;
+          border-radius: 999px;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: rgba(255, 255, 255, 0.85) !important;
+          font-weight: 600;
+          font-size: 0.9rem;
+          text-decoration: none !important;
+          transition: all 0.18s ease;
+        }
+        .tcn-nav-login:hover {
+          background: rgba(255, 255, 255, 0.08);
+          color: #fff !important;
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+        .tcn-nav-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0.55rem 1.15rem 0.55rem 1.25rem;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a !important;
+          font-weight: 800;
+          font-size: 0.88rem;
+          letter-spacing: 0.02em;
+          text-decoration: none !important;
+          box-shadow: 0 6px 18px rgba(255, 213, 74, 0.32);
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .tcn-nav-cta:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 26px rgba(255, 213, 74, 0.5);
+          color: #1a1f3a !important;
+        }
+
+        /* Mobile burger */
+        .tcn-nav-burger {
+          display: none;
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          margin-left: auto;
+        }
+        .tcn-nav-burger:hover { background: rgba(255, 255, 255, 0.1); }
+
+        /* Mobile drawer */
+        .tcn-mobile-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(6px);
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 0.25s ease;
+          z-index: 1050;
+        }
+        .tcn-mobile-backdrop.open {
+          opacity: 1;
+          pointer-events: auto;
+        }
+        .tcn-mobile-drawer {
+          position: fixed;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: min(340px, 90vw);
+          background: linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
+          border-left: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 1.25rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          transform: translateX(100%);
+          transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+          z-index: 1060;
+          overflow-y: auto;
+        }
+        .tcn-mobile-drawer.open { transform: translateX(0); }
+        .tcn-mobile-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .tcn-mobile-close {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: #fff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+        .tcn-mobile-link {
+          padding: 0.85rem 1rem;
+          border-radius: 12px;
+          color: rgba(231, 233, 243, 0.85) !important;
+          font-weight: 600;
+          font-size: 1rem;
+          text-decoration: none !important;
+          transition: all 0.18s ease;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .tcn-mobile-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff !important; }
+        .tcn-mobile-link.active {
+          background: linear-gradient(90deg, rgba(255, 213, 74, 0.18), rgba(255, 213, 74, 0.04));
+          color: #ffd54a !important;
+          box-shadow: inset 3px 0 0 #ffd54a;
+        }
+        .tcn-mobile-sub {
+          font-size: 0.7rem;
+          color: rgba(255, 255, 255, 0.45);
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          padding: 0.5rem 1rem;
+          margin-top: 0.4rem;
+        }
+        .tcn-mobile-actions {
+          margin-top: auto;
+          padding-top: 1rem;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+        }
+        .tcn-mobile-actions .login-btn {
+          padding: 0.85rem 1rem;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          color: #fff !important;
+          font-weight: 600;
+          font-size: 0.95rem;
+          text-decoration: none !important;
+          text-align: center;
+        }
+        .tcn-mobile-actions .trial-btn {
+          padding: 0.85rem 1rem;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a !important;
+          font-weight: 800;
+          font-size: 0.95rem;
+          text-decoration: none !important;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          box-shadow: 0 6px 18px rgba(255, 213, 74, 0.35);
+        }
+
+        @media (max-width: 991px) {
+          .tcn-nav-links, .tcn-nav-right { display: none; }
+          .tcn-nav-burger { display: inline-flex; }
+        }
+
+        /* Body padding for fixed navbar */
+        body { padding-top: 0 !important; }
+      `}</style>
+
+      <nav className={`tcn-nav ${scrolled ? "scrolled" : ""}`}>
+        <div className="tcn-nav-inner">
+          {/* Brand */}
+          <Link to="/" className="tcn-nav-brand" aria-label={brandName || "TheChatNest"}>
+            <img src="/chat.png" alt={brandName || "TheChatNest"} />
           </Link>
-          <button
-            className="navbar-toggler border-none p-1 shadow-none"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#offcanvasNavbar2"
-            aria-controls="offcanvasNavbar2"
-          >
-            <PiTextOutdent size={32} />
-          </button>
-          <div
-            className="offcanvas offcanvas-end"
-            style={{ height: "100vh" }}
-            tabIndex="-1"
-            id="offcanvasNavbar2"
-            aria-labelledby="offcanvasNavbar2Label"
-          >
-            <div className="offcanvas-header">
-              <h5 className="offcanvas-title" id="offcanvasNavbar2Label"></h5>
+
+          {/* Center links */}
+          <div className="tcn-nav-links">
+            {navLinks.map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={({ isActive }) =>
+                  `tcn-nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+
+            <div
+              className={`tcn-nav-dropdown ${appsOpen ? "open" : ""}`}
+              onMouseEnter={() => setAppsOpen(true)}
+              onMouseLeave={() => setAppsOpen(false)}
+            >
               <button
                 type="button"
-                className="btn-close btn-close-black"
-                data-bs-dismiss="offcanvas"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="offcanvas-body overflow-visible justify-content-end">
-              <ul className="navbar-nav justify-content-end grow pe-3 gap-2">
-                <li className="nav-item">
-                  <Link
-                    className="nav-link active"
-                    aria-current="page"
-                    to="/"
-                  >
-                    Home
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/pricing">
-                    Pricing
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/features">
-                    Features
-                  </Link>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/compare">
-                    Compare
-                  </Link>
-                </li>
-                <li className="nav-item dropdown">
-                  <div
-                    className="nav-link dropdown-toggle"
-                    role="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false"
-                  >
-                    Get Our App
-                  </div>
-                  <ul className="dropdown-menu">
-                    <li>
-                      <Link className="dropdown-item" to={appUrl} >
-                        Windows App
-                      </Link>
-                    </li>
-                    <li>
-                      <Link className="dropdown-item" to="/help">
-                        Help Center
-                      </Link>
-                    </li>
-                  </ul>
-                </li>
-                <li className="nav-item">
-                  <Link className="nav-link" to="/app">
-                    Messenger
-                  </Link>
-                </li>
-              </ul>
-              <ul className="navbar-nav ml-auto gap-2">
-                <Link className="nav-link" to="/auth/login">
-                  Login
+                className="tcn-nav-dropdown-trigger"
+                onClick={() => setAppsOpen((v) => !v)}
+                aria-expanded={appsOpen}
+              >
+                Get our app
+                <PiCaretDownBold size={11} className="caret" />
+              </button>
+              <div className="tcn-nav-dropdown-menu" role="menu">
+                <Link to={appUrl || "/downloads"} className="tcn-nav-dropdown-item">
+                  <span className="ico">
+                    <PiWindowsLogoDuotone size={16} />
+                  </span>
+                  Windows app
                 </Link>
-                <Link to="/auth/register" className="main-btn">
-                  Free Trial
+                <Link to="/downloads" className="tcn-nav-dropdown-item">
+                  <span className="ico">
+                    <PiDownloadSimpleDuotone size={16} />
+                  </span>
+                  All downloads
                 </Link>
-              </ul>
+                <Link to="/help" className="tcn-nav-dropdown-item">
+                  <span className="ico">
+                    <PiHeadsetDuotone size={16} />
+                  </span>
+                  Help center
+                </Link>
+              </div>
             </div>
+
+            <NavLink to="/app" className={({ isActive }) => `tcn-nav-link ${isActive ? "active" : ""}`}>
+              Messenger
+            </NavLink>
           </div>
+
+          {/* Right actions (desktop) */}
+          <div className="tcn-nav-right">
+            <Link to="/auth/login" className="tcn-nav-login">
+              Login
+            </Link>
+            <Link to="/auth/register" className="tcn-nav-cta">
+              Free trial <PiArrowRightBold size={12} />
+            </Link>
+          </div>
+
+          {/* Mobile burger */}
+          <button
+            className="tcn-nav-burger"
+            type="button"
+            aria-label="Open menu"
+            onClick={() => setMenuOpen(true)}
+          >
+            <PiList size={22} />
+          </button>
         </div>
       </nav>
 
-      {/* Scroll to Top Button */}
+      {/* Mobile drawer */}
+      <div className={`tcn-mobile-backdrop ${menuOpen ? "open" : ""}`} onClick={() => setMenuOpen(false)} />
+      <aside className={`tcn-mobile-drawer ${menuOpen ? "open" : ""}`} aria-hidden={!menuOpen}>
+        <div className="tcn-mobile-head">
+          <Link to="/" className="tcn-nav-brand" onClick={() => setMenuOpen(false)}>
+            <img src="/chat.png" alt={brandName || "TheChatNest"} style={{ height: 44 }} />
+          </Link>
+          <button
+            type="button"
+            className="tcn-mobile-close"
+            aria-label="Close menu"
+            onClick={() => setMenuOpen(false)}
+          >
+            <PiX size={20} />
+          </button>
+        </div>
+
+        {navLinks.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.end}
+            className={({ isActive }) => `tcn-mobile-link ${isActive ? "active" : ""}`}
+          >
+            {link.label}
+          </NavLink>
+        ))}
+
+        <NavLink to="/app" className={({ isActive }) => `tcn-mobile-link ${isActive ? "active" : ""}`}>
+          Messenger
+        </NavLink>
+
+        <div className="tcn-mobile-sub">Get our app</div>
+        <Link to={appUrl || "/downloads"} className="tcn-mobile-link">
+          Windows app <PiArrowRightBold size={14} />
+        </Link>
+        <Link to="/downloads" className="tcn-mobile-link">
+          All downloads <PiArrowRightBold size={14} />
+        </Link>
+        <Link to="/help" className="tcn-mobile-link">
+          Help center <PiArrowRightBold size={14} />
+        </Link>
+
+        <div className="tcn-mobile-actions">
+          <Link to="/auth/login" className="login-btn">
+            Login
+          </Link>
+          <Link to="/auth/register" className="trial-btn">
+            Free trial <PiArrowRightBold size={14} />
+          </Link>
+        </div>
+      </aside>
+
+      {/* Scroll to top button */}
       {showScrollTop && (
         <button
           className="scroll-to-top-btn"
           onClick={scrollToTop}
+          aria-label="Scroll to top"
           style={{
             position: "fixed",
             bottom: "30px",
             right: "20px",
-            backgroundColor: "#007bff",
+            background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
             color: "#fff",
             border: "none",
             borderRadius: "50%",
-            width: "60px",
-            height: "60px",
+            width: "52px",
+            height: "52px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+            boxShadow: "0 10px 24px rgba(109, 93, 252, 0.45)",
             cursor: "pointer",
             zIndex: 1000,
-            transition: "0.3s ease-in-out",
-            animation: "float 1s 2 ease-in-out",
+            transition: "transform 0.2s ease",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
         >
-          <PiArrowCircleUp size={45} />
+          <PiArrowCircleUp size={28} />
         </button>
-      )}
-
-      {/* Popup */}
-      {showPopup && (
-        <div
-          className="modal fade show text-white"
-          style={{
-            display: "block",
-
-            zIndex: 1050,
-          }}
-        >
-          <div
-            className="modal-dialog modal-dialog-centered"
-            style={{ maxWidth: "600px" }}
-          >
-            <div className="modal-content p-4 position-relative">
-              {/* Sliding Images Container */}
-              <div
-                className="sliding-images-container d-none d-md-block"
-                style={{
-                  position: "absolute",
-                  top: "120px",
-                  right: "40px",
-                  width: "150px", // Width of the image container
-                  height: "150px", // Height of the image container
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  className="sliding-images"
-                  style={{
-                    position: "relative",
-                    width: "100%", // Adjusted for horizontal animation
-                    height: "100%",
-                    display: "flex", // Make images inline horizontally
-                    animation: "slideImagesX 8s infinite",
-                  }}
-                >
-                  <img
-                    src={helpdeskGif}
-                    alt="Helpdesk"
-                    style={{
-                      width: "150px",
-                      height: "150px",
-                      flexShrink: "0", // Prevent shrinking during animation
-                    }}
-                  />
-                  <img
-                    src={teamworkGif}
-                    alt="Teamwork"
-                    style={{
-                      width: "150px",
-                      height: "150px",
-                      flexShrink: "0",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Content Section */}
-              <div className="ms-auto" onClick={() => setShowPopup(false)}>
-                <PiXCircle
-                  size={32}
-                  color="#fff"
-                  cursor="pointer"
-                  weight="fill"
-                />
-              </div>
-              <div className="d-flex flex-column gap-4">
-                <div>
-                  <h2 className="modal-title">
-                    Collaborate better with {brandName}!
-                  </h2>
-                  <p>Start Now</p>
-                </div>
-                <div>
-                  <div className="d-flex gap-2 mt-3">
-                    <Link to="/auth/login" className="main-btn">
-                      Try Now
-                    </Link>
-                    <Link to="/demo" className="fill-btn">
-                      Request Demo
-                    </Link>
-                  </div>
-                  <div className="">
-                    <div className="d-flex gap-2 mt-5">
-                      <button
-                        onClick={handleStartChat}
-                        className="btn btn-outline-light align-items-center d-flex gap-1 btn-sm rounded-pill"
-                      >
-                        <PiChat /> Chat
-                      </button>
-                      <Divider
-                        orientation="vertical"
-                        variant="middle"
-                        flexItem
-                        sx={{ bgcolor: "#000" }}
-                      />
-                      <a className="">support@thechatnest.com</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* CSS for Sliding Animation */}
-          <style>
-            {`
-    @keyframes slideImagesX {
-      0% {
-        transform: translateX(0);
-      }
-      45% {
-        transform: translateX(0);
-      }
-      50% {
-        transform: translateX(-100%);
-      }
-      95% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(0);
-      }
-    }
-
-    .sliding-images img {
-      transition: transform 1s ease-in-out;
-    }
-  `}
-          </style>
-        </div>
       )}
     </>
   );

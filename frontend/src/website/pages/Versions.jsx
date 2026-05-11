@@ -1,30 +1,39 @@
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import {
+  PiBrowserDuotone,
+  PiAndroidLogoDuotone,
+  PiAppleLogoDuotone,
+  PiDesktopDuotone,
+  PiSparkleDuotone,
+  PiBugDuotone,
+  PiShieldCheckDuotone,
+  PiTrendUpDuotone,
+  PiWarningDuotone,
+  PiGaugeDuotone,
+  PiArrowRightBold,
+  PiCheckBold,
+  PiCalendarDuotone,
+} from "react-icons/pi";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 
-// ─── Platform icons ──────────────────────────────────────
-const PlatformIcon = ({ type, active }) => {
-  const color = active ? "#0162c4" : "#cbd5e1";
-  const icons = {
-    web: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" /></svg>,
-    android: <svg width="18" height="18" viewBox="0 0 24 24" fill={color}><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z" /></svg>,
-    ios: <svg width="18" height="18" viewBox="0 0 24 24" fill={color}><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" /></svg>,
-    desktop: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2"><path d="M20 3H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V5a2 2 0 00-2-2z" /><path d="M8 21h8M12 17v4" /></svg>,
-  };
-  return icons[type] || null;
+const PLATFORMS = {
+  web: { label: "Web", Icon: PiBrowserDuotone, tint: "#0ea5e9" },
+  android: { label: "Android", Icon: PiAndroidLogoDuotone, tint: "#22c55e" },
+  ios: { label: "iOS", Icon: PiAppleLogoDuotone, tint: "#ec4899" },
+  desktop: { label: "Desktop", Icon: PiDesktopDuotone, tint: "#a855f7" },
 };
 
-// ─── Category badge colors ───────────────────────────────
-const CAT_COLORS = {
-  feature: { bg: "#dcfce7", color: "#15803d", border: "#86efac" },
-  improvement: { bg: "#dbeafe", color: "#1d4ed8", border: "#93c5fd" },
-  fix: { bg: "#fee2e2", color: "#b91c1c", border: "#fca5a5" },
-  security: { bg: "#fef3c7", color: "#92400e", border: "#fcd34d" },
-  performance: { bg: "#e0e7ff", color: "#4338ca", border: "#a5b4fc" },
-  breaking: { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4" },
+const CHANGE_TYPES = {
+  feature: { label: "Feature", Icon: PiSparkleDuotone, tint: "#22c55e", bg: "rgba(34,197,94,0.12)" },
+  improvement: { label: "Improvement", Icon: PiTrendUpDuotone, tint: "#0ea5e9", bg: "rgba(14,165,233,0.12)" },
+  fix: { label: "Fix", Icon: PiBugDuotone, tint: "#f59e0b", bg: "rgba(245,158,11,0.12)" },
+  security: { label: "Security", Icon: PiShieldCheckDuotone, tint: "#ef4444", bg: "rgba(239,68,68,0.12)" },
+  performance: { label: "Performance", Icon: PiGaugeDuotone, tint: "#6d5dfc", bg: "rgba(109,93,252,0.12)" },
+  breaking: { label: "Breaking", Icon: PiWarningDuotone, tint: "#ec4899", bg: "rgba(236,72,153,0.12)" },
 };
 
-// ─── Release data ────────────────────────────────────────
+// ─── Release data (unchanged) ────────────────────────────
 const releases = [
   {
     version: "1.5.3",
@@ -178,21 +187,21 @@ const releases = [
   },
 ];
 
-const PLATFORM_LABELS = {
-  all: "All Platforms",
-  web: "Web",
-  android: "Android",
-  ios: "iOS",
-  desktop: "Desktop",
-};
+const PLATFORM_FILTERS = [
+  { key: "all", label: "All platforms", Icon: null },
+  { key: "web", label: "Web", Icon: PiBrowserDuotone },
+  { key: "android", label: "Android", Icon: PiAndroidLogoDuotone },
+  { key: "ios", label: "iOS", Icon: PiAppleLogoDuotone },
+  { key: "desktop", label: "Desktop", Icon: PiDesktopDuotone },
+];
 
-const TYPE_LABELS = {
-  all: "All Updates",
-  feature: "Features",
-  improvement: "Improvements",
-  fix: "Bug Fixes",
-  security: "Security",
-};
+const TYPE_FILTERS = [
+  { key: "all", label: "All" },
+  { key: "feature", label: "Features" },
+  { key: "improvement", label: "Improvements" },
+  { key: "fix", label: "Fixes" },
+  { key: "security", label: "Security" },
+];
 
 export default function Versions() {
   const { brandName } = useSiteBranding();
@@ -210,208 +219,640 @@ export default function Versions() {
       .filter(Boolean);
   }, [platformFilter, typeFilter]);
 
-  // Stats
-  const totalFeatures = releases.reduce((s, r) => s + r.changes.filter((c) => c.type === "feature").length, 0);
-  const totalFixes = releases.reduce((s, r) => s + r.changes.filter((c) => c.type === "fix").length, 0);
-  const totalSecurity = releases.reduce((s, r) => s + r.changes.filter((c) => c.type === "security").length, 0);
+  const stats = useMemo(() => {
+    const features = releases.reduce((s, r) => s + r.changes.filter((c) => c.type === "feature").length, 0);
+    const fixes = releases.reduce((s, r) => s + r.changes.filter((c) => c.type === "fix").length, 0);
+    const sec = releases.reduce((s, r) => s + r.changes.filter((c) => c.type === "security").length, 0);
+    return { releases: releases.length, features, fixes, sec };
+  }, []);
 
   return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
+    <div className="tcn-versions">
       <style>{`
-        .ver-pill { transition: all 0.2s; cursor: pointer; border: none; }
-        .ver-pill:hover { transform: translateY(-1px); }
-        .ver-pill.active { box-shadow: 0 4px 12px -4px rgba(1,98,196,0.4); }
-        .ver-entry { transition: transform 0.2s, box-shadow 0.2s; }
-        .ver-entry:hover { transform: translateX(4px); box-shadow: 0 8px 24px -12px rgba(15,23,42,0.12); }
+        .tcn-versions { background: #fff; }
+
+        /* HERO */
+        .tcn-ver-hero {
+          background:
+            radial-gradient(1200px 600px at 80% -10%, rgba(109,93,252,0.32), transparent 60%),
+            radial-gradient(800px 500px at 10% 10%, rgba(255,213,74,0.1), transparent 60%),
+            linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
+          color: #fff;
+          padding: 8rem 0 4.5rem;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
+        }
+        .tcn-ver-hero::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+          -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+          pointer-events: none;
+        }
+        .tcn-ver-hero > .container { position: relative; z-index: 1; }
+        .tcn-ver-hero h1 {
+          font-size: clamp(2.4rem, 5vw, 4rem);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.025em;
+          line-height: 1.08;
+          margin: 0 auto 1.25rem;
+          max-width: 800px;
+        }
+        .tcn-ver-hero .gradient-word {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+        .tcn-ver-hero p.lead {
+          font-size: 1.15rem;
+          color: rgba(255,255,255,0.7);
+          max-width: 620px;
+          margin: 0 auto 2.5rem;
+          line-height: 1.6;
+        }
+        .tcn-ver-stats {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .tcn-ver-stat {
+          background: rgba(255,255,255,0.06);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 16px;
+          padding: 1rem 1.5rem;
+          min-width: 140px;
+          backdrop-filter: blur(10px);
+          transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .tcn-ver-stat:hover {
+          transform: translateY(-3px);
+          background: rgba(255,255,255,0.1);
+        }
+        .tcn-ver-stat .num {
+          font-size: 2rem;
+          font-weight: 800;
+          display: block;
+          letter-spacing: -0.02em;
+          background: linear-gradient(135deg, var(--g1, #ffd54a), var(--g2, #ffb74d));
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+        }
+        .tcn-ver-stat .lbl {
+          font-size: 0.78rem;
+          color: rgba(255,255,255,0.6);
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
+        /* FILTERS — sticky */
+        .tcn-ver-filters {
+          position: sticky;
+          top: 64px;
+          z-index: 20;
+          background: rgba(255,255,255,0.95);
+          backdrop-filter: saturate(180%) blur(14px);
+          border-bottom: 1px solid var(--tcn-border);
+          padding: 1rem 0;
+        }
+        .tcn-ver-filters-inner {
+          display: flex;
+          gap: 1rem;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .tcn-ver-filter-group {
+          display: flex;
+          gap: 0.4rem;
+          flex-wrap: wrap;
+        }
+        .tcn-ver-pill {
+          padding: 0.5rem 1rem;
+          border-radius: 999px;
+          border: 1px solid var(--tcn-border);
+          background: #fff;
+          color: var(--tcn-ink-700);
+          font-weight: 600;
+          font-size: 0.85rem;
+          cursor: pointer;
+          font-family: inherit;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.18s ease;
+          white-space: nowrap;
+        }
+        .tcn-ver-pill:hover {
+          background: var(--tcn-violet-50);
+          border-color: var(--tcn-violet-500);
+          color: var(--tcn-violet-600);
+        }
+        .tcn-ver-pill.active {
+          background: linear-gradient(135deg, var(--tcn-navy-900), var(--tcn-navy-800));
+          color: #fff;
+          border-color: transparent;
+          box-shadow: 0 4px 14px rgba(11,15,30,0.25);
+        }
+        .tcn-ver-divider {
+          width: 1px;
+          height: 26px;
+          background: var(--tcn-border);
+        }
+
+        /* TIMELINE */
+        .tcn-ver-timeline {
+          max-width: 920px;
+          margin: 0 auto;
+          padding: 4rem 1rem;
+          position: relative;
+        }
+        .tcn-ver-timeline::before {
+          content: "";
+          position: absolute;
+          left: 22px;
+          top: 4.5rem;
+          bottom: 4rem;
+          width: 2px;
+          background: linear-gradient(180deg, var(--tcn-violet-600) 0%, var(--tcn-border) 12%, var(--tcn-border) 100%);
+        }
+        .tcn-ver-release {
+          position: relative;
+          padding-left: 56px;
+          padding-bottom: 2.5rem;
+        }
+        .tcn-ver-release:last-child { padding-bottom: 0; }
+        .tcn-ver-dot {
+          position: absolute;
+          left: 11px;
+          top: 8px;
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #fff;
+          border: 2px solid var(--tcn-border);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1;
+        }
+        .tcn-ver-release.latest .tcn-ver-dot {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          border-color: transparent;
+          box-shadow: 0 0 0 4px rgba(255,213,74,0.18), 0 0 16px rgba(255,213,74,0.5);
+        }
+        .tcn-ver-card {
+          background: #fff;
+          border: 1px solid var(--tcn-border);
+          border-radius: 18px;
+          padding: 1.75rem 1.6rem;
+          transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .tcn-ver-card:hover {
+          transform: translateY(-3px);
+          box-shadow: var(--tcn-shadow-md);
+        }
+        .tcn-ver-release.latest .tcn-ver-card {
+          border-color: rgba(255,213,74,0.5);
+          box-shadow: 0 12px 32px rgba(255,213,74,0.12);
+        }
+
+        .tcn-ver-card-head {
+          display: flex;
+          align-items: center;
+          gap: 0.85rem;
+          flex-wrap: wrap;
+          margin-bottom: 1rem;
+        }
+        .tcn-ver-version {
+          font-size: 1.4rem;
+          font-weight: 800;
+          color: var(--tcn-ink-900);
+          margin: 0;
+          letter-spacing: -0.02em;
+        }
+        .tcn-ver-date {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          color: var(--tcn-ink-500);
+          font-size: 0.85rem;
+          font-weight: 500;
+        }
+        .tcn-ver-tag {
+          padding: 0.3rem 0.75rem;
+          border-radius: 999px;
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+        .tcn-ver-tag.latest {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a;
+          box-shadow: 0 3px 10px rgba(255,213,74,0.35);
+        }
+        .tcn-ver-tag.initial {
+          background: var(--tcn-violet-50);
+          color: var(--tcn-violet-600);
+        }
+        .tcn-ver-platforms {
+          display: flex;
+          gap: 5px;
+          margin-left: auto;
+        }
+        .tcn-ver-plat-chip {
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .tcn-ver-summary {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          margin-bottom: 1.25rem;
+        }
+        .tcn-ver-summary-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 0.3rem 0.7rem;
+          border-radius: 999px;
+          font-size: 0.74rem;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+        }
+
+        .tcn-ver-changes {
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+          margin: 0;
+          padding: 0;
+          list-style: none;
+        }
+        .tcn-ver-change {
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+          padding: 0.55rem 0.75rem;
+          border-radius: 10px;
+          transition: background 0.18s ease;
+        }
+        .tcn-ver-change:hover {
+          background: var(--tcn-bg-soft);
+        }
+        .tcn-ver-change-icon {
+          width: 26px;
+          height: 26px;
+          border-radius: 8px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          margin-top: 1px;
+        }
+        .tcn-ver-change-text {
+          color: var(--tcn-ink-700);
+          font-size: 0.92rem;
+          line-height: 1.5;
+        }
+
+        .tcn-ver-empty {
+          text-align: center;
+          padding: 4rem 1.5rem;
+          color: var(--tcn-ink-500);
+        }
+        .tcn-ver-empty button {
+          margin-top: 0.85rem;
+          padding: 0.6rem 1.25rem;
+          border-radius: 999px;
+          background: var(--tcn-violet-600);
+          color: #fff;
+          border: none;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: inherit;
+        }
+
+        /* FINAL CTA */
+        .tcn-ver-cta {
+          padding: 4rem 0 6rem;
+        }
+        .tcn-ver-cta-inner {
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 4rem 3rem;
+          border-radius: 24px;
+          background: linear-gradient(135deg, #0b0f1e 0%, #1a1f3a 50%, #2d2563 100%);
+          text-align: center;
+          color: #fff;
+          position: relative;
+          overflow: hidden;
+          box-shadow: var(--tcn-shadow-lg);
+        }
+        .tcn-ver-cta-inner::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(600px 300px at 20% 0%, rgba(255,213,74,0.2), transparent 60%),
+            radial-gradient(600px 300px at 80% 100%, rgba(109,93,252,0.3), transparent 60%);
+          pointer-events: none;
+        }
+        .tcn-ver-cta-inner > * { position: relative; z-index: 1; }
+        .tcn-ver-cta h2 {
+          color: #fff;
+          font-size: clamp(1.7rem, 3vw, 2.4rem);
+          font-weight: 800;
+          margin: 0 0 0.75rem;
+          letter-spacing: -0.02em;
+        }
+        .tcn-ver-cta p {
+          color: rgba(255,255,255,0.72);
+          font-size: 1.05rem;
+          max-width: 540px;
+          margin: 0 auto 1.75rem;
+          line-height: 1.6;
+        }
+        .tcn-ver-cta .btns {
+          display: flex;
+          gap: 0.85rem;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .tcn-ver-cta .btn-gold {
+          padding: 0.9rem 1.85rem;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a !important;
+          font-weight: 800;
+          font-size: 1rem;
+          text-decoration: none !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 8px 24px rgba(255,213,74,0.35);
+          transition: transform 0.18s ease;
+        }
+        .tcn-ver-cta .btn-gold:hover { transform: translateY(-2px); color: #1a1f3a !important; }
+        .tcn-ver-cta .btn-ghost {
+          padding: 0.9rem 1.75rem;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid rgba(255,255,255,0.18);
+          color: #fff !important;
+          font-weight: 600;
+          font-size: 1rem;
+          text-decoration: none !important;
+          backdrop-filter: blur(8px);
+        }
+
+        @media (max-width: 768px) {
+          .tcn-ver-hero { padding: 6.5rem 0 3rem; }
+          .tcn-ver-timeline { padding: 3rem 0.25rem; }
+          .tcn-ver-card { padding: 1.4rem 1.2rem; }
+          .tcn-ver-cta-inner { padding: 3rem 1.5rem; }
+          .tcn-ver-divider { display: none; }
+        }
       `}</style>
 
-      {/* Hero */}
-      <section style={{
-        background: "linear-gradient(135deg, #0a1628 0%, #0d2137 50%, #0f3460 100%)",
-        color: "#fff", padding: "80px 0 48px", textAlign: "center", position: "relative", overflow: "hidden",
-      }}>
-        <div style={{ position: "absolute", top: -100, right: -60, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(1,98,196,0.12) 0%, transparent 70%)" }} />
-        <div className="container" style={{ position: "relative", zIndex: 1 }}>
-          <p style={{ display: "inline-block", background: "rgba(1,98,196,0.2)", border: "1px solid rgba(1,98,196,0.4)", borderRadius: 20, padding: "6px 18px", fontSize: 12, fontWeight: 700, letterSpacing: 1.5, marginBottom: 20, color: "#64b5f6", textTransform: "uppercase" }}>
+      {/* ─── HERO ──────────────────────────────────────────── */}
+      <section className="tcn-ver-hero">
+        <div className="container">
+          <span
+            className="eyebrow"
+            style={{
+              background: "rgba(255,213,74,0.12)",
+              color: "#ffd54a",
+              borderColor: "rgba(255,213,74,0.25)",
+              marginBottom: "1.25rem",
+              display: "inline-flex",
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: "#22c55e", boxShadow: "0 0 0 4px rgba(34,197,94,0.25)" }} />
             Changelog
-          </p>
-          <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 800, marginBottom: 12, lineHeight: 1.15 }}>
-            We Keep Updating
+          </span>
+
+          <h1>
+            We ship updates <span className="gradient-word">every week</span>
           </h1>
-          <p style={{ fontSize: "1.05rem", color: "#94a3b8", maxWidth: 560, margin: "0 auto 32px" }}>
-            Every update makes {brandName} faster, more secure, and more powerful. Here's every change we've shipped.
+          <p className="lead">
+            Every release makes {brandName || "TheChatNest"} faster, more secure, and more
+            powerful. Here's everything we've shipped.
           </p>
 
-          {/* Stats */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
-            {[
-              { value: releases.length, label: "Releases", color: "#3b82f6" },
-              { value: totalFeatures, label: "Features Added", color: "#22c55e" },
-              { value: totalFixes, label: "Bugs Fixed", color: "#f59e0b" },
-              { value: totalSecurity, label: "Security Updates", color: "#ef4444" },
-            ].map((s) => (
-              <div key={s.label} style={{ minWidth: 120, padding: "14px 18px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <div style={{ fontSize: 28, fontWeight: 800, color: s.color }}>{s.value}</div>
-                <div style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>{s.label}</div>
-              </div>
-            ))}
+          <div className="tcn-ver-stats">
+            <div className="tcn-ver-stat">
+              <span className="num">{stats.releases}</span>
+              <span className="lbl">Releases</span>
+            </div>
+            <div className="tcn-ver-stat" style={{ "--g1": "#22c55e", "--g2": "#16a34a" }}>
+              <span className="num">{stats.features}</span>
+              <span className="lbl">Features added</span>
+            </div>
+            <div className="tcn-ver-stat" style={{ "--g1": "#f59e0b", "--g2": "#d97706" }}>
+              <span className="num">{stats.fixes}</span>
+              <span className="lbl">Bugs fixed</span>
+            </div>
+            <div className="tcn-ver-stat" style={{ "--g1": "#ef4444", "--g2": "#dc2626" }}>
+              <span className="num">{stats.sec}</span>
+              <span className="lbl">Security updates</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Filters */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", padding: "18px 0", position: "sticky", top: 55, zIndex: 100, backdropFilter: "blur(10px)", backgroundColor: "rgba(255,255,255,0.95)" }}>
+      {/* ─── FILTERS ───────────────────────────────────────── */}
+      <div className="tcn-ver-filters">
         <div className="container">
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
-            {/* Platform pills */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {Object.entries(PLATFORM_LABELS).map(([key, label]) => (
+          <div className="tcn-ver-filters-inner">
+            <div className="tcn-ver-filter-group">
+              {PLATFORM_FILTERS.map(({ key, label, Icon }) => (
                 <button
                   key={key}
-                  className={`ver-pill ${platformFilter === key ? "active" : ""}`}
+                  className={`tcn-ver-pill ${platformFilter === key ? "active" : ""}`}
                   onClick={() => setPlatformFilter(key)}
-                  style={{
-                    padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-                    background: platformFilter === key ? "#0162c4" : "#f1f5f9",
-                    color: platformFilter === key ? "#fff" : "#475569",
-                    display: "flex", alignItems: "center", gap: 5,
-                  }}
                 >
-                  {key !== "all" && <PlatformIcon type={key} active={platformFilter === key} />}
-                  {label}
+                  {Icon && <Icon size={14} />} {label}
                 </button>
               ))}
             </div>
 
-            <div style={{ width: 1, height: 24, background: "#e2e8f0" }} />
+            <div className="tcn-ver-divider" />
 
-            {/* Type pills */}
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-              {Object.entries(TYPE_LABELS).map(([key, label]) => {
-                const c = CAT_COLORS[key];
-                return (
-                  <button
-                    key={key}
-                    className={`ver-pill ${typeFilter === key ? "active" : ""}`}
-                    onClick={() => setTypeFilter(key)}
-                    style={{
-                      padding: "6px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600,
-                      background: typeFilter === key ? (c?.bg || "#0162c4") : "#f1f5f9",
-                      color: typeFilter === key ? (c?.color || "#fff") : "#475569",
-                      border: typeFilter === key && c ? `1px solid ${c.border}` : "1px solid transparent",
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+            <div className="tcn-ver-filter-group">
+              {TYPE_FILTERS.map(({ key, label }) => (
+                <button
+                  key={key}
+                  className={`tcn-ver-pill ${typeFilter === key ? "active" : ""}`}
+                  onClick={() => setTypeFilter(key)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Timeline */}
-      <section className="container" style={{ padding: "48px 15px", maxWidth: 860 }}>
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px", color: "#64748b" }}>
-            <div style={{ fontSize: "3rem", marginBottom: 12 }}>📋</div>
-            <h4 style={{ fontWeight: 700, color: "#0f172a" }}>No releases match your filters</h4>
-            <button onClick={() => { setPlatformFilter("all"); setTypeFilter("all"); }} style={{ marginTop: 12, padding: "8px 20px", borderRadius: 20, border: "none", background: "#0162c4", color: "#fff", fontWeight: 600, cursor: "pointer" }}>
-              Clear filters
-            </button>
-          </div>
-        ) : (
-          filtered.map((r, i) => {
-            const featureCount = r.changes.filter((c) => c.type === "feature").length;
-            const fixCount = r.changes.filter((c) => c.type === "fix").length;
-            const secCount = r.changes.filter((c) => c.type === "security").length;
-            const impCount = r.changes.filter((c) => c.type === "improvement").length;
+      {/* ─── TIMELINE ──────────────────────────────────────── */}
+      <div className="container">
+        <div className="tcn-ver-timeline">
+          {filtered.length === 0 ? (
+            <div className="tcn-ver-empty">
+              <div style={{ fontSize: "2.5rem", marginBottom: 8 }}>📋</div>
+              <h4 style={{ fontWeight: 700, color: "var(--tcn-ink-900)" }}>
+                No releases match your filters
+              </h4>
+              <button
+                onClick={() => {
+                  setPlatformFilter("all");
+                  setTypeFilter("all");
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            filtered.map((r, i) => {
+              const isLatest = r.tag === "Latest" || i === 0;
+              const isInitial = r.tag === "Initial Release";
+              const counts = {};
+              r.changes.forEach((c) => {
+                counts[c.type] = (counts[c.type] || 0) + 1;
+              });
 
-            return (
-              <div key={r.version} style={{ position: "relative", paddingLeft: 40, paddingBottom: i < filtered.length - 1 ? 36 : 0, borderLeft: i < filtered.length - 1 ? "2px solid #e2e8f0" : "2px solid transparent", marginLeft: 14 }}>
-                {/* Timeline dot */}
-                <div style={{
-                  position: "absolute", left: -9, top: 0, width: 18, height: 18, borderRadius: "50%",
-                  background: i === 0 ? "#0162c4" : "#cbd5e1", border: "3px solid #f8fafc",
-                  boxShadow: i === 0 ? "0 0 0 4px rgba(1,98,196,0.15)" : "none",
-                }} />
-
-                <div className="ver-entry" style={{ background: "#fff", borderRadius: 14, padding: "24px 28px", border: i === 0 ? "2px solid #0162c4" : "1px solid #e2e8f0" }}>
-                  {/* Header */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-                    <h3 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#0f172a", margin: 0 }}>v{r.version}</h3>
-                    <span style={{ color: "#64748b", fontSize: 13, fontWeight: 500 }}>{r.date}</span>
-                    {r.tag && (
-                      <span style={{
-                        background: r.tag === "Latest" ? "linear-gradient(135deg, #0162c4, #0288d1)" : "#f1f5f9",
-                        color: r.tag === "Latest" ? "#fff" : "#64748b",
-                        padding: "3px 12px", borderRadius: 999, fontSize: 11, fontWeight: 700,
-                      }}>
-                        {r.tag}
+              return (
+                <div key={r.version} className={`tcn-ver-release ${isLatest ? "latest" : ""}`}>
+                  <span className="tcn-ver-dot">
+                    {isLatest && <PiSparkleDuotone size={12} color="#1a1f3a" />}
+                  </span>
+                  <div className="tcn-ver-card">
+                    <div className="tcn-ver-card-head">
+                      <h3 className="tcn-ver-version">v{r.version}</h3>
+                      <span className="tcn-ver-date">
+                        <PiCalendarDuotone size={14} />
+                        {r.date}
                       </span>
-                    )}
-                    {/* Platform icons */}
-                    <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
-                      {r.platforms.map((p) => (
-                        <div key={p} title={PLATFORM_LABELS[p]} style={{ width: 28, height: 28, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <PlatformIcon type={p} active />
-                        </div>
-                      ))}
+                      {r.tag && (
+                        <span className={`tcn-ver-tag ${isLatest ? "latest" : isInitial ? "initial" : ""}`}>
+                          {r.tag}
+                        </span>
+                      )}
+                      <div className="tcn-ver-platforms">
+                        {r.platforms.map((p) => {
+                          const plat = PLATFORMS[p];
+                          if (!plat) return null;
+                          const Icon = plat.Icon;
+                          return (
+                            <span
+                              key={p}
+                              className="tcn-ver-plat-chip"
+                              title={plat.label}
+                              style={{
+                                background: `${plat.tint}1a`,
+                                color: plat.tint,
+                              }}
+                            >
+                              <Icon size={16} />
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Category summary */}
-                  <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-                    {featureCount > 0 && <span style={{ ...badgeStyle(CAT_COLORS.feature) }}>{featureCount} Feature{featureCount > 1 ? "s" : ""}</span>}
-                    {impCount > 0 && <span style={{ ...badgeStyle(CAT_COLORS.improvement) }}>{impCount} Improvement{impCount > 1 ? "s" : ""}</span>}
-                    {fixCount > 0 && <span style={{ ...badgeStyle(CAT_COLORS.fix) }}>{fixCount} Fix{fixCount > 1 ? "es" : ""}</span>}
-                    {secCount > 0 && <span style={{ ...badgeStyle(CAT_COLORS.security) }}>{secCount} Security</span>}
-                  </div>
+                    {/* Summary chips */}
+                    <div className="tcn-ver-summary">
+                      {Object.entries(counts).map(([type, count]) => {
+                        const t = CHANGE_TYPES[type];
+                        if (!t) return null;
+                        return (
+                          <span
+                            key={type}
+                            className="tcn-ver-summary-chip"
+                            style={{ background: t.bg, color: t.tint }}
+                          >
+                            <t.Icon size={11} /> {count} {t.label}
+                            {count > 1 && type === "fix" ? "es" : count > 1 ? "s" : ""}
+                          </span>
+                        );
+                      })}
+                    </div>
 
-                  {/* Changes list */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    {r.changes.map((c, j) => {
-                      const cat = CAT_COLORS[c.type] || CAT_COLORS.feature;
-                      return (
-                        <div key={j} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "6px 0" }}>
-                          <span style={{
-                            flexShrink: 0, marginTop: 2, width: 8, height: 8, borderRadius: "50%",
-                            background: cat.color,
-                          }} />
-                          <span style={{ fontSize: 14, color: "#334155", lineHeight: 1.5 }}>{c.text}</span>
-                        </div>
-                      );
-                    })}
+                    {/* Changes list */}
+                    <ul className="tcn-ver-changes">
+                      {r.changes.map((c, j) => {
+                        const t = CHANGE_TYPES[c.type] || CHANGE_TYPES.feature;
+                        return (
+                          <li key={j} className="tcn-ver-change">
+                            <span
+                              className="tcn-ver-change-icon"
+                              style={{ background: t.bg, color: t.tint }}
+                            >
+                              <t.Icon size={13} />
+                            </span>
+                            <span className="tcn-ver-change-text">{c.text}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-      </section>
+              );
+            })
+          )}
+        </div>
+      </div>
 
-      {/* CTA */}
-      <section style={{ background: "#0f172a", color: "#fff", padding: "48px 0", textAlign: "center" }}>
+      {/* ─── FINAL CTA ─────────────────────────────────────── */}
+      <section className="tcn-ver-cta">
         <div className="container">
-          <h3 style={{ fontWeight: 700, marginBottom: 8 }}>Want to see what's next?</h3>
-          <p style={{ color: "#94a3b8", marginBottom: 24 }}>We ship updates every week. Start using {brandName} today.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <Link to="/auth/register" style={{ display: "inline-block", background: "#0162c4", color: "#fff", padding: "12px 28px", borderRadius: 8, fontWeight: 600, textDecoration: "none" }}>
-              Start Free Trial
-            </Link>
-            <Link to="/features" style={{ display: "inline-block", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", padding: "12px 28px", borderRadius: 8, fontWeight: 600, textDecoration: "none" }}>
-              View All Features
-            </Link>
+          <div className="tcn-ver-cta-inner">
+            <span
+              className="eyebrow"
+              style={{
+                background: "rgba(255,213,74,0.12)",
+                color: "#ffd54a",
+                borderColor: "rgba(255,213,74,0.25)",
+                marginBottom: "1.25rem",
+                display: "inline-flex",
+              }}
+            >
+              <PiSparkleDuotone size={12} /> What's next
+            </span>
+            <h2>Get every update the moment it ships</h2>
+            <p>
+              Start free for 14 days and grow with us. Auto-updates, new features, and security
+              patches — all included.
+            </p>
+            <div className="btns">
+              <Link to="/auth/register" className="btn-gold">
+                Start free trial <PiArrowRightBold size={16} />
+              </Link>
+              <Link to="/features" className="btn-ghost">
+                View all features
+              </Link>
+            </div>
           </div>
         </div>
       </section>
     </div>
   );
-}
-
-function badgeStyle(cat) {
-  return {
-    display: "inline-block", padding: "3px 10px", borderRadius: 6, fontSize: 11, fontWeight: 700,
-    background: cat.bg, color: cat.color, border: `1px solid ${cat.border}`,
-  };
 }

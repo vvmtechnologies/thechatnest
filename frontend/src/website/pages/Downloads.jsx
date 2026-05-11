@@ -1,76 +1,110 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  PiAppleLogoDuotone,
+  PiAndroidLogoDuotone,
+  PiWindowsLogoDuotone,
+  PiLinuxLogoDuotone,
+  PiDownloadSimpleDuotone,
+  PiCheckCircleDuotone,
+  PiBrowserDuotone,
+  PiShieldCheckDuotone,
+  PiCalendarDuotone,
+  PiArrowRightBold,
+  PiClockDuotone,
+} from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 
-const platforms = [
+const desktopPlatforms = [
   {
+    key: "windows",
     name: "Windows",
-    icon: (
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M3 12V6.75l7-1.02V12H3zm8-1.18V5.55l10-1.55V12H11V10.82zM3 13h7v6.27l-7-1.02V13zm8 0h10v7l-10-1.55V13z" />
-      </svg>
-    ),
+    Icon: PiWindowsLogoDuotone,
+    tint: "#0ea5e9",
     desc: "Windows 10 / 11 (64-bit)",
     size: "~85 MB",
     format: ".exe installer",
+    perks: ["Native notifications", "Auto-update", "System tray support"],
   },
   {
+    key: "macos",
     name: "macOS",
-    icon: (
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-      </svg>
-    ),
+    Icon: PiAppleLogoDuotone,
+    tint: "#a855f7",
     desc: "macOS 12+ (Apple Silicon & Intel)",
     size: "~92 MB",
     format: ".dmg installer",
+    perks: ["Apple Silicon native", "Menu-bar integration", "Continuity-ready"],
   },
   {
+    key: "linux",
     name: "Linux",
-    icon: (
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.04 1.241.027 1.664.164a1.751 1.751 0 001.21.925c.76.19 1.69-.037 2.59-.525.898-.468 1.94-.536 2.744-.736.404-.132.764-.267.933-.6.167-.334.126-.794-.113-1.457-.088-.24-.032-.528.04-.863.067-.334.136-.603.055-.868a.456.456 0 00-.104-.164c.124-.796 0-1.64-.277-2.472-.587-1.77-1.83-3.47-2.715-4.52-.755-1.068-.98-1.93-1.05-3.02-.065-1.49 1.049-5.965-3.17-6.298A5.145 5.145 0 0012.504 0z" />
-      </svg>
-    ),
+    Icon: PiLinuxLogoDuotone,
+    tint: "#f59e0b",
     desc: "Ubuntu 20.04+ / Debian / Fedora",
     size: "~78 MB",
     format: ".AppImage / .deb",
+    perks: ["AppImage portable", ".deb package", "Wayland & X11 support"],
   },
 ];
 
 const mobileApps = [
   {
+    key: "android",
     name: "Android",
-    icon: (
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.523 15.341a.996.996 0 01-.998-.998.996.996 0 01.998-.998.996.996 0 01.998.998.996.996 0 01-.998.998m-11.046 0a.996.996 0 01-.998-.998.996.996 0 01.998-.998.996.996 0 01.998.998.996.996 0 01-.998.998m11.405-6.02l1.997-3.46a.416.416 0 00-.152-.567.416.416 0 00-.567.152L17.12 8.95c-1.46-.669-3.093-1.043-4.87-1.043-1.777 0-3.41.374-4.87 1.043L5.34 5.446a.416.416 0 00-.567-.152.416.416 0 00-.152.567l1.997 3.46C3.042 11.301 1 14.48 1 18.141h22c0-3.661-2.042-6.84-5.618-8.82" />
-      </svg>
-    ),
+    Icon: PiAndroidLogoDuotone,
+    tint: "#22c55e",
     desc: "Android 8.0+ (API 26)",
     stores: ["Google Play", "Direct APK"],
   },
   {
+    key: "ios",
     name: "iOS",
-    icon: (
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" />
-      </svg>
-    ),
+    Icon: PiAppleLogoDuotone,
+    tint: "#ec4899",
     desc: "iOS 15.0+",
     stores: ["App Store"],
   },
 ];
 
-// GitHub Releases is the source of truth for desktop installers — switched
-// to it from a backend endpoint that didn't exist (was returning 404 on
-// every page load). The latest release page works without auth and is
-// updated automatically by the desktop-release CI workflow.
+const desktopReqs = [
+  "Windows 10 or later (64-bit)",
+  "macOS 12 Monterey or later",
+  "Ubuntu 20.04+ / Debian 11+ / Fedora 36+",
+  "4 GB RAM minimum, 8 GB recommended",
+  "200 MB free disk space",
+  "Webcam & microphone for video calls",
+];
+
+const mobileReqs = [
+  "Android 8.0 (Oreo) or later",
+  "iOS 15.0 or later",
+  "100 MB free storage",
+  "Active internet connection",
+  "Camera & microphone permissions for calls",
+  "Biometric hardware for fingerprint / Face ID login",
+];
+
 const RELEASES_API = "https://api.github.com/repos/thakurbhavesh/Dream/releases/latest";
 const RELEASES_PAGE = "https://github.com/thakurbhavesh/Dream/releases/latest";
 
+const formatDate = (iso) => {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return "";
+  }
+};
+
 export default function Downloads() {
   const { brandName } = useSiteBranding();
+  const [release, setRelease] = useState(null);
   const [appUrl, setAppUrl] = useState(null);
 
   useEffect(() => {
@@ -78,129 +112,659 @@ export default function Downloads() {
     fetch(RELEASES_API, { headers: { Accept: "application/vnd.github+json" } })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (cancelled || !data?.assets) return;
-        // Prefer the .exe asset; fall back to the release page link so
-        // users still land somewhere useful even if the asset name shifts.
+        if (cancelled || !data?.assets) {
+          if (!cancelled) setAppUrl(RELEASES_PAGE);
+          return;
+        }
         const winInstaller = data.assets.find((a) => /\.exe$/i.test(a.name));
+        setRelease({
+          version: data.tag_name || data.name || "",
+          publishedAt: data.published_at,
+          size: winInstaller ? Math.round((winInstaller.size || 0) / 1048576) : null,
+        });
         setAppUrl(winInstaller?.browser_download_url || RELEASES_PAGE);
       })
       .catch(() => {
-        // Fall back to the release page if the API is unreachable.
         if (!cancelled) setAppUrl(RELEASES_PAGE);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
-      {/* Hero */}
-      <section style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#fff", padding: "80px 0 60px", textAlign: "center" }}>
+    <div className="tcn-downloads">
+      <style>{`
+        .tcn-downloads { background: #fff; }
+
+        /* HERO */
+        .tcn-dl-hero {
+          background:
+            radial-gradient(1200px 600px at 80% -10%, rgba(109,93,252,0.32), transparent 60%),
+            radial-gradient(800px 500px at 10% 10%, rgba(255,213,74,0.1), transparent 60%),
+            linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
+          color: #fff;
+          padding: 8rem 0 5rem;
+          text-align: center;
+          position: relative;
+          overflow: hidden;
+        }
+        .tcn-dl-hero::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background-image:
+            linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+          background-size: 60px 60px;
+          mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+          -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+          pointer-events: none;
+        }
+        .tcn-dl-hero > .container { position: relative; z-index: 1; }
+        .tcn-dl-hero h1 {
+          font-size: clamp(2.4rem, 5vw, 4rem);
+          font-weight: 800;
+          color: #fff;
+          letter-spacing: -0.025em;
+          line-height: 1.08;
+          margin: 0 auto 1.25rem;
+          max-width: 820px;
+        }
+        .tcn-dl-hero .gradient-word {
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+        .tcn-dl-hero p.lead {
+          font-size: 1.15rem;
+          color: rgba(255,255,255,0.7);
+          max-width: 640px;
+          margin: 0 auto 2.25rem;
+          line-height: 1.6;
+        }
+        .tcn-dl-release {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.6rem;
+          padding: 0.5rem 1.1rem;
+          border-radius: 999px;
+          background: rgba(34,197,94,0.12);
+          border: 1px solid rgba(34,197,94,0.3);
+          color: #4ade80;
+          font-size: 0.85rem;
+          font-weight: 600;
+          backdrop-filter: blur(8px);
+        }
+        .tcn-dl-release .pulse {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #22c55e;
+          box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+          animation: tcnPulseDot 2s infinite;
+        }
+        @keyframes tcnPulseDot {
+          0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+          70% { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        }
+
+        /* SECTION TITLES */
+        .tcn-dl-section {
+          padding: 5rem 0 1rem;
+        }
+        .tcn-dl-section + .tcn-dl-section { padding-top: 1rem; }
+        .tcn-dl-section.alt { background: #fafbff; }
+        .tcn-dl-section-head {
+          text-align: center;
+          margin-bottom: 3rem;
+          max-width: 680px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .tcn-dl-section-head h2 {
+          font-size: clamp(1.7rem, 3vw, 2.4rem);
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--tcn-ink-900);
+          margin: 1rem 0 0.7rem;
+        }
+        .tcn-dl-section-head p {
+          color: var(--tcn-ink-500);
+          font-size: 1.02rem;
+          margin: 0;
+        }
+
+        /* DESKTOP CARDS */
+        .tcn-dl-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 1.25rem;
+          max-width: 1180px;
+          margin: 0 auto;
+        }
+        .tcn-dl-card {
+          background: #fff;
+          border: 1px solid var(--tcn-border);
+          border-radius: 20px;
+          padding: 2rem 1.6rem 1.6rem;
+          transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .tcn-dl-card::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: var(--card-tint, #6d5dfc);
+          opacity: 0;
+          transition: opacity 0.22s ease;
+        }
+        .tcn-dl-card:hover {
+          transform: translateY(-6px);
+          border-color: var(--card-tint, #6d5dfc);
+          box-shadow: 0 20px 50px rgba(15,23,42,0.1);
+        }
+        .tcn-dl-card:hover::before { opacity: 1; }
+        .tcn-dl-icon {
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+          background: var(--card-tint-soft, rgba(109,93,252,0.1));
+          color: var(--card-tint, #6d5dfc);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.25rem;
+        }
+        .tcn-dl-card h3 {
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: var(--tcn-ink-900);
+          margin: 0 0 0.4rem;
+        }
+        .tcn-dl-card .meta {
+          font-size: 0.88rem;
+          color: var(--tcn-ink-500);
+          margin: 0 0 0.4rem;
+        }
+        .tcn-dl-card .filemeta {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.78rem;
+          color: var(--tcn-ink-500);
+          margin-bottom: 1.5rem;
+        }
+        .tcn-dl-card .filemeta .dot {
+          width: 3px;
+          height: 3px;
+          border-radius: 999px;
+          background: var(--tcn-ink-400);
+        }
+        .tcn-dl-perks {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+        }
+        .tcn-dl-perks li {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.9rem;
+          color: var(--tcn-ink-700);
+        }
+        .tcn-dl-perks li svg {
+          color: var(--card-tint, #6d5dfc);
+          flex-shrink: 0;
+        }
+        .tcn-dl-cta {
+          margin-top: auto;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 0.85rem 1rem;
+          border-radius: 999px;
+          background: var(--card-tint, #6d5dfc);
+          color: #fff !important;
+          font-weight: 700;
+          font-size: 0.95rem;
+          text-decoration: none !important;
+          border: none;
+          transition: transform 0.18s ease, box-shadow 0.18s ease;
+          cursor: pointer;
+          font-family: inherit;
+        }
+        .tcn-dl-cta:hover {
+          transform: translateY(-2px);
+          color: #fff !important;
+          box-shadow: 0 10px 24px var(--card-tint-shadow, rgba(109,93,252,0.4));
+        }
+        .tcn-dl-cta.soon {
+          background: #f3f4f8;
+          color: var(--tcn-ink-500) !important;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+        .tcn-dl-cta.soon:hover { transform: none; box-shadow: none; }
+
+        /* MOBILE STORE PILLS */
+        .tcn-store-row {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+          margin-top: auto;
+        }
+        .tcn-store-pill {
+          flex: 1;
+          min-width: 120px;
+          background: var(--card-tint-soft, rgba(109,93,252,0.08));
+          border: 1px solid var(--card-tint, #6d5dfc);
+          border-color: var(--card-tint-border, rgba(109,93,252,0.2));
+          color: var(--card-tint, #6d5dfc);
+          padding: 0.7rem 0.9rem;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.82rem;
+          text-align: center;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+        .tcn-store-pill .tag {
+          font-size: 0.65rem;
+          background: rgba(245,158,11,0.18);
+          color: #d97706;
+          padding: 2px 6px;
+          border-radius: 999px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+        }
+
+        /* REQUIREMENTS */
+        .tcn-req-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 1.25rem;
+          max-width: 1080px;
+          margin: 0 auto;
+        }
+        .tcn-req-card {
+          background: #fff;
+          border: 1px solid var(--tcn-border);
+          border-radius: 20px;
+          padding: 1.75rem 1.6rem;
+          transition: border-color 0.22s ease, box-shadow 0.22s ease;
+        }
+        .tcn-req-card:hover {
+          border-color: var(--tcn-violet-500);
+          box-shadow: var(--tcn-shadow-md);
+        }
+        .tcn-req-card h4 {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: var(--tcn-ink-900);
+          margin: 0 0 1rem;
+        }
+        .tcn-req-card ul {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.6rem;
+        }
+        .tcn-req-card ul li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 0.9rem;
+          color: var(--tcn-ink-700);
+          line-height: 1.5;
+        }
+        .tcn-req-card ul li svg {
+          color: #22c55e;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        /* WEB CTA */
+        .tcn-web-cta {
+          padding: 5rem 0 6rem;
+        }
+        .tcn-web-cta-inner {
+          max-width: 1180px;
+          margin: 0 auto;
+          padding: 4rem 3rem;
+          border-radius: 24px;
+          background: linear-gradient(135deg, #0b0f1e 0%, #1a1f3a 50%, #2d2563 100%);
+          text-align: center;
+          color: #fff;
+          position: relative;
+          overflow: hidden;
+          box-shadow: var(--tcn-shadow-lg);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+        }
+        .tcn-web-cta-inner::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(600px 300px at 20% 0%, rgba(255,213,74,0.2), transparent 60%),
+            radial-gradient(600px 300px at 80% 100%, rgba(109,93,252,0.3), transparent 60%);
+          pointer-events: none;
+        }
+        .tcn-web-cta-inner > * { position: relative; z-index: 1; }
+        .tcn-web-cta-inner .browser-icon {
+          width: 72px;
+          height: 72px;
+          border-radius: 18px;
+          background: linear-gradient(135deg, rgba(255,213,74,0.18), rgba(109,93,252,0.18));
+          color: #ffd54a;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 0.5rem;
+        }
+        .tcn-web-cta-inner h2 {
+          color: #fff;
+          font-size: clamp(1.7rem, 3vw, 2.4rem);
+          font-weight: 800;
+          margin: 0 0 0.7rem;
+          letter-spacing: -0.02em;
+        }
+        .tcn-web-cta-inner p {
+          color: rgba(255,255,255,0.72);
+          font-size: 1.05rem;
+          max-width: 540px;
+          margin: 0 0 1.5rem;
+          line-height: 1.6;
+        }
+        .tcn-web-cta-inner .btn-gold {
+          padding: 0.9rem 1.85rem;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #ffd54a, #ffb74d);
+          color: #1a1f3a !important;
+          font-weight: 800;
+          font-size: 1rem;
+          text-decoration: none !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 8px 24px rgba(255,213,74,0.35);
+          transition: transform 0.18s ease;
+        }
+        .tcn-web-cta-inner .btn-gold:hover { transform: translateY(-2px); color: #1a1f3a !important; }
+
+        @media (max-width: 768px) {
+          .tcn-dl-hero { padding: 6.5rem 0 3.5rem; }
+          .tcn-dl-section { padding: 3.5rem 0 0.5rem; }
+          .tcn-web-cta-inner { padding: 3rem 1.5rem; }
+        }
+      `}</style>
+
+      {/* ─── HERO ──────────────────────────────────────────── */}
+      <section className="tcn-dl-hero">
         <div className="container">
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: 12 }}>Download {brandName}</h1>
-          <p style={{ fontSize: "1.1rem", color: "#94a3b8", maxWidth: 560, margin: "0 auto" }}>
-            Available on every platform. Install once, communicate everywhere with your team.
+          <span
+            className="eyebrow"
+            style={{
+              background: "rgba(255,213,74,0.12)",
+              color: "#ffd54a",
+              borderColor: "rgba(255,213,74,0.25)",
+              marginBottom: "1.25rem",
+              display: "inline-flex",
+            }}
+          >
+            <PiDownloadSimpleDuotone size={12} />
+            Apps for every device
+          </span>
+
+          <h1>
+            Get {brandName || "TheChatNest"} on{" "}
+            <span className="gradient-word">every platform</span>
+          </h1>
+          <p className="lead">
+            Install the native desktop app, grab the mobile companion, or open the browser web
+            app — your conversations stay in sync wherever you are.
           </p>
+
+          {release?.version && (
+            <div className="tcn-dl-release">
+              <span className="pulse" />
+              Latest release {release.version}
+              {release.publishedAt ? ` · ${formatDate(release.publishedAt)}` : ""}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Desktop Apps */}
-      <section className="container" style={{ padding: "60px 15px" }}>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 8, color: "#0f172a" }}>Desktop Apps</h2>
-        <p style={{ color: "#64748b", marginBottom: 32 }}>Full-featured desktop clients with native notifications, screen sharing, and deep OS integration.</p>
+      {/* ─── DESKTOP APPS ──────────────────────────────────── */}
+      <section className="tcn-dl-section">
+        <div className="container">
+          <div className="tcn-dl-section-head">
+            <span className="eyebrow">Desktop</span>
+            <h2>Native desktop, built for focused work</h2>
+            <p>
+              Native notifications, screen sharing, system tray, global shortcuts, and deep OS
+              integration. Auto-updates included.
+            </p>
+          </div>
 
-        <div className="row g-4">
-          {platforms.map((p) => (
-            <div key={p.name} className="col-lg-4 col-md-6">
-              <div style={{ background: "#fff", borderRadius: 12, padding: 32, border: "1px solid #e2e8f0", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                <div style={{ color: "#0162c4", marginBottom: 16 }}>{p.icon}</div>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: 8, color: "#0f172a" }}>{p.name}</h3>
-                <p style={{ color: "#64748b", fontSize: 14, marginBottom: 4 }}>{p.desc}</p>
-                <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 20 }}>{p.size} &middot; {p.format}</p>
-                <div style={{ marginTop: "auto" }}>
-                  {p.name === "Windows" && appUrl ? (
-                    <a href={appUrl} style={{ display: "inline-block", background: "#0162c4", color: "#fff", padding: "10px 28px", borderRadius: 8, fontWeight: 600, fontSize: 14, textDecoration: "none" }}>
+          <div className="tcn-dl-grid">
+            {desktopPlatforms.map((p) => {
+              const isAvailable = p.key === "windows" && appUrl;
+              const shadowColor = `${p.tint}66`;
+              return (
+                <div
+                  key={p.key}
+                  className="tcn-dl-card"
+                  style={{
+                    "--card-tint": p.tint,
+                    "--card-tint-soft": `${p.tint}1a`,
+                    "--card-tint-shadow": shadowColor,
+                  }}
+                >
+                  <div className="tcn-dl-icon">
+                    <p.Icon size={36} />
+                  </div>
+                  <h3>{p.name}</h3>
+                  <p className="meta">{p.desc}</p>
+                  <div className="filemeta">
+                    <span>{p.size}</span>
+                    <span className="dot" />
+                    <span>{p.format}</span>
+                  </div>
+                  <ul className="tcn-dl-perks">
+                    {p.perks.map((perk) => (
+                      <li key={perk}>
+                        <PiCheckCircleDuotone size={16} />
+                        {perk}
+                      </li>
+                    ))}
+                  </ul>
+                  {isAvailable ? (
+                    <a className="tcn-dl-cta" href={appUrl}>
+                      <PiDownloadSimpleDuotone size={16} />
                       Download for {p.name}
                     </a>
                   ) : (
-                    <span style={{ display: "inline-block", background: "#e2e8f0", color: "#64748b", padding: "10px 28px", borderRadius: 8, fontWeight: 600, fontSize: 14 }}>
-                      Coming Soon
+                    <span className="tcn-dl-cta soon">
+                      <PiClockDuotone size={16} />
+                      Coming soon
                     </span>
                   )}
                 </div>
-              </div>
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      {/* Mobile Apps */}
-      <section style={{ background: "#fff", padding: "60px 0" }}>
+      {/* ─── MOBILE APPS ───────────────────────────────────── */}
+      <section className="tcn-dl-section alt">
         <div className="container">
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 8, color: "#0f172a" }}>Mobile Apps</h2>
-          <p style={{ color: "#64748b", marginBottom: 32 }}>Stay connected on the go. Full feature parity with desktop — messaging, calls, admin panel, and more.</p>
+          <div className="tcn-dl-section-head">
+            <span className="eyebrow">Mobile</span>
+            <h2>Stay in flow on the go</h2>
+            <p>
+              Full feature parity with desktop — messaging, calls, admin panel, biometric login.
+              Mobile launch coming soon.
+            </p>
+          </div>
 
-          <div className="row g-4 justify-content-center">
-            {mobileApps.map((m) => (
-              <div key={m.name} className="col-lg-4 col-md-6">
-                <div style={{ background: "#f8fafc", borderRadius: 12, padding: 32, border: "1px solid #e2e8f0", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-                  <div style={{ color: "#0162c4", marginBottom: 16 }}>{m.icon}</div>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: 8, color: "#0f172a" }}>{m.name}</h3>
-                  <p style={{ color: "#64748b", fontSize: 14, marginBottom: 16 }}>{m.desc}</p>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: "auto" }}>
+          <div
+            className="tcn-dl-grid"
+            style={{ maxWidth: 760, marginLeft: "auto", marginRight: "auto" }}
+          >
+            {mobileApps.map((m) => {
+              const shadowColor = `${m.tint}66`;
+              return (
+                <div
+                  key={m.key}
+                  className="tcn-dl-card"
+                  style={{
+                    "--card-tint": m.tint,
+                    "--card-tint-soft": `${m.tint}1a`,
+                    "--card-tint-shadow": shadowColor,
+                    "--card-tint-border": `${m.tint}40`,
+                  }}
+                >
+                  <div className="tcn-dl-icon">
+                    <m.Icon size={36} />
+                  </div>
+                  <h3>{m.name}</h3>
+                  <p className="meta" style={{ marginBottom: "1.5rem" }}>
+                    {m.desc}
+                  </p>
+                  <div className="tcn-store-row">
                     {m.stores.map((s) => (
-                      <span key={s} style={{ background: "#e2e8f0", color: "#64748b", padding: "8px 20px", borderRadius: 8, fontWeight: 600, fontSize: 13 }}>
-                        {s} — Coming Soon
+                      <span key={s} className="tcn-store-pill">
+                        {s} <span className="tag">SOON</span>
                       </span>
                     ))}
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* System Requirements */}
-      <section className="container" style={{ padding: "60px 15px" }}>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 24, color: "#0f172a" }}>System Requirements</h2>
-        <div className="row g-4">
-          <div className="col-md-6">
-            <div style={{ background: "#fff", borderRadius: 12, padding: 24, border: "1px solid #e2e8f0" }}>
-              <h4 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 16, color: "#0f172a" }}>Desktop</h4>
-              <ul style={{ color: "#475569", fontSize: 14, lineHeight: 2, paddingLeft: 20 }}>
-                <li>Windows 10 or later (64-bit)</li>
-                <li>macOS 12 Monterey or later</li>
-                <li>Ubuntu 20.04+ / Debian 11+ / Fedora 36+</li>
-                <li>4 GB RAM minimum, 8 GB recommended</li>
-                <li>200 MB free disk space</li>
-                <li>Webcam &amp; microphone for video calls</li>
-              </ul>
-            </div>
-          </div>
-          <div className="col-md-6">
-            <div style={{ background: "#fff", borderRadius: 12, padding: 24, border: "1px solid #e2e8f0" }}>
-              <h4 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: 16, color: "#0f172a" }}>Mobile</h4>
-              <ul style={{ color: "#475569", fontSize: 14, lineHeight: 2, paddingLeft: 20 }}>
-                <li>Android 8.0 (Oreo) or later</li>
-                <li>iOS 15.0 or later</li>
-                <li>100 MB free storage</li>
-                <li>Active internet connection</li>
-                <li>Camera &amp; microphone permissions for calls</li>
-                <li>Biometric hardware for fingerprint / Face ID login</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section style={{ background: "#0f172a", color: "#fff", padding: "48px 0", textAlign: "center" }}>
+      {/* ─── SYSTEM REQUIREMENTS ───────────────────────────── */}
+      <section className="tcn-dl-section">
         <div className="container">
-          <h3 style={{ fontWeight: 700, marginBottom: 12 }}>Prefer the browser?</h3>
-          <p style={{ color: "#94a3b8", marginBottom: 24 }}>No download needed. Access {brandName} directly from your browser.</p>
-          <Link to="/auth/register" style={{ display: "inline-block", background: "#0162c4", color: "#fff", padding: "12px 32px", borderRadius: 8, fontWeight: 600, textDecoration: "none" }}>
-            Open Web App
-          </Link>
+          <div className="tcn-dl-section-head">
+            <span className="eyebrow">Requirements</span>
+            <h2>What you'll need to run it</h2>
+            <p>
+              {brandName || "TheChatNest"} runs on lean hardware. Most modern machines and phones
+              are good to go.
+            </p>
+          </div>
+
+          <div className="tcn-req-grid">
+            <div className="tcn-req-card">
+              <h4>
+                <PiWindowsLogoDuotone size={22} color="#0ea5e9" />
+                Desktop
+              </h4>
+              <ul>
+                {desktopReqs.map((req) => (
+                  <li key={req}>
+                    <PiCheckCircleDuotone size={16} />
+                    {req}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="tcn-req-card">
+              <h4>
+                <PiAndroidLogoDuotone size={22} color="#22c55e" />
+                Mobile
+              </h4>
+              <ul>
+                {mobileReqs.map((req) => (
+                  <li key={req}>
+                    <PiCheckCircleDuotone size={16} />
+                    {req}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── WEB APP CTA ───────────────────────────────────── */}
+      <section className="tcn-web-cta">
+        <div className="container">
+          <div className="tcn-web-cta-inner">
+            <span
+              className="eyebrow"
+              style={{
+                background: "rgba(255,213,74,0.12)",
+                color: "#ffd54a",
+                borderColor: "rgba(255,213,74,0.25)",
+                display: "inline-flex",
+              }}
+            >
+              <PiShieldCheckDuotone size={12} />
+              No install required
+            </span>
+            <div className="browser-icon">
+              <PiBrowserDuotone size={36} />
+            </div>
+            <h2>Prefer the browser?</h2>
+            <p>
+              Open {brandName || "TheChatNest"} in any modern browser — same features, zero
+              install. Perfect for shared machines or quick check-ins.
+            </p>
+            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
+              <Link to="/auth/login" className="btn-gold">
+                Open web app <PiArrowRightBold size={16} />
+              </Link>
+              <Link
+                to="/auth/register"
+                style={{
+                  padding: "0.9rem 1.75rem",
+                  borderRadius: 999,
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  backdropFilter: "blur(8px)",
+                }}
+              >
+                <PiCalendarDuotone size={18} /> Start free trial
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </div>

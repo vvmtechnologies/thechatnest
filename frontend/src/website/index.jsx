@@ -8,10 +8,8 @@ import Footer from "./components/Footer.jsx";
 
 function WebsiteIndex() {
   return (
-    <div >
-      <div style={{height: "55px"}}>
+    <div>
       <Navbar />
-      </div>
       <main>
         <Outlet />
       </main>

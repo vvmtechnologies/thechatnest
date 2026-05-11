@@ -1,101 +1,145 @@
 import React from "react";
-
-const lastUpdated = "April 1, 2026";
-
-const sections = [
-  {
-    title: "1. Introduction",
-    content: `This Privacy Policy applies to the on-premise (self-hosted) deployment of TheChatNest. When you deploy TheChatNest on your own infrastructure, your organization acts as the Data Controller. TheChatNest (the company) acts solely as the software provider and does not access, process, or store any of your communication data.`,
-  },
-  {
-    title: "2. Your Data, Your Control",
-    content: `With on-premise deployment:`,
-    list: [
-      "All data remains on YOUR servers — messages, files, user profiles, and logs never leave your infrastructure",
-      "TheChatNest has zero access to your data, conversations, or user information",
-      "Your IT team controls backups, retention policies, and data deletion",
-      "No telemetry, analytics, or usage data is sent to TheChatNest servers",
-      "Database credentials, encryption keys, and API secrets are managed entirely by your organization",
-    ],
-  },
-  {
-    title: "3. Data Processed by TheChatNest (Limited)",
-    content: `The only data TheChatNest processes in an on-premise deployment:`,
-    list: [
-      "License Key: Your organization's license key for activation and validation",
-      "Update Checks: Periodic version checks (can be disabled in air-gapped environments)",
-      "Support Requests: Only information you voluntarily provide when contacting our support team",
-    ],
-  },
-  {
-    title: "4. Your Responsibilities as Data Controller",
-    content: `As the operator of a self-hosted TheChatNest instance, your organization is responsible for:`,
-    list: [
-      "Complying with applicable data protection laws (GDPR, CCPA, etc.)",
-      "Implementing appropriate security measures (firewalls, SSL, access controls)",
-      "Managing user consent and privacy notices for your employees",
-      "Handling data subject requests (access, deletion, portability)",
-      "Configuring data retention and backup policies",
-      "Maintaining server security patches and TheChatNest updates",
-    ],
-  },
-  {
-    title: "5. Security Recommendations",
-    content: `We recommend the following security measures for on-premise deployments:`,
-    list: [
-      "Deploy behind a reverse proxy with TLS 1.3",
-      "Enable AES-256-GCM encryption for messages at rest",
-      "Restrict database access to the application server only",
-      "Enable IP and platform restrictions from the admin panel",
-      "Configure device limits and trusted device management",
-      "Enable XSS sanitization and dangerous file blocking (enabled by default)",
-      "Perform regular backups and test restore procedures",
-      "Monitor activity logs and OTP verification logs from the admin panel",
-    ],
-  },
-  {
-    title: "6. Third-Party Services",
-    content: `On-premise TheChatNest may optionally connect to external services that you configure:`,
-    list: [
-      "STUN/TURN Servers: For WebRTC calls (configurable, can use your own servers)",
-      "Tenor API: For GIF search (can be disabled)",
-      "SMTP Server: For email notifications (your own SMTP server)",
-      "S3-Compatible Storage: For file uploads (can be your own MinIO/S3 instance)",
-    ],
-  },
-  {
-    title: "7. Updates & Patches",
-    content: `Software updates are provided as downloadable packages. No automatic updates are pushed to your servers. Your IT team controls when and how updates are applied. Security patches are communicated via email to the registered admin contact.`,
-  },
-  {
-    title: "8. Contact",
-    content: `For questions about on-premise privacy or deployment assistance, contact us at privacy@thechatnest.com.`,
-  },
-];
+import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import LegalLayout from "../components/layout/LegalLayout.jsx";
 
 export default function OnPremisePrivacy() {
-  return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
-      <section style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#fff", padding: "80px 0 60px", textAlign: "center" }}>
-        <div className="container">
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: 12 }}>On-Premise Privacy Policy</h1>
-          <p style={{ fontSize: "1rem", color: "#94a3b8" }}>Self-Hosted Deployment &middot; Last updated: {lastUpdated}</p>
-        </div>
-      </section>
+  const { brandName } = useSiteBranding();
+  const brand = brandName || "TheChatNest";
 
-      <section className="container" style={{ padding: "48px 15px", maxWidth: 800 }}>
-        {sections.map((s, i) => (
-          <div key={i} style={{ marginBottom: 36 }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>{s.title}</h2>
-            {s.content && <p style={{ color: "#475569", fontSize: 15, lineHeight: 1.7 }}>{s.content}</p>}
-            {s.list && (
-              <ul style={{ color: "#475569", fontSize: 15, lineHeight: 1.8, paddingLeft: 20 }}>
-                {s.list.map((item, j) => <li key={j}>{item}</li>)}
-              </ul>
-            )}
-          </div>
-        ))}
-      </section>
-    </div>
+  const sections = [
+    {
+      id: "intro",
+      title: "Introduction",
+      body: (
+        <p>
+          This Privacy Policy applies to the on-premise (self-hosted) deployment
+          of <strong>{brand}</strong>. When you deploy {brand} on your own
+          infrastructure, your organization acts as the Data Controller. {brand}{" "}
+          (the company) acts solely as the software provider and does not access,
+          process, or store any of your communication data.
+        </p>
+      ),
+    },
+    {
+      id: "your-control",
+      title: "Your data, your control",
+      body: (
+        <>
+          <p>With on-premise deployment:</p>
+          <ul>
+            <li>All data remains on YOUR servers — messages, files, user profiles, and logs never leave your infrastructure.</li>
+            <li>{brand} has zero access to your data, conversations, or user information.</li>
+            <li>Your IT team controls backups, retention policies, and data deletion.</li>
+            <li>No telemetry, analytics, or usage data is sent to {brand} servers.</li>
+            <li>Database credentials, encryption keys, and API secrets are managed entirely by your organization.</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      id: "limited-data",
+      title: "Data processed by us (limited)",
+      body: (
+        <>
+          <p>The only data {brand} processes in an on-premise deployment:</p>
+          <ul>
+            <li><strong>License key:</strong> Your organization's license key for activation and validation.</li>
+            <li><strong>Update checks:</strong> Periodic version checks (can be disabled in air-gapped environments).</li>
+            <li><strong>Support requests:</strong> Only information you voluntarily provide when contacting our support team.</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      id: "responsibilities",
+      title: "Your responsibilities as data controller",
+      body: (
+        <>
+          <p>As the operator of a self-hosted {brand} instance, your organization is responsible for:</p>
+          <ul>
+            <li>Complying with applicable data protection laws (GDPR, CCPA, etc.)</li>
+            <li>Implementing appropriate security measures (firewalls, SSL, access controls)</li>
+            <li>Managing user consent and privacy notices for your employees</li>
+            <li>Handling data subject requests (access, deletion, portability)</li>
+            <li>Configuring data retention and backup policies</li>
+            <li>Maintaining server security patches and {brand} updates</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      id: "security",
+      title: "Security recommendations",
+      body: (
+        <>
+          <p>We recommend the following security measures for on-premise deployments:</p>
+          <ul>
+            <li>Deploy behind a reverse proxy with TLS 1.3</li>
+            <li>Enable AES-256-GCM encryption for messages at rest</li>
+            <li>Restrict database access to the application server only</li>
+            <li>Enable IP and platform restrictions from the admin panel</li>
+            <li>Configure device limits and trusted device management</li>
+            <li>Enable XSS sanitization and dangerous file blocking (enabled by default)</li>
+            <li>Perform regular backups and test restore procedures</li>
+            <li>Monitor activity logs and OTP verification logs from the admin panel</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      id: "third-party",
+      title: "Third-party services",
+      body: (
+        <>
+          <p>On-premise {brand} may optionally connect to external services that you configure:</p>
+          <ul>
+            <li><strong>STUN/TURN servers</strong> — for WebRTC calls (configurable, can use your own servers)</li>
+            <li><strong>Tenor API</strong> — for GIF search (can be disabled)</li>
+            <li><strong>SMTP server</strong> — for email notifications (your own SMTP server)</li>
+            <li><strong>S3-compatible storage</strong> — for file uploads (your own MinIO/S3 instance)</li>
+          </ul>
+        </>
+      ),
+    },
+    {
+      id: "updates",
+      title: "Updates & patches",
+      body: (
+        <p>
+          Software updates are provided as downloadable packages. No automatic
+          updates are pushed to your servers. Your IT team controls when and how
+          updates are applied. Security patches are communicated via email to
+          the registered admin contact.
+        </p>
+      ),
+    },
+    {
+      id: "contact",
+      title: "Contact",
+      body: (
+        <p>
+          For questions about on-premise privacy or deployment assistance,
+          contact us at{" "}
+          <a href="mailto:privacy@thechatnest.com">privacy@thechatnest.com</a>.
+        </p>
+      ),
+    },
+  ];
+
+  return (
+    <LegalLayout
+      eyebrow="Self-hosted deployment"
+      title={
+        <>
+          On-premise{" "}
+          <span className="gradient-word">privacy policy</span>
+        </>
+      }
+      lead={`When you self-host ${brand}, all data stays on your infrastructure. Here's exactly what that means.`}
+      lastUpdated="April 1, 2026"
+      sections={sections}
+      ctaTitle="Planning a self-hosted rollout?"
+      ctaDescription="Our deployment engineers help with sizing, hardening, and migration. Free architecture review for teams of 50+."
+    />
   );
 }

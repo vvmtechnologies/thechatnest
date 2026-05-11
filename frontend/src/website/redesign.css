@@ -53,6 +53,18 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
+/* Reserve space under the fixed navbar. Hero sections already
+   add their own top padding so they sit flush with the navbar. */
+main { padding-top: 92px; }
+.hero-section,
+.tcn-pricing-hero,
+.tcn-feat-hero,
+.tcn-dl-hero,
+.tcn-ver-hero,
+.tcn-contact-hero {
+  margin-top: -92px;
+}
+
 body {
   font-size: 16px;
   line-height: 1.6;
@@ -83,6 +95,300 @@ a.btn-ghost,
 .tcn-final-cta a,
 .tcn-feat-cta a {
   text-decoration: none !important;
+}
+
+/* ============ Shared page hero (PageHero component) ============ */
+.tcn-page-hero {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(109,93,252,0.32), transparent 60%),
+    radial-gradient(800px 500px at 10% 10%, rgba(255,213,74,0.1), transparent 60%),
+    linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
+  color: #fff;
+  padding: 8rem 0 5rem;
+  position: relative;
+  overflow: hidden;
+}
+.tcn-page-hero--tight { padding: 7rem 0 3.5rem; }
+.tcn-page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+  pointer-events: none;
+}
+.tcn-page-hero > .container { position: relative; z-index: 1; }
+.tcn-page-hero-inner {
+  text-align: center;
+  max-width: 820px;
+  margin: 0 auto;
+}
+.tcn-page-hero-inner.left {
+  text-align: left;
+  margin: 0;
+  max-width: 760px;
+}
+.tcn-page-hero h1 {
+  font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.025em;
+  line-height: 1.08;
+  margin: 0 0 1.1rem;
+}
+.tcn-page-hero h1 .gradient-word,
+.tcn-page-hero .gradient-word {
+  background: linear-gradient(135deg, #ffd54a, #ffb74d);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.tcn-page-hero p.lead {
+  font-size: 1.1rem;
+  color: rgba(255,255,255,0.7);
+  max-width: 640px;
+  margin: 0 auto 0;
+  line-height: 1.65;
+}
+.tcn-page-hero-inner.left p.lead { margin-left: 0; }
+
+@media (max-width: 768px) {
+  .tcn-page-hero { padding: 6.5rem 0 3rem; }
+}
+
+/* ============ Shared final CTA (FinalCta component) ============ */
+.tcn-page-cta {
+  padding: 5rem 0 6rem;
+}
+.tcn-page-cta-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 4rem 3rem;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0b0f1e 0%, #1a1f3a 50%, #2d2563 100%);
+  text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--tcn-shadow-lg);
+}
+.tcn-page-cta-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 300px at 20% 0%, rgba(255,213,74,0.2), transparent 60%),
+    radial-gradient(600px 300px at 80% 100%, rgba(109,93,252,0.3), transparent 60%);
+  pointer-events: none;
+}
+.tcn-page-cta-inner > * { position: relative; z-index: 1; }
+.tcn-page-cta-inner h2 {
+  color: #fff;
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 800;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.02em;
+}
+.tcn-page-cta-inner p {
+  color: rgba(255,255,255,0.72);
+  font-size: 1.05rem;
+  max-width: 540px;
+  margin: 0 auto 1.75rem;
+  line-height: 1.6;
+}
+.tcn-page-cta-inner .btns {
+  display: flex;
+  gap: 0.85rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.tcn-page-cta-inner .btn-gold {
+  padding: 0.9rem 1.85rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffd54a, #ffb74d);
+  color: #1a1f3a !important;
+  font-weight: 800;
+  font-size: 1rem;
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(255,213,74,0.35);
+  transition: transform 0.18s ease;
+}
+.tcn-page-cta-inner .btn-gold:hover { transform: translateY(-2px); color: #1a1f3a !important; }
+.tcn-page-cta-inner .btn-ghost {
+  padding: 0.9rem 1.75rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none !important;
+  backdrop-filter: blur(8px);
+}
+@media (max-width: 768px) {
+  .tcn-page-cta-inner { padding: 3rem 1.5rem; }
+}
+
+/* ============ Legal/policy doc layout ============ */
+.tcn-legal {
+  background: #fff;
+}
+.tcn-legal-body {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+.tcn-legal-tocwrap {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 3rem;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 4rem 1.5rem;
+}
+.tcn-legal-toc {
+  position: sticky;
+  top: 110px;
+  align-self: start;
+  background: var(--tcn-bg-soft);
+  border: 1px solid var(--tcn-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+}
+.tcn-legal-toc .toc-head {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tcn-ink-500);
+  margin: 0 0 0.85rem;
+}
+.tcn-legal-toc ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  counter-reset: tcn-toc;
+}
+.tcn-legal-toc ol li { counter-increment: tcn-toc; }
+.tcn-legal-toc a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  color: var(--tcn-ink-700) !important;
+  font-size: 0.86rem;
+  font-weight: 500;
+  text-decoration: none !important;
+  transition: all 0.18s ease;
+  line-height: 1.4;
+}
+.tcn-legal-toc a::before {
+  content: counter(tcn-toc, decimal-leading-zero);
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--tcn-ink-400);
+  background: #fff;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--tcn-border);
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.tcn-legal-toc a:hover {
+  background: var(--tcn-violet-50);
+  color: var(--tcn-violet-600) !important;
+}
+.tcn-legal-toc a:hover::before {
+  border-color: var(--tcn-violet-500);
+  color: var(--tcn-violet-600);
+}
+
+.tcn-legal-content h2 {
+  font-size: clamp(1.4rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--tcn-ink-900);
+  margin: 2.5rem 0 1rem;
+  scroll-margin-top: 120px;
+}
+.tcn-legal-content h2:first-child { margin-top: 0; }
+.tcn-legal-content h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--tcn-ink-900);
+  margin: 1.75rem 0 0.75rem;
+}
+.tcn-legal-content p {
+  color: var(--tcn-ink-700);
+  font-size: 1rem;
+  line-height: 1.75;
+  margin: 0 0 1rem;
+}
+.tcn-legal-content ul, .tcn-legal-content ol {
+  padding-left: 1.4rem;
+  margin: 0 0 1.25rem;
+}
+.tcn-legal-content li {
+  color: var(--tcn-ink-700);
+  font-size: 1rem;
+  line-height: 1.75;
+  margin-bottom: 0.45rem;
+}
+.tcn-legal-content strong { color: var(--tcn-ink-900); }
+.tcn-legal-content a {
+  color: var(--tcn-violet-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.tcn-legal-content blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--tcn-violet-500);
+  background: var(--tcn-violet-50);
+  border-radius: 0 12px 12px 0;
+  color: var(--tcn-ink-900);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+.tcn-legal-content code {
+  background: #f3f4f8;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.88em;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+  color: var(--tcn-ink-900);
+}
+.tcn-legal-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: var(--tcn-bg-soft);
+  border: 1px solid var(--tcn-border);
+  color: var(--tcn-ink-500);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .tcn-legal-tocwrap { grid-template-columns: 1fr; gap: 1.5rem; padding: 2.5rem 1rem; }
+  .tcn-legal-toc { position: static; max-height: none; }
 }
 
 /* ============ Navbar (refine over earlier dark navy) ============ */

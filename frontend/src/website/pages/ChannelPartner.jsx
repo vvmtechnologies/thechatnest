@@ -1,66 +1,262 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import {
+  PiHandshakeDuotone,
+  PiCoinsDuotone,
+  PiChartLineUpDuotone,
+  PiWrenchDuotone,
+  PiTagDuotone,
+  PiGraduationCapDuotone,
+  PiUsersThreeDuotone,
+  PiBuildingsDuotone,
+  PiMegaphoneDuotone,
+  PiPlugsDuotone,
+  PiArrowRightBold,
+  PiCheckBold,
+} from "react-icons/pi";
+import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import PageHero from "../components/layout/PageHero.jsx";
+import FinalCta from "../components/layout/FinalCta.jsx";
 
-const benefits = [
-  { title: "Revenue Sharing", desc: "Earn competitive commissions on every customer you refer. Recurring revenue for recurring subscriptions.", icon: "💰" },
-  { title: "Sales & Marketing Support", desc: "Access co-branded materials, product demos, and dedicated partner manager support.", icon: "📊" },
-  { title: "Priority Technical Support", desc: "Get priority access to our engineering team for deployment assistance and custom integrations.", icon: "🛠️" },
-  { title: "Exclusive Pricing", desc: "Offer your clients special partner pricing that's not available through direct channels.", icon: "🏷️" },
-  { title: "Training & Certification", desc: "Comprehensive product training and official TheChatNest partner certification.", icon: "🎓" },
-  { title: "Deal Registration", desc: "Register your deals for pipeline protection and enhanced support during the sales cycle.", icon: "🤝" },
+const BENEFITS = [
+  { Icon: PiCoinsDuotone, tint: "#22c55e", title: "Revenue sharing", desc: "Earn competitive commissions on every customer you refer. Recurring revenue for recurring subscriptions." },
+  { Icon: PiChartLineUpDuotone, tint: "#0ea5e9", title: "Sales & marketing support", desc: "Co-branded materials, product demos, and a dedicated partner manager." },
+  { Icon: PiWrenchDuotone, tint: "#f59e0b", title: "Priority technical support", desc: "Direct line to our engineering team for deployments, integrations, and escalations." },
+  { Icon: PiTagDuotone, tint: "#ec4899", title: "Exclusive pricing", desc: "Offer your clients partner pricing that's not available through direct channels." },
+  { Icon: PiGraduationCapDuotone, tint: "#a855f7", title: "Training & certification", desc: "Comprehensive product training and official partner certification." },
+  { Icon: PiHandshakeDuotone, tint: "#14b8a6", title: "Deal registration", desc: "Register your deals for pipeline protection and enhanced support during the sales cycle." },
 ];
 
-const partnerTypes = [
-  { title: "Reseller Partner", desc: "Purchase TheChatNest licenses at discounted rates and resell to your clients with full margin control.", best: "IT companies, system integrators, managed service providers" },
-  { title: "Referral Partner", desc: "Refer qualified leads and earn a commission on every successful conversion. No technical involvement required.", best: "Consultants, agencies, industry influencers" },
-  { title: "Technology Partner", desc: "Integrate your product with TheChatNest to offer joint solutions. Co-market to combined audiences.", best: "SaaS companies, productivity tool vendors, security providers" },
+const PARTNER_TYPES = [
+  {
+    Icon: PiBuildingsDuotone,
+    tint: "#6d5dfc",
+    title: "Reseller partner",
+    desc: "Purchase licenses at discounted rates and resell to your clients with full margin control.",
+    best: "IT companies, system integrators, managed service providers",
+  },
+  {
+    Icon: PiMegaphoneDuotone,
+    tint: "#ec4899",
+    title: "Referral partner",
+    desc: "Refer qualified leads and earn a commission on every successful conversion. No technical involvement required.",
+    best: "Consultants, agencies, industry influencers",
+  },
+  {
+    Icon: PiPlugsDuotone,
+    tint: "#0ea5e9",
+    title: "Technology partner",
+    desc: "Integrate your product with ours to offer joint solutions. Co-market to combined audiences.",
+    best: "SaaS companies, productivity tool vendors, security providers",
+  },
 ];
 
 export default function ChannelPartner() {
-  return (
-    <div style={{ background: "#f8fafc", minHeight: "100vh" }}>
-      {/* Hero */}
-      <section style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#fff", padding: "80px 0 60px", textAlign: "center" }}>
-        <div className="container">
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 800, marginBottom: 12 }}>Channel Partner Program</h1>
-          <p style={{ fontSize: "1.1rem", color: "#94a3b8", maxWidth: 600, margin: "0 auto 28px" }}>
-            Grow your business by partnering with TheChatNest. Help enterprises adopt secure, self-hosted communication — and earn while doing it.
-          </p>
-          <Link to="/contact" style={{ display: "inline-block", background: "#0162c4", color: "#fff", padding: "12px 32px", borderRadius: 8, fontWeight: 600, textDecoration: "none" }}>
-            Apply to Partner Program
-          </Link>
-        </div>
-      </section>
+  const { brandName } = useSiteBranding();
+  const brand = brandName || "TheChatNest";
 
-      {/* Partner Types */}
-      <section className="container" style={{ padding: "60px 15px" }}>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 32, color: "#0f172a", textAlign: "center" }}>Choose Your Partnership</h2>
-        <div className="row g-4">
-          {partnerTypes.map((pt) => (
-            <div key={pt.title} className="col-lg-4">
-              <div style={{ background: "#fff", borderRadius: 12, padding: 28, border: "1px solid #e2e8f0", height: "100%" }}>
-                <h3 style={{ fontSize: "1.15rem", fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>{pt.title}</h3>
-                <p style={{ color: "#475569", fontSize: 14, lineHeight: 1.6, marginBottom: 16 }}>{pt.desc}</p>
-                <p style={{ color: "#64748b", fontSize: 13 }}><strong>Best for:</strong> {pt.best}</p>
-              </div>
-            </div>
+  return (
+    <div style={{ background: "#fff" }}>
+      <style>{`
+        .tcn-cp-section { padding: 5rem 0; }
+        .tcn-cp-section.alt { background: var(--tcn-bg-soft); }
+        .tcn-cp-head {
+          text-align: center;
+          max-width: 680px;
+          margin: 0 auto 3rem;
+        }
+        .tcn-cp-head h2 {
+          font-size: clamp(1.7rem, 3vw, 2.4rem);
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--tcn-ink-900);
+          margin: 1rem 0 0.7rem;
+        }
+        .tcn-cp-head p {
+          color: var(--tcn-ink-500);
+          font-size: 1.02rem;
+          margin: 0;
+        }
+        .tcn-cp-grid-3 {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 1.25rem;
+          max-width: 1180px;
+          margin: 0 auto;
+        }
+        .tcn-cp-card {
+          background: #fff;
+          border: 1px solid var(--tcn-border);
+          border-radius: 20px;
+          padding: 2rem 1.6rem;
+          transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .tcn-cp-card::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: var(--card-tint, #6d5dfc);
+          opacity: 0;
+          transition: opacity 0.22s ease;
+        }
+        .tcn-cp-card:hover {
+          transform: translateY(-4px);
+          border-color: var(--card-tint, #6d5dfc);
+          box-shadow: 0 14px 36px rgba(15,23,42,0.08);
+        }
+        .tcn-cp-card:hover::before { opacity: 1; }
+        .tcn-cp-card .ico {
+          width: 56px;
+          height: 56px;
+          border-radius: 14px;
+          background: var(--card-tint-soft);
+          color: var(--card-tint);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 1.1rem;
+        }
+        .tcn-cp-card h3 {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: var(--tcn-ink-900);
+          margin: 0 0 0.5rem;
+        }
+        .tcn-cp-card p {
+          color: var(--tcn-ink-500);
+          font-size: 0.93rem;
+          line-height: 1.55;
+          margin: 0 0 1rem;
+        }
+        .tcn-cp-best {
+          margin-top: auto;
+          padding-top: 1rem;
+          border-top: 1px solid var(--tcn-border);
+          font-size: 0.82rem;
+          color: var(--tcn-ink-500);
+          display: flex;
+          gap: 6px;
+          align-items: flex-start;
+        }
+        .tcn-cp-best strong { color: var(--tcn-ink-900); }
+
+        .tcn-cp-benefits {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 1rem;
+          max-width: 1180px;
+          margin: 0 auto;
+        }
+        .tcn-cp-benefit {
+          display: flex;
+          gap: 14px;
+          padding: 1.5rem 1.4rem;
+          background: #fff;
+          border: 1px solid var(--tcn-border);
+          border-radius: 16px;
+          transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .tcn-cp-benefit:hover {
+          border-color: var(--card-tint, #6d5dfc);
+          transform: translateY(-2px);
+        }
+        .tcn-cp-benefit .ico {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          background: var(--card-tint-soft);
+          color: var(--card-tint);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .tcn-cp-benefit h4 {
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--tcn-ink-900);
+          margin: 0 0 0.3rem;
+        }
+        .tcn-cp-benefit p {
+          font-size: 0.88rem;
+          color: var(--tcn-ink-500);
+          margin: 0;
+          line-height: 1.55;
+        }
+      `}</style>
+
+      <PageHero
+        eyebrow="Channel partner program"
+        eyebrowIcon={PiHandshakeDuotone}
+        title={
+          <>
+            Grow your business with{" "}
+            <span className="gradient-word">{brand}</span>
+          </>
+        }
+        lead="Help enterprises adopt secure, self-hosted communication. Earn recurring revenue, get co-marketing support, and ship faster with our engineering team."
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "0.6rem",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            marginTop: "1.5rem",
+          }}
+        >
+          {[
+            "Recurring commissions",
+            "Co-marketing",
+            "Priority support",
+            "Deal registration",
+          ].map((tag) => (
+            <span
+              key={tag}
+              className="trust-chip"
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              <PiCheckBold size={12} color="#ffd54a" /> {tag}
+            </span>
           ))}
         </div>
-      </section>
+      </PageHero>
 
-      {/* Benefits */}
-      <section style={{ background: "#fff", padding: "60px 0" }}>
+      {/* Partner types */}
+      <section className="tcn-cp-section">
         <div className="container">
-          <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: 32, color: "#0f172a", textAlign: "center" }}>Partner Benefits</h2>
-          <div className="row g-4">
-            {benefits.map((b) => (
-              <div key={b.title} className="col-lg-4 col-md-6">
-                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 28 }}>{b.icon}</span>
-                  <div>
-                    <h4 style={{ fontSize: "1rem", fontWeight: 700, color: "#0f172a", marginBottom: 4 }}>{b.title}</h4>
-                    <p style={{ color: "#64748b", fontSize: 14, lineHeight: 1.5, margin: 0 }}>{b.desc}</p>
-                  </div>
+          <div className="tcn-cp-head">
+            <span className="eyebrow">Three ways to partner</span>
+            <h2>Choose the model that fits your business</h2>
+            <p>Whether you sell, refer, or build alongside us — there's a partnership that works.</p>
+          </div>
+
+          <div className="tcn-cp-grid-3">
+            {PARTNER_TYPES.map((pt) => (
+              <div
+                key={pt.title}
+                className="tcn-cp-card"
+                style={{
+                  "--card-tint": pt.tint,
+                  "--card-tint-soft": `${pt.tint}1a`,
+                }}
+              >
+                <div className="ico">
+                  <pt.Icon size={28} />
+                </div>
+                <h3>{pt.title}</h3>
+                <p>{pt.desc}</p>
+                <div className="tcn-cp-best">
+                  <PiUsersThreeDuotone size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>
+                    <strong>Best for:</strong> {pt.best}
+                  </span>
                 </div>
               </div>
             ))}
@@ -68,18 +264,48 @@ export default function ChannelPartner() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ background: "#0f172a", color: "#fff", padding: "48px 0", textAlign: "center" }}>
+      {/* Benefits */}
+      <section className="tcn-cp-section alt">
         <div className="container">
-          <h3 style={{ fontWeight: 700, marginBottom: 12 }}>Ready to Partner?</h3>
-          <p style={{ color: "#94a3b8", marginBottom: 24, maxWidth: 500, margin: "0 auto 24px" }}>
-            Get in touch with our partnerships team. We'll walk you through the program details and get you set up.
-          </p>
-          <Link to="/contact" style={{ display: "inline-block", background: "#0162c4", color: "#fff", padding: "12px 32px", borderRadius: 8, fontWeight: 600, textDecoration: "none" }}>
-            Contact Us
-          </Link>
+          <div className="tcn-cp-head">
+            <span className="eyebrow">Partner benefits</span>
+            <h2>Everything you need to win deals</h2>
+            <p>Real margins, real support, real partnership — not just a referral link.</p>
+          </div>
+
+          <div className="tcn-cp-benefits">
+            {BENEFITS.map((b) => (
+              <div
+                key={b.title}
+                className="tcn-cp-benefit"
+                style={{
+                  "--card-tint": b.tint,
+                  "--card-tint-soft": `${b.tint}1a`,
+                }}
+              >
+                <span className="ico">
+                  <b.Icon size={24} />
+                </span>
+                <div>
+                  <h4>{b.title}</h4>
+                  <p>{b.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+
+      <FinalCta
+        eyebrow="Ready to partner?"
+        eyebrowIcon={PiHandshakeDuotone}
+        title="Let's grow together"
+        description="Get in touch and we'll walk you through the program details, margins, and onboarding steps."
+        primaryLabel="Apply to partner program"
+        primaryTo="/contact"
+        secondaryLabel="See pricing"
+        secondaryTo="/pricing"
+      />
     </div>
   );
 }

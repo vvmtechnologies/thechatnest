@@ -160,19 +160,44 @@ const TopBar = () => {
   const dragRegionSx = isBrowser ? {} : { WebkitAppRegion: "drag" };
   const noDragRegionSx = isBrowser ? {} : { WebkitAppRegion: "no-drag" };
 
+  const pillBtnSx = {
+    fontSize: "12px",
+    color: "#e6e6ea",
+    border: "1px solid rgba(255,255,255,0.14)",
+    background: "rgba(255,255,255,0.05)",
+    backdropFilter: "blur(10px)",
+    borderRadius: "999px",
+    px: 1.4,
+    py: 0.5,
+    minHeight: 0,
+    textTransform: "none",
+    fontWeight: 600,
+    letterSpacing: 0.02,
+    transition: "all 0.18s ease",
+    "&:hover": {
+      background: "rgba(255,213,74,0.1)",
+      borderColor: "rgba(255,213,74,0.35)",
+      color: "#ffd54a",
+    },
+    ...noDragRegionSx,
+  };
+
   return (
     <Box
       sx={{
-        backgroundColor: theme.palette.primary.main,
+        background:
+          "radial-gradient(600px 200px at 80% 0%, rgba(109,93,252,0.25), transparent 60%), linear-gradient(180deg, #0b0f1e 0%, #11162a 100%)",
         height: "100%",
         width: "100%",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        boxShadow: "0 1px 0 rgba(0,0,0,0.4)",
         ...dragRegionSx,
       }}
     >
       <Stack
         direction="row"
         alignItems="center"
-        px={1}
+        px={2}
         py="6px"
         height="100%"
         justifyContent="space-between"
@@ -180,70 +205,132 @@ const TopBar = () => {
         sx={dragRegionSx}
       >
         {/* Left chunk */}
-        <Stack spacing={1.5} direction="row" alignItems="center">
-          <Typography
-            color="#fff"
-            variant="body"
+        <Stack spacing={1.25} direction="row" alignItems="center">
+          {/* Branded chip */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
             sx={{
-              fontWeight: "bold",
-              letterSpacing: 1,
-              textTransform: "uppercase",
+              px: 1.2,
+              py: 0.5,
+              borderRadius: "999px",
+              background: "rgba(255,213,74,0.08)",
+              border: "1px solid rgba(255,213,74,0.18)",
             }}
           >
-            {brandName}
-          </Typography>
+            <Box
+              sx={{
+                width: 22,
+                height: 22,
+                borderRadius: "7px",
+                background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                color: "#1a1f3a",
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: 0.5,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 2px 8px rgba(255,213,74,0.4)",
+              }}
+            >
+              TCN
+            </Box>
+            <Typography
+              sx={{
+                color: "#fff",
+                fontSize: "12.5px",
+                fontWeight: 700,
+                letterSpacing: 0.4,
+              }}
+            >
+              {brandName}
+            </Typography>
+          </Stack>
 
-          <Divider orientation="vertical" variant="middle" flexItem />
-          <Typography color="#fff" variant="body">
-            {displayName}
-          </Typography>
+          {/* User identity */}
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={0.85}
+            sx={{
+              pl: 1.5,
+              borderLeft: "1px solid rgba(255,255,255,0.1)",
+              ml: 1,
+            }}
+          >
+            <Box
+              sx={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                background: netOK ? "#22c55e" : "#ef4444",
+                boxShadow: netOK
+                  ? "0 0 0 3px rgba(34,197,94,0.2)"
+                  : "0 0 0 3px rgba(239,68,68,0.2)",
+              }}
+            />
+            <Typography
+              sx={{
+                color: "rgba(231,233,243,0.85)",
+                fontSize: "12.5px",
+                fontWeight: 500,
+              }}
+            >
+              {displayName}
+            </Typography>
+          </Stack>
 
           {/* No Internet pill */}
           {!netOK && (
             <Box
               sx={{
-                ml: 2,
-                px: 1.5,
+                ml: 1,
+                px: 1.3,
                 py: 0.5,
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 1,
+                gap: 0.6,
                 borderRadius: 9999,
-                bgcolor: "rgba(0,0,0,0.8)",
-                color: "#fff",
+                background: "rgba(239,68,68,0.15)",
+                border: "1px solid rgba(239,68,68,0.35)",
+                color: "#fca5a5",
               }}
               title="You are offline"
             >
+              <PiWifiSlash size={13} />
               <Typography
                 variant="caption"
-                sx={{ fontWeight: 700, lineHeight: 1 }}
+                sx={{ fontWeight: 700, lineHeight: 1, fontSize: 10.5 }}
               >
-                No Internet
+                Offline
               </Typography>
-              <PiWifiSlash size={16} color="#ff4d4f" />
             </Box>
           )}
         </Stack>
 
         {/* Right chunk */}
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center">
           <Box sx={{ ...noDragRegionSx }}>
             <DownloadToasts />
           </Box>
+
           <Button
-            startIcon={lockState.locked ? <PiLockKeyOpen size={18} /> : <PiLockKey size={18}/>}
+            startIcon={lockState.locked ? <PiLockKeyOpen size={14} /> : <PiLockKey size={14} />}
             onClick={handleLockToggle}
             sx={{
-              fontSize: "12px",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,.6)",
-              backdropFilter: "blur(10px)",
-              borderRadius: "4px",
-              "&:hover": { borderColor: "rgba(255,255,255,1)", color: "#fff" },
-              p: "0px 8px",
-              m: "4px",
-              bgcolor: lockState.locked ? "rgba(0,0,0,0.45)" : "transparent",
-              ...noDragRegionSx,
+              ...pillBtnSx,
+              ...(lockState.locked && {
+                background: "rgba(34,197,94,0.12)",
+                borderColor: "rgba(34,197,94,0.35)",
+                color: "#4ade80",
+                "&:hover": {
+                  background: "rgba(34,197,94,0.18)",
+                  borderColor: "rgba(34,197,94,0.5)",
+                  color: "#4ade80",
+                },
+              }),
             }}
           >
             {lockLabel}
@@ -252,45 +339,40 @@ const TopBar = () => {
           {/* Desktop App CTA (browser only) */}
           {isBrowser && (
             <Button
-              startIcon={<PiDesktop size={16} />}
+              startIcon={<PiDesktop size={14} />}
               href={appUrl}
               target="_blank"
               rel="noopener noreferrer"
-              sx={{
-                fontSize: "12px",
-                color: "#fff !important",
-                border: "1px solid rgba(255,255,255,.6)",
-                backdropFilter: "blur(10px)",
-                borderRadius: "5px",
-                "&:hover": {
-                  borderColor: "rgba(255,255,255,1)",
-                  color: "#fff",
-                },
-                p: "2px 8px",
-                m: "4px",
-                ...noDragRegionSx,
-              }}
+              sx={pillBtnSx}
             >
               Desktop App
             </Button>
           )}
 
-          <Divider orientation="vertical" variant="middle" flexItem />
-
           <Button
-            endIcon={<PiSignOut size={16} />}
+            endIcon={<PiSignOut size={14} />}
+            onClick={handleLogout}
             sx={{
+              ...noDragRegionSx,
               fontSize: "12px",
               color: "#fff",
-              height: "auto",
-              bgcolor: theme.palette.error.main,
-              borderRadius: "4px",
-              p: "2px 8px",
-              m: "4px",
-              "&:hover": { bgcolor: "#111" },
-              ...noDragRegionSx,
+              textTransform: "none",
+              fontWeight: 700,
+              letterSpacing: 0.02,
+              background: "linear-gradient(135deg, #ff5b3e, #ff7e5f)",
+              borderRadius: "999px",
+              px: 1.6,
+              py: 0.5,
+              minHeight: 0,
+              ml: 0.5,
+              boxShadow: "0 4px 14px rgba(255,91,62,0.35)",
+              transition: "all 0.18s ease",
+              "&:hover": {
+                background: "linear-gradient(135deg, #ff7e5f, #ff5b3e)",
+                transform: "translateY(-1px)",
+                boxShadow: "0 6px 18px rgba(255,91,62,0.5)",
+              },
             }}
-            onClick={handleLogout}
           >
             Logout
           </Button>

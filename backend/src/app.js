@@ -132,6 +132,30 @@ app.get('/diag/users', async (req, res) => {
   }
 });
 
+// Diagnostic: organization membership snapshot. Helpful when chat list
+// looks empty — shows which users belong to which org. Remove after launch.
+app.get('/diag/orgs', async (req, res) => {
+  const db = require('./config/database');
+  try {
+    const { rows: orgs } = await db.query(
+      `SELECT organization_id, name, status, created_at,
+              (SELECT COUNT(*)::int FROM organization_members om
+               WHERE om.organization_id = o.organization_id) AS member_count
+       FROM organizations o
+       ORDER BY organization_id ASC`
+    );
+    const { rows: memberships } = await db.query(
+      `SELECT om.organization_id, om.user_id, u.email, u.name, om.role_id, om.status
+       FROM organization_members om
+       JOIN users u ON u.user_id = om.user_id
+       ORDER BY om.organization_id, om.user_id`
+    );
+    return res.json({ orgs, memberships });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 // Diagnostic: latest OTPs for an identifier. Useful while SMTP isn't
 // configured — fetch the OTP that was just generated and use it to log in.
 // Remove after launch.

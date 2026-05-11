@@ -361,9 +361,13 @@ const AuthSplitLayout = ({ title, subtitle, children, footer }) => {
         .tcn-auth-body .MuiInputLabel-root.Mui-focused {
           color: var(--tcn-violet-600) !important;
         }
-        .tcn-auth-body .MuiButton-contained {
-          background: linear-gradient(135deg, var(--tcn-navy-900), #4d3eff) !important;
-          color: #fff !important;
+        .tcn-auth-body .MuiButton-contained,
+        .tcn-auth-body button.MuiButton-contained,
+        .tcn-auth-body .MuiButton-root.MuiButton-contained {
+          background: linear-gradient(135deg, #0b0f1e, #4d3eff) !important;
+          background-color: #4d3eff !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
           border-radius: 999px !important;
           padding: 0.7rem 1.5rem !important;
           font-weight: 700 !important;
@@ -371,10 +375,32 @@ const AuthSplitLayout = ({ title, subtitle, children, footer }) => {
           box-shadow: 0 8px 24px rgba(109,93,252,0.35) !important;
           font-family: inherit !important;
           text-transform: none !important;
+          border: none !important;
         }
-        .tcn-auth-body .MuiButton-contained:hover {
+        .tcn-auth-body .MuiButton-contained:hover,
+        .tcn-auth-body button.MuiButton-contained:hover {
+          background: linear-gradient(135deg, #1a1f3a, #6d5dfc) !important;
+          background-color: #6d5dfc !important;
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
           transform: translateY(-1px);
           box-shadow: 0 12px 30px rgba(109,93,252,0.5) !important;
+        }
+        .tcn-auth-body .MuiButton-contained:disabled,
+        .tcn-auth-body button.MuiButton-contained:disabled {
+          background: #e7e9f3 !important;
+          background-color: #e7e9f3 !important;
+          color: #8189a8 !important;
+          -webkit-text-fill-color: #8189a8 !important;
+          box-shadow: none !important;
+          cursor: not-allowed;
+        }
+        /* Force inner label/span/text visibility */
+        .tcn-auth-body .MuiButton-contained .MuiButton-label,
+        .tcn-auth-body .MuiButton-contained span,
+        .tcn-auth-body .MuiButton-contained > * {
+          color: inherit !important;
+          -webkit-text-fill-color: inherit !important;
         }
         .tcn-auth-body .MuiButton-outlined {
           border-radius: 999px !important;

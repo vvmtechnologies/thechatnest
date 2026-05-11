@@ -16,7 +16,7 @@ import {
   DialogContent,
   Box,
 } from "@mui/material";
-import { PiQrCode } from "react-icons/pi";
+import { PiQrCode, PiQrCodeDuotone } from "react-icons/pi";
 import { useForm, Controller } from "react-hook-form";
 import * as Yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -719,78 +719,338 @@ const Login = () => {
         </Snackbar>
       </>
 
-      {/* ─── QR Code Login Dialog ─── */}
-      <Dialog open={showQr} onClose={closeQr} maxWidth="xs" fullWidth
-        PaperProps={{ sx: { borderRadius: 4, p: 2, textAlign: "center" } }}>
-        <DialogTitle sx={{ fontWeight: 800, fontSize: 20 }}>
-          Login via QR Code
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Scan this QR code with the {brandName} mobile app
-          </Typography>
-        </DialogTitle>
-        <DialogContent>
+      {/* ─── QR Code Login Dialog (redesigned) ─── */}
+      <Dialog
+        open={showQr}
+        onClose={closeQr}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            overflow: "hidden",
+            background: "#fff",
+            boxShadow: "0 30px 80px rgba(15,23,42,0.35)",
+          },
+        }}
+      >
+        <style>{`
+          @keyframes tcnQrPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(109,93,252,0.45), 0 30px 60px rgba(15,23,42,0.08); }
+            50% { box-shadow: 0 0 0 12px rgba(109,93,252,0), 0 30px 60px rgba(15,23,42,0.08); }
+          }
+          @keyframes tcnQrShimmer {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+          }
+          .tcn-qr-head {
+            background:
+              radial-gradient(400px 200px at 80% 0%, rgba(255,213,74,0.18), transparent 60%),
+              radial-gradient(400px 200px at 20% 100%, rgba(109,93,252,0.3), transparent 60%),
+              linear-gradient(135deg, #0b0f1e, #1a1f3a);
+            color: #fff;
+            padding: 1.75rem 1.5rem 1.5rem;
+            text-align: center;
+            position: relative;
+          }
+          .tcn-qr-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            background: rgba(255,213,74,0.14);
+            color: #ffd54a;
+            border: 1px solid rgba(255,213,74,0.25);
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+          }
+          .tcn-qr-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin: 0 0 0.4rem;
+            color: #fff;
+          }
+          .tcn-qr-sub {
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.7);
+            margin: 0;
+            line-height: 1.5;
+          }
+          .tcn-qr-sub strong {
+            color: #fff;
+            font-weight: 600;
+          }
+          .tcn-qr-body {
+            padding: 2rem 1.5rem 1.75rem;
+            text-align: center;
+          }
+          .tcn-qr-frame {
+            position: relative;
+            width: 230px;
+            height: 230px;
+            margin: 0 auto 1.5rem;
+            padding: 14px;
+            border-radius: 20px;
+            background: #fff;
+            animation: tcnQrPulse 2.5s ease-in-out infinite;
+            border: 1px solid var(--tcn-border, #e5e7eb);
+          }
+          .tcn-qr-frame::before,
+          .tcn-qr-frame::after,
+          .tcn-qr-frame > .corner-tl,
+          .tcn-qr-frame > .corner-bl {
+            content: "";
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            border-color: #6d5dfc;
+            border-style: solid;
+          }
+          .tcn-qr-frame::before {
+            top: -2px; left: -2px;
+            border-width: 3px 0 0 3px;
+            border-top-left-radius: 8px;
+          }
+          .tcn-qr-frame::after {
+            top: -2px; right: -2px;
+            border-width: 3px 3px 0 0;
+            border-top-right-radius: 8px;
+          }
+          .tcn-qr-frame .corner-bl {
+            bottom: -2px; left: -2px;
+            border-width: 0 0 3px 3px;
+            border-bottom-left-radius: 8px;
+          }
+          .tcn-qr-frame .corner-tl {
+            bottom: -2px; right: -2px;
+            border-width: 0 3px 3px 0;
+            border-bottom-right-radius: 8px;
+          }
+          .tcn-qr-frame img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 10px;
+          }
+          .tcn-qr-steps {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.25rem;
+          }
+          .tcn-qr-step {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 0.35rem 0.7rem;
+            border-radius: 999px;
+            background: var(--tcn-bg-soft, #fafbff);
+            border: 1px solid var(--tcn-border, #e5e7eb);
+            font-size: 0.74rem;
+            color: var(--tcn-ink-700, #2a3050);
+            font-weight: 600;
+          }
+          .tcn-qr-step .num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #6d5dfc, #4d3eff);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 800;
+          }
+          .tcn-qr-timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            background: rgba(34,197,94,0.1);
+            color: #16a34a;
+            border: 1px solid rgba(34,197,94,0.25);
+            font-size: 0.78rem;
+            font-weight: 700;
+          }
+          .tcn-qr-timer .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #22c55e;
+            animation: tcnQrPulse 1.5s ease-in-out infinite;
+          }
+          .tcn-qr-success {
+            padding: 2.5rem 1rem;
+            text-align: center;
+          }
+          .tcn-qr-success .check-ring {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.25rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 800;
+            box-shadow: 0 12px 30px rgba(34,197,94,0.35);
+          }
+          .tcn-qr-success h3 {
+            color: var(--tcn-ink-900, #0a0e1f);
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 0 0 0.4rem;
+          }
+          .tcn-qr-success p {
+            color: var(--tcn-ink-500, #5b6280);
+            margin: 0;
+            font-size: 0.9rem;
+          }
+          .tcn-qr-error {
+            padding: 2rem 1rem;
+            text-align: center;
+          }
+          .tcn-qr-error .ring {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1rem;
+            border-radius: 999px;
+            background: rgba(239,68,68,0.12);
+            color: #dc2626;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+          }
+          .tcn-qr-error h3 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--tcn-ink-900, #0a0e1f);
+            margin: 0 0 0.4rem;
+          }
+          .tcn-qr-error p {
+            font-size: 0.88rem;
+            color: var(--tcn-ink-500, #5b6280);
+            margin: 0 0 1rem;
+          }
+          .tcn-qr-retry {
+            padding: 0.65rem 1.4rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #0b0f1e, #4d3eff);
+            color: #fff !important;
+            font-weight: 700;
+            font-size: 0.88rem;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            box-shadow: 0 6px 18px rgba(109,93,252,0.35);
+            transition: transform 0.18s ease;
+          }
+          .tcn-qr-retry:hover { transform: translateY(-2px); }
+        `}</style>
+
+        <div className="tcn-qr-head">
+          <span className="tcn-qr-eyebrow">
+            <PiQrCodeDuotone size={11} /> Mobile login
+          </span>
+          <h2 className="tcn-qr-title">Scan to sign in</h2>
+          <p className="tcn-qr-sub">
+            Open <strong>{brandName}</strong> on your phone and point at the
+            code below
+          </p>
+        </div>
+
+        <DialogContent sx={{ p: 0 }}>
           {qrStatus === "loading" && (
-            <Box sx={{ py: 6 }}>
-              <CircularProgress />
-              <Typography variant="body2" sx={{ mt: 2 }}>Generating QR code...</Typography>
-            </Box>
+            <div className="tcn-qr-body" style={{ padding: "3rem 1.5rem" }}>
+              <CircularProgress sx={{ color: "var(--tcn-violet-600, #6d5dfc)" }} />
+              <Typography variant="body2" sx={{ mt: 2, color: "var(--tcn-ink-500, #5b6280)" }}>
+                Generating secure QR code…
+              </Typography>
+            </div>
           )}
 
           {qrStatus === "ready" && qrData && (
-            <Box sx={{ py: 2 }}>
-              {/* QR Code rendered as SVG using simple encoding */}
-              <Box sx={{
-                width: 220, height: 220, mx: "auto", mb: 2, p: 2,
-                border: "2px solid", borderColor: "divider", borderRadius: 3,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                bgcolor: "#fff",
-              }}>
+            <div className="tcn-qr-body">
+              <div className="tcn-qr-frame">
+                <span className="corner-bl" />
+                <span className="corner-tl" />
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(JSON.stringify({ qrToken: qrData.qrToken }))}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                    JSON.stringify({ qrToken: qrData.qrToken })
+                  )}`}
                   alt="QR Code"
-                  style={{ width: 200, height: 200 }}
                 />
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Open {brandName} app → Login → QR Code
-              </Typography>
-              <Typography variant="caption" color="text.disabled" sx={{ display: "block", mt: 1 }}>
-                QR expires in 5 minutes
-              </Typography>
-            </Box>
+              </div>
+
+              <div className="tcn-qr-steps">
+                <span className="tcn-qr-step">
+                  <span className="num">1</span> Open app
+                </span>
+                <span className="tcn-qr-step">
+                  <span className="num">2</span> Tap Login
+                </span>
+                <span className="tcn-qr-step">
+                  <span className="num">3</span> Scan QR
+                </span>
+              </div>
+
+              <span className="tcn-qr-timer">
+                <span className="dot" /> Expires in 5 minutes
+              </span>
+            </div>
           )}
 
           {qrStatus === "linked" && (
-            <Box sx={{ py: 4 }}>
-              <Typography variant="h5" sx={{ color: "success.main", fontWeight: 800 }}>
-                ✓ Login Successful!
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Redirecting...
-              </Typography>
-            </Box>
+            <div className="tcn-qr-success">
+              <div className="check-ring">✓</div>
+              <h3>You're in!</h3>
+              <p>Redirecting to your workspace…</p>
+            </div>
           )}
 
           {qrStatus === "expired" && (
-            <Box sx={{ py: 4 }}>
-              <Typography variant="body1" color="error" sx={{ fontWeight: 700 }}>
-                QR Code Expired
-              </Typography>
-              <Button variant="outlined" onClick={() => { closeQr(); startQrLogin(); }} sx={{ mt: 2 }}>
-                Generate New QR
-              </Button>
-            </Box>
+            <div className="tcn-qr-error">
+              <div className="ring">⏱</div>
+              <h3>QR code expired</h3>
+              <p>Generate a fresh code to continue.</p>
+              <button
+                className="tcn-qr-retry"
+                onClick={() => {
+                  closeQr();
+                  startQrLogin();
+                }}
+              >
+                Generate new QR
+              </button>
+            </div>
           )}
 
           {qrStatus === "error" && (
-            <Box sx={{ py: 4 }}>
-              <Typography variant="body1" color="error" sx={{ fontWeight: 700 }}>
-                Failed to generate QR
-              </Typography>
-              <Button variant="outlined" onClick={() => { closeQr(); startQrLogin(); }} sx={{ mt: 2 }}>
-                Try Again
-              </Button>
-            </Box>
+            <div className="tcn-qr-error">
+              <div className="ring">!</div>
+              <h3>Couldn't generate QR</h3>
+              <p>Check your connection and try again.</p>
+              <button
+                className="tcn-qr-retry"
+                onClick={() => {
+                  closeQr();
+                  startQrLogin();
+                }}
+              >
+                Try again
+              </button>
+            </div>
           )}
         </DialogContent>
       </Dialog>

@@ -17,7 +17,6 @@ BEGIN
   UPDATE public.users
   SET password_hash = pw_hash,
       status = 'active',
-      email_verified = COALESCE(email_verified, true),
       email_verified_at = COALESCE(email_verified_at, NOW()),
       updated_at = NOW()
   WHERE LOWER(email) = LOWER(owner_email);

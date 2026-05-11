@@ -38,7 +38,7 @@ BEGIN
         UPDATE public.users
         SET email = owner_email,
             name = COALESCE(NULLIF(TRIM(name), ''), 'Owner'),
-            email_verified = COALESCE(email_verified, true),
+            email_verified_at = COALESCE(email_verified_at, NOW()),
             updated_at = NOW()
         WHERE user_id = owner_user_id;
         RAISE NOTICE 'Promoted % → % (user_id=%)', candidate, owner_email, owner_user_id;

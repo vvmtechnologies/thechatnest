@@ -1,0 +1,350 @@
+/* ============================================================
+   TheChatNest — Modern SaaS redesign layer
+   Loaded after website.css to override legacy styles.
+   ============================================================ */
+
+:root {
+  /* Brand palette — navy + violet primary, gold accent */
+  --tcn-navy-950: #0b0f1e;
+  --tcn-navy-900: #11162a;
+  --tcn-navy-800: #1a1f3a;
+  --tcn-navy-700: #232a4d;
+  --tcn-violet-600: #6d5dfc;
+  --tcn-violet-500: #8b7cff;
+  --tcn-violet-400: #a99dff;
+  --tcn-violet-50: #f3f1ff;
+  --tcn-gold-500: #ffd54a;
+  --tcn-gold-400: #ffe082;
+  --tcn-ink-900: #0a0e1f;
+  --tcn-ink-700: #2a3050;
+  --tcn-ink-500: #5b6280;
+  --tcn-ink-400: #8189a8;
+  --tcn-ink-300: #b4bacf;
+  --tcn-ink-100: #e7e9f3;
+  --tcn-bg: #ffffff;
+  --tcn-bg-soft: #fafbff;
+  --tcn-bg-card: #ffffff;
+  --tcn-border: rgba(15, 23, 42, 0.08);
+  --tcn-border-strong: rgba(15, 23, 42, 0.14);
+  --tcn-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --tcn-shadow-md: 0 6px 20px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --tcn-shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.12), 0 8px 20px rgba(15, 23, 42, 0.06);
+  --tcn-shadow-glow: 0 30px 80px rgba(109, 93, 252, 0.25);
+  --tcn-radius-sm: 8px;
+  --tcn-radius-md: 14px;
+  --tcn-radius-lg: 20px;
+  --tcn-radius-pill: 999px;
+  --tcn-font-sans: "Inter", "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --tcn-font-display: "Inter", "Manrope", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* Override legacy tokens so old components inherit new look */
+  --bg-primary-color: #6d5dfc;
+  --bg-secondary-color: #ff5b3e;
+  --accent: #ffffff;
+}
+
+/* ============ Base typography ============ */
+html, body {
+  font-family: var(--tcn-font-sans);
+  background: var(--tcn-bg);
+  color: var(--tcn-ink-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--tcn-font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--tcn-ink-900);
+}
+
+h1 { font-size: clamp(2.4rem, 5vw, 4.2rem); line-height: 1.05; }
+h2 { font-size: clamp(1.9rem, 3.6vw, 3rem); line-height: 1.15; }
+h3 { font-size: clamp(1.4rem, 2.4vw, 2rem); line-height: 1.25; }
+
+p { color: var(--tcn-ink-700); }
+
+a { color: var(--tcn-violet-600); text-decoration: none; }
+a:hover { color: var(--tcn-violet-500); }
+
+/* ============ Navbar (refine over earlier dark navy) ============ */
+.navbar {
+  background-color: rgba(11, 15, 30, 0.85) !important;
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: none !important;
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+}
+
+.navbar .nav-link {
+  font-weight: 500 !important;
+  color: rgba(231, 233, 243, 0.78) !important;
+  font-size: 0.95rem !important;
+  transition: color 0.18s ease;
+}
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: var(--tcn-gold-500) !important;
+}
+
+.navbar .dropdown-menu {
+  background: var(--tcn-navy-800);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--tcn-radius-md);
+  padding: 0.4rem !important;
+  margin-top: 0.4rem !important;
+  box-shadow: var(--tcn-shadow-lg);
+}
+.navbar .dropdown-menu .dropdown-item {
+  color: var(--tcn-ink-100) !important;
+  border-radius: var(--tcn-radius-sm);
+  padding: 0.5rem 0.8rem !important;
+  font-size: 0.92rem;
+}
+.navbar .dropdown-menu .dropdown-item:hover {
+  background: rgba(255, 213, 74, 0.08);
+  color: var(--tcn-gold-500) !important;
+}
+
+/* Replace orange FREE TRIAL with violet gradient */
+.main-btn,
+.navbar .main-btn,
+a.main-btn,
+button.main-btn {
+  background: linear-gradient(135deg, var(--tcn-violet-600), #4d3eff) !important;
+  border: 1px solid transparent !important;
+  color: #fff !important;
+  border-radius: var(--tcn-radius-pill) !important;
+  padding: 0.6rem 1.4rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 18px rgba(109, 93, 252, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.main-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(109, 93, 252, 0.5);
+}
+
+/* Mobile toggler icon visibility on dark navbar */
+.navbar-toggler { color: var(--tcn-ink-100) !important; }
+.navbar-toggler svg { fill: var(--tcn-ink-100); color: var(--tcn-ink-100); }
+
+/* ============ Hero (modern) ============ */
+.hero-section {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(109, 93, 252, 0.35), transparent 60%),
+    radial-gradient(900px 500px at 10% 10%, rgba(255, 213, 74, 0.12), transparent 60%),
+    linear-gradient(180deg, var(--tcn-navy-950) 0%, var(--tcn-navy-900) 100%) !important;
+  color: #fff !important;
+  padding: 9rem 0 5rem !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-section .container.wrapper { position: relative; z-index: 1; }
+
+.hero-section .content { text-align: center; max-width: 920px; margin: 0 auto; }
+
+.hero-section h1, .hero-section h1 p {
+  color: #fff !important;
+  font-size: clamp(2.5rem, 6vw, 5rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.025em;
+  margin: 0;
+  display: inline;
+}
+.hero-section h1 p::after { content: " "; }
+.hero-section .superscript {
+  background: linear-gradient(135deg, var(--tcn-gold-500), var(--tcn-gold-400));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-section .chat-window-img {
+  margin-top: 4rem !important;
+  position: relative;
+  border-radius: var(--tcn-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--tcn-shadow-glow), 0 30px 60px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* ============ Buttons (general) ============ */
+.btn, button.btn {
+  font-family: var(--tcn-font-sans);
+  border-radius: var(--tcn-radius-pill);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* ============ Sections (light) ============ */
+section {
+  padding: 5rem 0;
+}
+
+.bg-accent, .bg-light, .bg-white {
+  background-color: var(--tcn-bg) !important;
+}
+
+.section-light {
+  background: var(--tcn-bg);
+}
+
+.section-soft {
+  background: linear-gradient(180deg, var(--tcn-bg) 0%, var(--tcn-bg-soft) 100%);
+}
+
+.section-dark {
+  background: var(--tcn-navy-900);
+  color: #fff;
+}
+.section-dark h1, .section-dark h2, .section-dark h3 { color: #fff; }
+.section-dark p { color: rgba(255,255,255,0.7); }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--tcn-radius-pill);
+  background: var(--tcn-violet-50);
+  color: var(--tcn-violet-600);
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ============ Cards ============ */
+.feature-card, .card {
+  background: var(--tcn-bg-card);
+  border: 1px solid var(--tcn-border);
+  border-radius: var(--tcn-radius-lg);
+  box-shadow: var(--tcn-shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  padding: 1.75rem;
+}
+.feature-card:hover, .card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--tcn-shadow-md);
+  border-color: var(--tcn-border-strong);
+}
+
+/* ============ Pricing toggle (Monthly/Yearly) ============ */
+.pricing-toggle {
+  display: inline-flex;
+  background: var(--tcn-bg-soft);
+  border: 1px solid var(--tcn-border);
+  border-radius: var(--tcn-radius-pill);
+  padding: 4px;
+}
+
+/* ============ Footer ============ */
+.footer, footer {
+  background: var(--tcn-navy-950) !important;
+  color: rgba(255,255,255,0.7);
+  padding: 4rem 0 2rem !important;
+}
+.footer a, footer a { color: rgba(255,255,255,0.75); }
+.footer a:hover, footer a:hover { color: var(--tcn-gold-500); }
+
+/* ============ Section heading helpers ============ */
+.section-title {
+  text-align: center;
+  margin: 0 auto 3rem;
+  max-width: 720px;
+}
+.section-title h2 {
+  margin-bottom: 1rem;
+}
+.section-title p {
+  font-size: 1.125rem;
+  color: var(--tcn-ink-500);
+}
+
+/* ============ Forms ============ */
+input.form-control, textarea.form-control, select.form-select {
+  border-radius: var(--tcn-radius-md) !important;
+  border-color: var(--tcn-border) !important;
+  padding: 0.7rem 1rem !important;
+  font-size: 0.95rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+input.form-control:focus, textarea.form-control:focus, select.form-select:focus {
+  border-color: var(--tcn-violet-500) !important;
+  box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.18) !important;
+}
+
+/* ============ Trust strip ============ */
+.trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+.trust-strip .trust-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--tcn-radius-pill);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.92);
+  font-size: 0.85rem;
+  font-weight: 500;
+  backdrop-filter: blur(8px);
+}
+
+/* ============ Logo strip ============ */
+.logo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 2.5rem;
+  opacity: 0.7;
+}
+
+/* ============ Animations ============ */
+@keyframes tcnFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: tcnFadeUp 0.6s ease-out both; }
+.fade-up-d1 { animation-delay: 0.1s; }
+.fade-up-d2 { animation-delay: 0.2s; }
+.fade-up-d3 { animation-delay: 0.3s; }
+
+/* ============ Responsive ============ */
+@media (max-width: 768px) {
+  .hero-section { padding: 7rem 0 3rem !important; }
+  section { padding: 3.5rem 0; }
+}

@@ -1,103 +1,99 @@
 import React from "react";
-import { PiChat, PiUsersThree, PiVideoCamera, PiFile, PiScreencast, PiShieldCheck } from "react-icons/pi";
-import manWithLaptopImg from "../assets/Images/man-with-laptop.jpg";
+import {
+  PiChatCircleDotsDuotone,
+  PiUsersThreeDuotone,
+  PiVideoCameraDuotone,
+  PiFileLockDuotone,
+  PiSparkleDuotone,
+  PiShieldCheckDuotone,
+} from "react-icons/pi";
+
+const featureList = [
+  {
+    icon: PiChatCircleDotsDuotone,
+    color: "#6d5dfc",
+    title: "Instant Messaging",
+    desc: "1:1, group, and channel chat with read receipts, threads, reactions, and search.",
+  },
+  {
+    icon: PiVideoCameraDuotone,
+    color: "#0ea5e9",
+    title: "HD Audio & Video",
+    desc: "Crystal-clear group calls, screen sharing, and meetings — built right into chat.",
+  },
+  {
+    icon: PiUsersThreeDuotone,
+    color: "#22c55e",
+    title: "Smart Group Chat",
+    desc: "Organize teams into channels, projects, and broadcasts. Permissions you control.",
+  },
+  {
+    icon: PiFileLockDuotone,
+    color: "#f59e0b",
+    title: "Secure File Sharing",
+    desc: "Send any file with end-to-end encryption, previews, and granular access controls.",
+  },
+  {
+    icon: PiSparkleDuotone,
+    color: "#ec4899",
+    title: "Built-in AI Assistant",
+    desc: "Summarize threads, draft replies, translate, and search across your workspace.",
+  },
+  {
+    icon: PiShieldCheckDuotone,
+    color: "#14b8a6",
+    title: "Enterprise Security",
+    desc: "SOC 2, GDPR, AES-256-GCM at rest, RBAC, audit logs, and SSO/SAML on demand.",
+  },
+];
 
 const Features = () => {
   return (
-    <section className="features-container wrapper">
-      <div className="text-center ">
-        <h2>Amazing Features</h2>
-        
-      </div>
+    <section className="section-soft" style={{ padding: "6rem 0" }}>
+      <div className="container">
+        <div className="section-title">
+          <span className="eyebrow">Features</span>
+          <h2 style={{ marginTop: "1rem" }}>Everything your team needs, in one place</h2>
+          <p>
+            From quick 1:1 chats to all-hands broadcasts, secure file transfers, AI shortcuts,
+            and HD calls — TheChatNest replaces a dozen tools with one focused workspace.
+          </p>
+        </div>
 
-      <div className="container-fluid wrapper mt-lg-5 ">
-        <div className="row mx-0">
-          <div className="col-md-7 col-12 my-auto position-relative">
-            <div className="side-img">
-              <img src={manWithLaptopImg} />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "1.25rem",
+          }}
+        >
+          {featureList.map(({ icon: Icon, color, title, desc }) => (
+            <div key={title} className="feature-card fade-up">
+              <div
+                style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: 14,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: `${color}15`,
+                  color,
+                  marginBottom: "1.25rem",
+                }}
+              >
+                <Icon size={32} />
+              </div>
+              <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem", fontWeight: 700 }}>
+                {title}
+              </h3>
+              <p style={{ margin: 0, color: "var(--tcn-ink-500)", fontSize: "0.97rem" }}>
+                {desc}
+              </p>
             </div>
-            <span className="element d-none d-md-block"></span>
-          </div>
-          <div className="col-lg-4 col-md-5 col-12">
-            <div className="row mx-2 gy-5 my-auto">
-              <div className="col-md-12 col-sm-4 col-12">
-              <p className=" px-2">
-          Features that every office team’s needs! Whether you want to send a
-          1:1 message, talk in a group, message to bulk, meet securely, and do
-          more. All kinds of team collaboration use cases are covered in this
-          business chat app!
-        </p>
-              </div>
-              <div className="col-md-12 col-sm-4 col-12">
-                <div className="px-lg-5 px-2">
-                  <PiChat size={48} color="#f5cb24" />
-                  <h5 className="mt-3">Instant Messaging</h5>
-                  <p>
-                    Send your work requirements to your co-worker through a
-                    quick one-to-one instant chat app.
-                  </p>
-                </div>
-              </div>
-              <div className="col-md-12 col-sm-4 col-12">
-                <div className="px-lg-5 px-2">
-                  <PiVideoCamera size={48} color="#0162c4" />
-                  <h5 className="mt-3">Audio & Video Calling</h5>
-                  <p>
-                    Meet via a clear and crisp 1:1 or group audio-video call to
-                    share your voice of opinion.
-                  </p>
-                </div>
-              </div>
-              <div className="col-md-12 col-sm-4 col-12">
-                <div className="px-lg-5 px-2">
-                  <PiUsersThree size={48} color="#ff4842" />
-                  <h5 className="mt-3">Group Chat</h5>
-                  <p>
-                    Collaborate in group chats to discuss your daily office work
-                    routines! Be a part of the group to access all files and
-                    conversations.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-         
+          ))}
         </div>
       </div>
-      <div className="row mx-0 px-4 gy-4 bg-accent" style={{padding: '100px 0'}}>
-            <div className=" col-sm-4 col-12">
-              <div className="px-md-5 ">
-                <PiFile size={48} color="#90c337" />
-                <h5 className="mt-3">Files Sharing</h5>
-                <p>
-                  You can share text files, PDFs, PPTs, images, videos, and URLs
-                  across 1:1 and group chats. Preview these on the UI to improve
-                  your business productivity.
-                </p>
-              </div>
-            </div>
-            <div className=" col-sm-4 col-12">
-              <div className="px-md-5 ">
-                <PiScreencast size={48} color="#c489e1" />
-                <h5 className="mt-3">Remote Screen Share</h5>
-                <p>
-                  Reach out to your remotest office teams with TheChatNest’s
-                  productive and ultra-new screen share feature.
-                </p>
-              </div>
-            </div>
-            <div className=" col-sm-4 col-12">
-              <div className="px-md-5 ">
-                <PiShieldCheck size={48} color="#4fdbe8" />
-                <h5 className="mt-3">End-to-End Encryption</h5>
-                <p>
-                  Your work conversations are under your complete control!
-                  Chats, calls, and conferences are end-to-end encrypted in this
-                  office chat app.
-                </p>
-              </div>
-            </div>
-          </div>
     </section>
   );
 };

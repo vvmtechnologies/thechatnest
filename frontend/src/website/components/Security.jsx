@@ -1,166 +1,124 @@
-import { Typography } from "@mui/material";
-import {
-  PiChatCircle,
-  PiCloudCheck,
-  PiHandshake,
-  PiLockKey,
-  PiRocketLaunch,
-  PiShieldCheck,
-  PiUserGear,
-  PiWifiHigh,
-} from "react-icons/pi";
 import React from "react";
-import secureImg from "../assets/Images/secure.png";
-import videoCallImg from "../assets/Images/video_call.png";
+import {
+  PiLockKeyDuotone,
+  PiShieldCheckDuotone,
+  PiCloudCheckDuotone,
+  PiUserGearDuotone,
+  PiWifiHighDuotone,
+  PiHandshakeDuotone,
+} from "react-icons/pi";
+
+const pillars = [
+  {
+    icon: PiLockKeyDuotone,
+    title: "End-to-end encryption",
+    desc: "AES-256-GCM at rest, TLS 1.3 in transit. Your keys, your control.",
+  },
+  {
+    icon: PiShieldCheckDuotone,
+    title: "SOC 2 & GDPR ready",
+    desc: "Audited controls, data residency, and right-to-erasure built in.",
+  },
+  {
+    icon: PiCloudCheckDuotone,
+    title: "99.9% uptime SLA",
+    desc: "Multi-region failover, automated backups, real-time health.",
+  },
+  {
+    icon: PiUserGearDuotone,
+    title: "Granular admin",
+    desc: "RBAC, SSO/SAML, SCIM provisioning, audit logs, retention policies.",
+  },
+  {
+    icon: PiWifiHighDuotone,
+    title: "Air-gapped option",
+    desc: "Self-host on-premises or in your private cloud. Zero data egress.",
+  },
+  {
+    icon: PiHandshakeDuotone,
+    title: "Compliance partner",
+    desc: "DPAs, sub-processor lists, and security questionnaires on request.",
+  },
+];
 
 const Security = () => {
   return (
-    <>
-      {/* security and scale container */}
-      <section className="secure-container wrapper ">
-        <div className="responsive-paragraph mx-auto text-md-start text-center">
-          <h2>Security & scale</h2>
-          <p className="  my-2">Protect your intellectual property</p>
-        </div>
-
-        <div className="container-fluid ">
-          <div className="row mx-0">
-            <div className="col-lg-5 offset-xl-1 col-md-6 col-12">
-              <div className="row mx-2 gy-md-5 gy-2 my-auto">
-                <div className="col-md-12 col-sm-4 col-12">
-                  <div className="px-md-5 px-2">
-                    <h5 className="mt-3">Admin Controls</h5>
-                    <p>
-                      Your Messenger admin will have complete control over which
-                      features must be made available to app users.
-                    </p>
-                  </div>
-                </div>
-                <div className="col-md-12 col-sm-4 col-12">
-                  <div className="px-md-5 px-2">
-                    <h5 className="mt-3">End-to-End Encryption</h5>
-                    <p>
-                      All of your messages, calls, conferences, and files are
-                      end-to-end encrypted. Messenger engages the most proven
-                      security protocols to secure your data
-                    </p>
-                  </div>
-                </div>
-                <div className="col-md-12 col-sm-4 col-12">
-                  <div className="px-md-5 px-2">
-                    <h5 className="mt-3">Multi-Factor Authentication (MFA)</h5>
-                    <p>
-                      Employ multiple levels of security for your enterprise
-                      messaging software, TheChatNest, to avoid
-                      unauthorized access.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-6 col-12 my-md-auto my-4 position-relative">
-              <div className="side-img">
-                <img src={secureImg} className="transform-tilt-left" alt="Secure workspace" />
-                <span className="bg-element-1 d-none d-md-block"></span>
-              </div>
-              <span className="element d-none d-md-block"></span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      {/* why us container */}
-      <section className="whyUs-container wrapper mt-md-5">
-        <div className="responsive-paragraph ms-auto  text-center text-md-start">
-          <h2>Why TheChatNest</h2>
-          <p className="my-2">
-            Plan your work schedules and projects on this team chat software
-            with:
+    <section className="section-dark" style={{ padding: "6rem 0" }}>
+      <div className="container">
+        <div className="section-title">
+          <span
+            className="eyebrow"
+            style={{
+              background: "rgba(255,213,74,0.12)",
+              color: "#ffd54a",
+            }}
+          >
+            Security & Scale
+          </span>
+          <h2 style={{ marginTop: "1rem", color: "#fff" }}>
+            Built for teams that take privacy seriously
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.65)" }}>
+            Bank-grade encryption, granular admin controls, and self-hosted options —
+            so your conversations stay yours.
           </p>
         </div>
-        <div className="container-fluid ">
-          <div className="row mx-0">
-            <div className="col-md-6 col-12 my-md-auto my-5 position-relative">
-              <div className="side-img">
-                <img src={videoCallImg} className="transform-tilt-right" alt="Video call" />
-                <span className="bg-element-2 d-none d-md-block"></span>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gap: "1.25rem",
+          }}
+        >
+          {pillars.map(({ icon: Icon, title, desc }) => (
+            <div
+              key={title}
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "var(--tcn-radius-lg)",
+                padding: "1.75rem",
+                backdropFilter: "blur(8px)",
+                transition: "background 0.2s ease, border-color 0.2s ease, transform 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                e.currentTarget.style.borderColor = "rgba(255,213,74,0.25)";
+                e.currentTarget.style.transform = "translateY(-3px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 12,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "linear-gradient(135deg, rgba(255,213,74,0.18), rgba(109,93,252,0.18))",
+                  color: "#ffd54a",
+                  marginBottom: "1.25rem",
+                }}
+              >
+                <Icon size={28} />
               </div>
-              <span className="element d-none d-md-block"></span>
+              <h3 style={{ color: "#fff", fontSize: "1.15rem", marginBottom: "0.5rem", fontWeight: 700 }}>
+                {title}
+              </h3>
+              <p style={{ color: "rgba(255,255,255,0.65)", margin: 0, fontSize: "0.95rem" }}>
+                {desc}
+              </p>
             </div>
-            <div className="col-lg-6 col-md-6 col-12 my-auto">
-              <div className="row mx-0 gy-md-4 gy-2">
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiShieldCheck size={32} />
-                    <Typography>
-                    SaaS and On-Premise Service Offerings
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiUserGear size={32} />
-                    <Typography>
-                    Enterprise Dashboard
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiHandshake size={32} />
-                    <Typography>
-                    Enterprise-Grade Collaboration Features
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiLockKey size={32} />
-                    <Typography>
-                    Role-Based Access Controls
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiWifiHigh size={32} />
-                    <Typography>
-                    Uninterrupted and Seamless Communication
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiRocketLaunch size={32} />
-                    <Typography>
-                    Unlimited Work Productivity Features
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiCloudCheck size={32} />
-                    <Typography>
-                    Uniform sync on all device
-                    </Typography>
-                  </div>
-                </div>
-                <div className="col-md-6 col-12">
-                  <div className="d-flex gap-3 align-items-center">
-                    <PiChatCircle size={32} />
-                    <Typography>
-                    End-to-End Encrpyted
-                    </Typography>
-                  </div>
-                </div>
-                
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 

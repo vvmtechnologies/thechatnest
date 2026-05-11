@@ -1,56 +1,77 @@
-
 import React from "react";
-import EmailInputComponent from "./EmailInputComponent.jsx";
+import { Link } from "react-router-dom";
 import chatWindowImg from "../assets/Images/chat-window.png";
-import avatar1Img from "../assets/Images/avatar1.png";
-import avatar2Img from "../assets/Images/avatar2.png";
-import avatar3Img from "../assets/Images/avatar3.png";
-import avatar4Img from "../assets/Images/avatar4.png";
-import messageIconImg from "../assets/Images/message-icon.png";
-import messageIcon2Img from "../assets/Images/message-icon2.png";
-import messageIcon3Img from "../assets/Images/message-icon3.png";
-import messageIcon4Img from "../assets/Images/message-icon4.png";
 
 const Hero = () => {
   return (
     <section className="hero-section">
       <div className="container wrapper">
         <div className="content">
-          <h1 className="h1-animation mb-5">
-            <p>Chat .</p>
-            <p>Meet .</p>
-            <p>Share .</p>
-            <p className="superscript ">Create .</p>
+          <span className="eyebrow fade-up" style={{ background: "rgba(255,213,74,0.12)", color: "#ffd54a", borderColor: "rgba(255,213,74,0.2)" }}>
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: "#ffd54a" }} />
+            Built for modern teams
+          </span>
+
+          <h1 className="fade-up fade-up-d1" style={{ marginTop: "1.25rem" }}>
+            One workspace to <span className="superscript">Chat</span>,<br />
+            Meet, Share &amp; Create.
           </h1>
-          <EmailInputComponent textColor="white" />
-          <div className="chat-window-img mt-5">
-            <img src={chatWindowImg} className="img-fluid" alt="Chat window" />
-            <div className="popup scattered">
-              <div className="popup-avatar">
-                <img src={avatar1Img} alt="User 1" />
-                <span className="message-icon">
-                  <img src={messageIcon2Img} alt="Message Icon" />
-                </span>
-              </div>
-              <div className="popup-avatar">
-                <img src={avatar2Img} alt="User 2" />
-                <span className="message-icon">
-                  <img src={messageIconImg} alt="Message Icon" />
-                </span>
-              </div>
-              <div className="popup-avatar">
-                <img src={avatar3Img} alt="User 3" />
-                <span className="message-icon">
-                  <img src={messageIcon3Img} alt="Message Icon" />
-                </span>
-              </div>
-              <div className="popup-avatar">
-                <img src={avatar4Img} alt="User 4" />
-                <span className="message-icon">
-                  <img src={messageIcon4Img} alt="Message Icon" />
-                </span>
-              </div>
-            </div>
+
+          <p
+            className="fade-up fade-up-d2"
+            style={{
+              color: "rgba(255,255,255,0.78)",
+              fontSize: "1.18rem",
+              maxWidth: 680,
+              margin: "1.5rem auto 2.25rem",
+              lineHeight: 1.6,
+            }}
+          >
+            Secure messaging, HD calls, file sharing, and AI assistance — built for teams that move fast and care about privacy.
+          </p>
+
+          <div
+            className="fade-up fade-up-d3"
+            style={{
+              display: "flex",
+              gap: "0.85rem",
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <Link to="/auth/register" className="main-btn" style={{ fontSize: "1rem", padding: "0.85rem 1.75rem" }}>
+              Start free trial
+            </Link>
+            <Link
+              to="/features"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                padding: "0.85rem 1.5rem",
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                color: "rgba(255,255,255,0.95)",
+                fontWeight: 600,
+                fontSize: "1rem",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              See features →
+            </Link>
+          </div>
+
+          <div className="trust-strip fade-up fade-up-d3">
+            <span className="trust-chip">🔒 AES-256-GCM</span>
+            <span className="trust-chip">✅ SOC 2 Ready</span>
+            <span className="trust-chip">🇪🇺 GDPR Compliant</span>
+            <span className="trust-chip">⚡ 99.9% Uptime</span>
+            <span className="trust-chip">💚 24/7 Support</span>
+          </div>
+
+          <div className="chat-window-img fade-up" style={{ animationDelay: "0.45s" }}>
+            <img src={chatWindowImg} className="img-fluid" alt="TheChatNest product preview" style={{ display: "block", width: "100%" }} />
           </div>
         </div>
       </div>

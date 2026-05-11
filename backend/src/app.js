@@ -114,7 +114,7 @@ app.get('/diag/users', async (req, res) => {
         db.query("SELECT COUNT(*)::int AS n FROM users WHERE email ~* 'teamchatx|aabhyasa'"),
         db.query(
           `SELECT user_id, email, name, COALESCE(status, 'unknown') AS status,
-                  COALESCE(email_verified, false) AS email_verified, created_at
+                  (email_verified_at IS NOT NULL) AS email_verified, created_at
            FROM users
            ORDER BY user_id ASC
            LIMIT 20`

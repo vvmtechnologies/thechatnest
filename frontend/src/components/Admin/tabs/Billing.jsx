@@ -2720,6 +2720,30 @@ const Billing = ({ adminData }) => {
       if (!response.ok || payload?.status === "error") {
         throw new Error(payload?.message || "Unable to get resume URL");
       }
+
+      // Payment already succeeded at the gateway but our DB is still
+      // pending — call confirm to finalize instead of bouncing the user
+      // to a dead Stripe URL.
+      if (payload?.data?.already_paid) {
+        const confirmRes = await fetchWithAuth(
+          `${API_BASE_URL}/billing/checkout/confirm`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId }),
+          },
+        );
+        if (!confirmRes.response.ok || confirmRes.payload?.status === "error") {
+          throw new Error(
+            confirmRes.payload?.message ||
+              "Payment succeeded at gateway but we couldn't finalize it. Contact support.",
+          );
+        }
+        // Reload so payment history reflects the new succeeded state
+        window.location.reload();
+        return;
+      }
+
       const checkoutUrl = payload?.data?.checkout_url;
       if (!checkoutUrl) throw new Error("No checkout URL returned");
       window.location.href = checkoutUrl;

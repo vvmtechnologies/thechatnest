@@ -2015,6 +2015,25 @@ const resumeCheckoutSession = async (req, res, next) => {
         err.status = 410;
         throw err;
       }
+      // If the user has already paid at Stripe but our DB stayed pending
+      // (e.g. user closed the tab before /billing/thank-you finished), there
+      // is no resume URL — we should finalize the payment record instead of
+      // bouncing them back to a dead checkout page. Signal that to the
+      // client so it can call /billing/checkout/confirm.
+      if (session.status === 'complete' || session.payment_status === 'paid') {
+        return success(
+          res,
+          {
+            checkout_url: null,
+            gateway,
+            session_id: sessionId,
+            already_paid: true,
+            status: session.status,
+            payment_status: session.payment_status,
+          },
+          'Payment already complete — confirm to finalize.'
+        );
+      }
       checkoutUrl = session.url;
     } else if (gateway === 'paypal') {
       const paypalAccessToken = await getPaypalAccessToken({ gatewayRuntime });

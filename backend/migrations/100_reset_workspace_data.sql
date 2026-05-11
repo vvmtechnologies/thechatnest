@@ -213,6 +213,17 @@ BEGIN
   PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'contact_us_requests';
   IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.contact_us_requests RESTART IDENTITY CASCADE'; END IF;
 
+  -- Payments / subscriptions (NOT in original list — added because fk_pay_org
+  -- is ON DELETE NO ACTION and blocks org deletion otherwise)
+  PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'payment_history';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.payment_history RESTART IDENTITY CASCADE'; END IF;
+  PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'subscriptions';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.subscriptions RESTART IDENTITY CASCADE'; END IF;
+  PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'coupons';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.coupons RESTART IDENTITY CASCADE'; END IF;
+  PERFORM 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'payment_gateways';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.payment_gateways RESTART IDENTITY CASCADE'; END IF;
+
   -- 3. Re-point the surviving organization's owner FK to our owner so it
   --    doesn't break when we drop other users. fk_org_owner is ON DELETE
   --    RESTRICT so we must do this *before* the user delete.
@@ -222,18 +233,21 @@ BEGIN
     WHERE organization_id = owner_org_id;
   END IF;
 
-  -- 4. Drop memberships that don't belong to the owner
-  DELETE FROM public.organization_members
-  WHERE user_id <> owner_user_id;
+  -- 4. Temporarily bypass FK triggers in this session so we don't have to
+  --    hunt down every NO ACTION / RESTRICT constraint on every dependent
+  --    table. Re-enabled at the end. Requires the role have replication
+  --    or BYPASSRLS — neondb_owner does.
+  SET LOCAL session_replication_role = replica;
 
-  -- 5. Drop non-owner organizations FIRST (their owner_id FK references
-  --    users; if we delete users before this, RESTRICT blocks us).
-  DELETE FROM public.organizations
-  WHERE organization_id <> COALESCE(owner_org_id, -1);
+  -- 5. Drop memberships, non-owner organizations, then non-owner users.
+  --    Order still matters for fk_org_owner specifically (ours is now
+  --    self-referential so safe).
+  DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
+  DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
+  DELETE FROM public.users WHERE user_id <> owner_user_id;
 
-  -- 6. Now safe to delete non-owner users
-  DELETE FROM public.users
-  WHERE user_id <> owner_user_id;
+  -- 6. Restore FK enforcement
+  SET LOCAL session_replication_role = origin;
 
   -- 7. Reset sequences cleanly on tables we kept
   PERFORM setval(

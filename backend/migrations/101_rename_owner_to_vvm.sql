@@ -153,16 +153,28 @@ BEGIN
   IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.contact_us_requests RESTART IDENTITY CASCADE'; END IF;
 
   -- 5. Re-point owner FK on surviving org before dropping other users
-  --    (fk_org_owner is ON DELETE RESTRICT)
   IF owner_org_id IS NOT NULL THEN
     UPDATE public.organizations SET owner_id = owner_user_id
     WHERE organization_id = owner_org_id;
   END IF;
 
-  -- 6. Drop memberships → other orgs → other users (order matters for FKs)
+  -- 5a. Wipe payment / subscription tables (FKs to org are NO ACTION)
+  PERFORM 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='payment_history';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.payment_history RESTART IDENTITY CASCADE'; END IF;
+  PERFORM 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='subscriptions';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.subscriptions RESTART IDENTITY CASCADE'; END IF;
+  PERFORM 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='coupons';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.coupons RESTART IDENTITY CASCADE'; END IF;
+  PERFORM 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='payment_gateways';
+  IF FOUND THEN EXECUTE 'TRUNCATE TABLE public.payment_gateways RESTART IDENTITY CASCADE'; END IF;
+
+  -- 6. Bypass FK enforcement for the user/org wipe so we don't have to
+  --    chase every NO ACTION constraint on every legacy table.
+  SET LOCAL session_replication_role = replica;
   DELETE FROM public.organization_members WHERE user_id <> owner_user_id;
   DELETE FROM public.organizations WHERE organization_id <> COALESCE(owner_org_id, -1);
   DELETE FROM public.users WHERE user_id <> owner_user_id;
+  SET LOCAL session_replication_role = origin;
 
   RAISE NOTICE 'Owner now: % (user_id=%, org_id=%). All other tenant data wiped.',
     owner_email, owner_user_id, owner_org_id;

@@ -94,6 +94,44 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Diagnostic: users table state (safe — no PII, just counts + sample emails).
+// Remove this endpoint after launch verification.
+app.get('/diag/users', async (req, res) => {
+  const db = require('./config/database');
+  try {
+    const { rows: existsRows } = await db.query(
+      "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users'"
+    );
+    if (!existsRows.length) {
+      return res.json({ exists: false, message: 'users table does not exist' });
+    }
+    const [{ rows: totalRows }, { rows: statusRows }, { rows: legacyRows }, { rows: sample }] =
+      await Promise.all([
+        db.query('SELECT COUNT(*)::int AS n FROM users'),
+        db.query(
+          "SELECT COALESCE(status, 'unknown') AS status, COUNT(*)::int AS n FROM users GROUP BY status ORDER BY n DESC"
+        ),
+        db.query("SELECT COUNT(*)::int AS n FROM users WHERE email ~* 'teamchatx|aabhyasa'"),
+        db.query(
+          `SELECT user_id, email, name, COALESCE(status, 'unknown') AS status,
+                  COALESCE(email_verified, false) AS email_verified, created_at
+           FROM users
+           ORDER BY user_id ASC
+           LIMIT 20`
+        ),
+      ]);
+    return res.json({
+      exists: true,
+      total: totalRows[0].n,
+      legacy_emails: legacyRows[0].n,
+      by_status: statusRows,
+      sample,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 app.use('/auth', authRoutes);
 app.use('/push', pushRoutes);
 app.use('/calls', callRoutes);

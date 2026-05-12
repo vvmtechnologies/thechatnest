@@ -9,8 +9,8 @@ export const normalizeProfilePayload = baseNormalizeProfilePayload;
 export const WALLPAPER_PRESETS = [
   {
     id: "default-pattern",
-    label: "Default Pattern",
-    preview: "/src/assets/Images/chat-bg-pattern.png",
+    label: "TheChatNest Pattern",
+    preview: "/wallpapers/tcn-pattern.svg",
   },
   {
     id: "texture1",

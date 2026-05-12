@@ -16,7 +16,9 @@ import React, {
   useState,
 } from "react";
 import MessageMenu from "./messages/MessageMenu.jsx";
-import chatBgPattern from "../../assets/Images/chat-bg-pattern.png";
+// Branded chat background — uses the public SVG so it stays in sync with the
+// wallpaper preset of the same name (no legacy "TeamChatx" wordmark baked in).
+const chatBgPattern = "/wallpapers/tcn-pattern.svg";
 import VirtualizedMessageList from "./lists/VirtualizedMessageList.jsx";
 import useThreadMessagesState from "../../hooks/useThreadMessagesState.js";
 import { isGroupThread } from "../../utils/threadUtils.js";

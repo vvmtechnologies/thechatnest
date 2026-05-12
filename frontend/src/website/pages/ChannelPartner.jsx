@@ -16,6 +16,7 @@ import {
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 import PageHero from "../components/layout/PageHero.jsx";
 import FinalCta from "../components/layout/FinalCta.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const BENEFITS = [
   { Icon: PiCoinsDuotone, tint: "#22c55e", title: "Revenue sharing", desc: "Earn competitive commissions on every customer you refer. Recurring revenue for recurring subscriptions." },
@@ -56,6 +57,11 @@ export default function ChannelPartner() {
 
   return (
     <div style={{ background: "#fff" }}>
+      <Seo
+        title="Channel partner program"
+        description="Grow your business with TheChatNest. Recurring commissions, deal registration, and co-marketing for resellers and consultants."
+        keywords="thechatnest partner, reseller, referral, channel program"
+      />
       <style>{`
         .tcn-cp-section { padding: 5rem 0; }
         .tcn-cp-section.alt { background: var(--tcn-bg-soft); }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import Seo from "../../components/Seo.jsx";
 
 // ─── Competitors ────────────────────────────────────────────────────
 // `color` = brand color used in pricing/table/cards
@@ -533,6 +534,11 @@ const Compare = () => {
 
   return (
     <div style={{ fontFamily: "'Manrope', sans-serif" }}>
+      <Seo
+        title="Compare"
+        description="How TheChatNest stacks up against Slack, Microsoft Teams, and Troop Messenger — pricing, features, and the real cost of switching."
+        keywords="slack alternative, microsoft teams alternative, troop messenger alternative, team chat comparison"
+      />
       <style>{`
         @keyframes compareFadeIn {
           from { opacity: 0; transform: translateY(10px); }

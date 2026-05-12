@@ -442,7 +442,7 @@ const Navbar = () => {
         <div className="tcn-nav-inner">
           {/* Brand */}
           <Link to="/" className="tcn-nav-brand" aria-label={brandName || "TheChatNest"}>
-            <img src="/chat.png" alt={brandName || "TheChatNest"} />
+            <img src="/chat.png" alt={brandName || "TheChatNest"} width="48" height="48" decoding="async" fetchpriority="high" />
           </Link>
 
           {/* Center links */}
@@ -528,7 +528,7 @@ const Navbar = () => {
       <aside className={`tcn-mobile-drawer ${menuOpen ? "open" : ""}`} aria-hidden={!menuOpen}>
         <div className="tcn-mobile-head">
           <Link to="/" className="tcn-nav-brand" onClick={() => setMenuOpen(false)}>
-            <img src="/chat.png" alt={brandName || "TheChatNest"} style={{ height: 44 }} />
+            <img src="/chat.png" alt={brandName || "TheChatNest"} width="44" height="44" decoding="async" style={{ height: 44 }} />
           </Link>
           <button
             type="button"

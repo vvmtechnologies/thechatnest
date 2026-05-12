@@ -12,6 +12,7 @@ import {
   PiArrowRightBold,
 } from "react-icons/pi";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const HIGHLIGHTS = [
   {
@@ -54,12 +55,55 @@ const Demo = () => {
     timezone: "GMT +5:30",
     query: "",
   });
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
 
-  const update = (k) => (e) =>
-    setValues((prev) => ({ ...prev, [k]: e.target.value }));
+  const validate = (k, v) => {
+    const s = String(v || "").trim();
+    if (k === "name") return !s ? "Please enter your name." : s.length < 2 ? "Name looks too short." : "";
+    if (k === "companyName") return !s ? "Company name is required." : "";
+    if (k === "mobile") {
+      const d = s.replace(/[^\d]/g, "");
+      return !d ? "Mobile number is required." : d.length < 7 ? "Mobile number is too short." : "";
+    }
+    if (k === "email") {
+      if (!s) return "Work email is required.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(s)) return "Enter a valid email address.";
+      return "";
+    }
+    if (k === "scheduledAt") return !s ? "Pick a preferred date / time." : "";
+    return "";
+  };
+
+  const update = (k) => (e) => {
+    const v = e.target.value;
+    setValues((prev) => ({ ...prev, [k]: v }));
+    if (touched[k]) setErrors((prev) => ({ ...prev, [k]: validate(k, v) }));
+  };
+
+  const handleBlur = (k) => (e) => {
+    setTouched((prev) => ({ ...prev, [k]: true }));
+    setErrors((prev) => ({ ...prev, [k]: validate(k, e.target.value) }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const required = ["name", "companyName", "mobile", "email", "scheduledAt"];
+    const all = Object.fromEntries(required.map((k) => [k, validate(k, values[k])]));
+    setErrors(all);
+    setTouched(Object.fromEntries(required.map((k) => [k, true])));
+    if (Object.values(all).some(Boolean)) return;
+    setSubmitted(true);
+  };
 
   return (
     <div className="tcn-demo">
+      <Seo
+        title="Book a demo"
+        description="See TheChatNest in action with a 30-minute live walkthrough tailored to your team size and workflow."
+        keywords="thechatnest demo, book a demo, product walkthrough"
+      />
       <style>{`
         .tcn-demo { background: #fff; }
         .tcn-demo-hero {
@@ -267,9 +311,26 @@ const Demo = () => {
             </div>
 
             {/* Right form */}
-            <form className="tcn-demo-form" onSubmit={(e) => e.preventDefault()}>
+            <form className="tcn-demo-form" onSubmit={handleSubmit} noValidate>
               <h2>Schedule your demo</h2>
               <p className="form-sub">Pick a slot — we confirm within 4 business hours.</p>
+
+              {submitted && (
+                <div style={{
+                  padding: "0.9rem 1rem",
+                  marginBottom: "1rem",
+                  borderRadius: 12,
+                  background: "rgba(34,197,94,0.1)",
+                  border: "1px solid rgba(34,197,94,0.35)",
+                  color: "#15803d",
+                  fontSize: "0.92rem",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                  <PiCheckCircleDuotone size={18} /> Got it! We'll email you a confirmed slot within 4 business hours.
+                </div>
+              )}
 
               <div style={{ display: "grid", gap: "1rem" }}>
                 <TextField
@@ -278,6 +339,9 @@ const Demo = () => {
                   required
                   value={values.name}
                   onChange={update("name")}
+                  onBlur={handleBlur("name")}
+                  error={Boolean(errors.name)}
+                  helperText={errors.name || " "}
                   size="small"
                 />
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.7rem" }}>
@@ -287,6 +351,9 @@ const Demo = () => {
                     required
                     value={values.companyName}
                     onChange={update("companyName")}
+                    onBlur={handleBlur("companyName")}
+                    error={Boolean(errors.companyName)}
+                    helperText={errors.companyName || " "}
                     size="small"
                   />
                   <TextField
@@ -312,6 +379,9 @@ const Demo = () => {
                     required
                     value={values.mobile}
                     onChange={update("mobile")}
+                    onBlur={handleBlur("mobile")}
+                    error={Boolean(errors.mobile)}
+                    helperText={errors.mobile || " "}
                     size="small"
                     InputProps={{
                       startAdornment: (
@@ -328,6 +398,9 @@ const Demo = () => {
                     required
                     value={values.email}
                     onChange={update("email")}
+                    onBlur={handleBlur("email")}
+                    error={Boolean(errors.email)}
+                    helperText={errors.email || " "}
                     size="small"
                   />
                 </div>
@@ -338,6 +411,9 @@ const Demo = () => {
                     required
                     value={values.scheduledAt}
                     onChange={update("scheduledAt")}
+                    onBlur={handleBlur("scheduledAt")}
+                    error={Boolean(errors.scheduledAt)}
+                    helperText={errors.scheduledAt || " "}
                     size="small"
                     placeholder="e.g. Tue 3:00 PM"
                     InputProps={{

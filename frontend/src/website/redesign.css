@@ -86,6 +86,37 @@ p { color: var(--tcn-ink-700); }
 a { color: var(--tcn-violet-600); text-decoration: none; }
 a:hover { color: var(--tcn-violet-500); }
 
+/* ============ Skeleton shimmer ============ */
+.tcn-skeleton {
+  position: relative;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: tcnSkelShimmer 1.4s ease-in-out infinite;
+  overflow: hidden;
+}
+/* Lighter shimmer on white backgrounds — opt-in via parent .tcn-skel-light */
+.tcn-skel-light .tcn-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.05) 0%,
+    rgba(15, 23, 42, 0.12) 50%,
+    rgba(15, 23, 42, 0.05) 100%
+  );
+}
+@keyframes tcnSkelShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tcn-skeleton { animation: none; }
+}
+
 /* Buttons-as-links never inherit underline / link color */
 a.main-btn,
 a.tcn-btn-gold,
@@ -1269,4 +1300,50 @@ input.form-control:focus, textarea.form-control:focus, select.form-select:focus 
 @media (max-width: 768px) {
   .hero-section { padding: 7rem 0 3rem !important; }
   section { padding: 3.5rem 0; }
+}
+
+/* ============ Accessibility ============ */
+.tcn-skip-link {
+  position: absolute;
+  left: 12px;
+  top: -64px;
+  z-index: 9999;
+  padding: 0.75rem 1.1rem;
+  background: var(--tcn-navy-950, #0b0f1e);
+  color: #ffd54a !important;
+  border-radius: 999px;
+  font-family: "Inter Tight", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none !important;
+  transition: top 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+.tcn-skip-link:focus {
+  top: 12px;
+  outline: 2px solid #ffd54a;
+  outline-offset: 2px;
+}
+
+/* Global keyboard focus ring — visible only via keyboard, not mouse */
+*:focus-visible {
+  outline: 2px solid #6d5dfc;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+a:focus-visible, button:focus-visible {
+  outline: 2px solid #ffd54a;
+  outline-offset: 3px;
+}
+
+/* Make main focusable target invisible visually */
+main:focus { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

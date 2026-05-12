@@ -9,8 +9,9 @@ import Footer from "./components/Footer.jsx";
 function WebsiteIndex() {
   return (
     <div>
+      <a href="#main-content" className="tcn-skip-link">Skip to main content</a>
       <Navbar />
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <Outlet />
       </main>
       <Footer />

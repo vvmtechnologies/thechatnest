@@ -14,6 +14,7 @@ import {
 } from "react-icons/pi";
 import PageHero from "../components/layout/PageHero.jsx";
 import FinalCta from "../components/layout/FinalCta.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const POSTS = [
   {
@@ -95,6 +96,11 @@ export default function Blogs() {
 
   return (
     <div style={{ background: "#fff" }}>
+      <Seo
+        title="Blog"
+        description="Insights on secure team communication, productivity, AI, compliance, and product updates — from the team building TheChatNest."
+        keywords="thechatnest blog, team chat blog, secure messaging blog"
+      />
       <style>{`
         .tcn-blog-filters {
           display: flex;

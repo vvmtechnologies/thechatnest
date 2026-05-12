@@ -1322,4 +1322,23 @@
   .v2-stack-table { grid-template-columns: 40px 1fr 90px; }
   .v2-stack-row > * { padding: 1rem 0.6rem; }
   .v2-vault-grid { grid-template-columns: 1fr; }
+  .v2-cta-plans { grid-template-columns: 1fr; }
+  .v2-cta-plan { border-right: 0 !important; border-bottom: 1.5px solid var(--v2-ink) !important; }
+  .v2-cta-plan:last-child { border-bottom: 0 !important; }
+}
+
+@media (max-width: 400px) {
+  .v2-hero { padding: 6rem 0 3rem; }
+  .v2-hero-eyebrow { font-size: 10px; padding: 0.3rem 0.65rem; }
+  .v2-hero-headline { line-height: 0.95; }
+  .v2-hero-meta { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+  .v2-hero-cta-row { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+  .v2-hero-cta-row > a, .v2-hero-cta-row > button { width: 100%; justify-content: center; }
+  .v2-stack-row .meta { display: none; }
+  .v2-stack-table { grid-template-columns: 30px 1fr 70px; }
+  .v2-vault-card { padding: 1.25rem; }
+  .v2-anatomy { padding: 4rem 0; }
+  .v2-cta { padding: 4rem 0; }
+  .v2-marquee { font-size: 1.2rem; }
+  .v2-quote { padding: 4rem 0; }
 }

@@ -16,6 +16,7 @@ import {
 } from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const TRUST_BADGES = [
   { label: "AES-256-GCM", icon: "🔒" },
@@ -137,6 +138,11 @@ const Pricing = () => {
 
   return (
     <div className="tcn-pricing">
+      <Seo
+        title="Pricing"
+        description="Simple per-seat pricing that scales with your team. Start free for 14 days — no credit card. Plans from ₹199/seat/month."
+        keywords="thechatnest pricing, team chat pricing, slack alternative pricing, per seat pricing"
+      />
       <style>{`
         .tcn-pricing { background: #fff; }
         .tcn-pricing-hero {
@@ -732,7 +738,28 @@ const Pricing = () => {
 
           {/* Plans grid */}
           {loading && !plans.length ? (
-            <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem 0" }}>Loading plans…</div>
+            <div className="tcn-plans-grid" aria-busy="true" aria-label="Loading plans">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="tcn-plan"
+                  style={{
+                    pointerEvents: "none",
+                    background: "rgba(255,255,255,0.03)",
+                    borderColor: "rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <div className="tcn-skeleton" style={{ height: 20, width: "55%", marginBottom: 12 }} />
+                  <div className="tcn-skeleton" style={{ height: 12, width: "70%", marginBottom: 22 }} />
+                  <div className="tcn-skeleton" style={{ height: 38, width: "55%", marginBottom: 8 }} />
+                  <div className="tcn-skeleton" style={{ height: 12, width: "85%", marginBottom: 22 }} />
+                  <div className="tcn-skeleton" style={{ height: 38, width: "100%", borderRadius: 999, marginBottom: 18 }} />
+                  {[0, 1, 2, 3].map((j) => (
+                    <div key={j} className="tcn-skeleton" style={{ height: 10, width: `${85 - j * 8}%`, marginBottom: 10 }} />
+                  ))}
+                </div>
+              ))}
+            </div>
           ) : !plans.length ? (
             <div style={{ color: "rgba(255,255,255,0.6)", padding: "2rem 0" }}>Plans coming soon.</div>
           ) : (

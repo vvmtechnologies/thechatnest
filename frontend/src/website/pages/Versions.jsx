@@ -16,6 +16,7 @@ import {
   PiCalendarDuotone,
 } from "react-icons/pi";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const PLATFORMS = {
   web: { label: "Web", Icon: PiBrowserDuotone, tint: "#0ea5e9" },
@@ -228,6 +229,11 @@ export default function Versions() {
 
   return (
     <div className="tcn-versions">
+      <Seo
+        title="Changelog"
+        description="Every TheChatNest release, what changed, and when it shipped. Updated weekly with new features, bug fixes, and security updates."
+        keywords="thechatnest changelog, release notes, product updates"
+      />
       <style>{`
         .tcn-versions { background: #fff; }
 

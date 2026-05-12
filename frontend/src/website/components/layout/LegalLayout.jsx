@@ -2,6 +2,7 @@ import React from "react";
 import { PiCalendarDuotone, PiShieldCheckDuotone } from "react-icons/pi";
 import PageHero from "./PageHero.jsx";
 import FinalCta from "./FinalCta.jsx";
+import Seo from "../../../components/Seo.jsx";
 
 /**
  * Shared layout for legal/policy pages: dark hero + sticky TOC + content body + final CTA.
@@ -17,9 +18,18 @@ const LegalLayout = ({
   sections = [],
   ctaTitle,
   ctaDescription,
+  seoTitle,
+  seoDescription,
 }) => {
+  // Strip any JSX from `title` to derive a plain text seo title fallback
+  const fallbackTitle =
+    typeof title === "string" ? title : eyebrow || "Policy";
   return (
     <div className="tcn-legal">
+      <Seo
+        title={seoTitle || fallbackTitle}
+        description={seoDescription || lead || "Policy and legal documentation for TheChatNest."}
+      />
       <PageHero
         eyebrow={eyebrow}
         eyebrowIcon={PiShieldCheckDuotone}

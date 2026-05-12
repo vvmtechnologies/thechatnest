@@ -428,6 +428,11 @@ const AuthSplitLayout = ({ title, subtitle, children, footer }) => {
           .tcn-auth-form-panel { padding: 1.5rem; }
           .tcn-auth-mobile-brand { display: flex; }
         }
+        @media (max-width: 480px) {
+          .tcn-auth-form-panel { padding: 1.1rem 1rem; }
+          .tcn-auth-card { padding: 1.4rem 1.1rem; border-radius: 18px; }
+          .tcn-auth-mobile-brand img { width: 36px; height: 36px; }
+        }
       `}</style>
 
       {isElectron && (

@@ -11,6 +11,7 @@ import {
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 import PageHero from "../components/layout/PageHero.jsx";
 import FinalCta from "../components/layout/FinalCta.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const HowItWorks = () => {
   const { brandName } = useSiteBranding();
@@ -45,6 +46,11 @@ const HowItWorks = () => {
 
   return (
     <div style={{ background: "#fff" }}>
+      <Seo
+        title="How it works"
+        description="Sign up, add your team, start chatting — TheChatNest in three steps. Most teams are live within an hour."
+        keywords="how thechatnest works, onboarding, getting started"
+      />
       <style>{`
         .tcn-hiw-section { padding: 5rem 0; }
         .tcn-hiw-steps {

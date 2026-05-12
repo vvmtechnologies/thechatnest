@@ -15,6 +15,7 @@ import {
 } from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const desktopPlatforms = [
   {
@@ -134,6 +135,11 @@ export default function Downloads() {
 
   return (
     <div className="tcn-downloads">
+      <Seo
+        title="Downloads"
+        description="Get TheChatNest on Windows, macOS, Linux, iOS, and Android. Free trial available across every platform."
+        keywords="thechatnest download, windows chat app, mac chat app, linux chat app, android, ios"
+      />
       <style>{`
         .tcn-downloads { background: #fff; }
 

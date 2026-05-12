@@ -19,6 +19,7 @@ import {
   PiBuildingsDuotone,
 } from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
+import Seo from "../../components/Seo.jsx";
 
 const cleanLegacyEmail = (raw) =>
   String(raw || "")
@@ -42,10 +43,44 @@ const Contact = () => {
     totalUsers: "",
     requirementDetails: "",
   });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCountriesLoading, setIsCountriesLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+
+  const validateField = (name, value) => {
+    const v = String(value || "").trim();
+    switch (name) {
+      case "name":
+        if (!v) return "Please enter your name.";
+        if (v.length < 2) return "Name looks too short.";
+        return "";
+      case "emailAddress":
+        if (!v) return "We need an email to reply.";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "That doesn't look like a valid email.";
+        return "";
+      case "mobileNumber": {
+        const digits = v.replace(/[^\d]/g, "");
+        if (!digits) return "Please enter a mobile number.";
+        if (digits.length < 7) return "Mobile number is too short.";
+        return "";
+      }
+      case "totalUsers": {
+        const n = Number(v);
+        if (!v) return "How many users?";
+        if (!Number.isInteger(n) || n <= 0) return "Must be a positive whole number.";
+        return "";
+      }
+      case "requirementDetails":
+        if (!v) return "Tell us a little about what you need.";
+        if (v.length < 10) return "A bit more detail helps (10+ characters).";
+        return "";
+      default:
+        return "";
+    }
+  };
   const [siteProfile, setSiteProfile] = useState(null);
   const [countries, setCountries] = useState([]);
 
@@ -192,6 +227,15 @@ const Contact = () => {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormValues((prev) => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+    }
+  };
+
+  const handleBlur = (event) => {
+    const { name, value } = event.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setFieldErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
   const resetForm = () => {
@@ -217,8 +261,17 @@ const Contact = () => {
     const requirementDetails = formValues.requirementDetails.trim();
     const totalUsers = Number(formValues.totalUsers);
 
-    if (!name || !emailAddress || !mobile || !requirementDetails || !totalUsers) {
-      setErrorMessage("Please fill name, email, mobile, total users, and requirement details.");
+    const allErrors = {
+      name: validateField("name", name),
+      emailAddress: validateField("emailAddress", emailAddress),
+      mobileNumber: validateField("mobileNumber", mobile),
+      totalUsers: validateField("totalUsers", formValues.totalUsers),
+      requirementDetails: validateField("requirementDetails", requirementDetails),
+    };
+    setFieldErrors(allErrors);
+    setTouched({ name: true, emailAddress: true, mobileNumber: true, totalUsers: true, requirementDetails: true });
+    if (Object.values(allErrors).some(Boolean)) {
+      setErrorMessage("Please fix the highlighted fields and try again.");
       return;
     }
     if (!API_BASE_URL) {
@@ -226,14 +279,6 @@ const Contact = () => {
       return;
     }
     const mobileNumber = mobile.replace(/[^\d]/g, "");
-    if (!mobileNumber) {
-      setErrorMessage("Please enter a valid mobile number.");
-      return;
-    }
-    if (!Number.isInteger(totalUsers) || totalUsers <= 0) {
-      setErrorMessage("Total users must be a positive integer.");
-      return;
-    }
 
     const companyName = emailAddress.split("@")[1]?.split(".")[0]?.trim() || "Individual";
 
@@ -273,6 +318,11 @@ const Contact = () => {
 
   return (
     <div className="tcn-contact">
+      <Seo
+        title="Contact"
+        description="Get in touch with the TheChatNest team — sales, support, partnerships. We reply within one business day."
+        keywords="thechatnest contact, support, sales, partnerships"
+      />
       <style>{`
         .tcn-contact { background: #fff; }
 
@@ -824,6 +874,9 @@ const Contact = () => {
                   required
                   value={formValues.name}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  error={Boolean(fieldErrors.name)}
+                  helperText={fieldErrors.name || " "}
                   size="small"
                 />
 
@@ -836,6 +889,9 @@ const Contact = () => {
                   name="emailAddress"
                   value={formValues.emailAddress}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  error={Boolean(fieldErrors.emailAddress)}
+                  helperText={fieldErrors.emailAddress || " "}
                   size="small"
                 />
 
@@ -870,6 +926,9 @@ const Contact = () => {
                     required
                     value={formValues.mobileNumber}
                     onChange={handleInputChange}
+                    onBlur={handleBlur}
+                    error={Boolean(fieldErrors.mobileNumber)}
+                    helperText={fieldErrors.mobileNumber || " "}
                     inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
                     size="small"
                   />
@@ -884,6 +943,9 @@ const Contact = () => {
                   type="number"
                   value={formValues.totalUsers}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  error={Boolean(fieldErrors.totalUsers)}
+                  helperText={fieldErrors.totalUsers || " "}
                   inputProps={{ min: 1 }}
                   size="small"
                 />
@@ -898,6 +960,9 @@ const Contact = () => {
                   required
                   value={formValues.requirementDetails}
                   onChange={handleInputChange}
+                  onBlur={handleBlur}
+                  error={Boolean(fieldErrors.requirementDetails)}
+                  helperText={fieldErrors.requirementDetails || " "}
                 />
 
                 {errorMessage && <Alert severity="error">{errorMessage}</Alert>}

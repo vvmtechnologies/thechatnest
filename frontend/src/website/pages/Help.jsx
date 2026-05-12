@@ -15,6 +15,7 @@ import Videos from "../components/HelpCenter/Videos.jsx";
 import Support from "../components/HelpCenter/Support.jsx";
 import PageHero from "../components/layout/PageHero.jsx";
 import FinalCta from "../components/layout/FinalCta.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const TABS = [
   { key: "home", label: "Overview", Icon: PiHouseDuotone, header: "How can we help you?" },
@@ -48,6 +49,11 @@ const Help = () => {
 
   return (
     <div className="tcn-help">
+      <Seo
+        title="Help center"
+        description="Guides, FAQs, video tutorials, and contact support for TheChatNest."
+        keywords="thechatnest help, support, documentation, faq"
+      />
       <style>{`
         .tcn-help { background: #fff; }
 

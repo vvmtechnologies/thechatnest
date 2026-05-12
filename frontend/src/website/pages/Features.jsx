@@ -11,6 +11,7 @@ import {
 } from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import Seo from "../../components/Seo.jsx";
 
 const toSectionId = (value, fallbackId) => {
   const normalized = String(value || "")
@@ -186,6 +187,11 @@ const Features = () => {
 
   return (
     <div className="tcn-features">
+      <Seo
+        title="Features"
+        description="Every feature your team actually uses — messaging, calls, file sharing, AI shortcuts, admin controls — in one focused workspace."
+        keywords="team chat features, slack alternative features, ai chat assistant, secure file sharing"
+      />
       <style>{`
         .tcn-features { background: #fff; }
 
@@ -664,7 +670,25 @@ const Features = () => {
       {/* ─── Feature sections ───────────────────────────── */}
       <div className="container">
         {loading && !sections.length ? (
-          <div className="tcn-feat-empty">Loading features…</div>
+          <div className="tcn-skel-light" aria-busy="true" aria-label="Loading features">
+            {[0, 1, 2].map((s) => (
+              <div key={s} style={{ marginBottom: 56 }}>
+                <div className="tcn-skeleton" style={{ height: 14, width: 120, marginBottom: 14 }} />
+                <div className="tcn-skeleton" style={{ height: 30, width: "55%", marginBottom: 12 }} />
+                <div className="tcn-skeleton" style={{ height: 12, width: "78%", marginBottom: 24 }} />
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18 }}>
+                  {[0, 1, 2, 3].map((c) => (
+                    <div key={c} style={{ padding: 22, borderRadius: 14, background: "rgba(15,23,42,0.04)", border: "1px solid rgba(15,23,42,0.08)" }}>
+                      <div className="tcn-skeleton" style={{ height: 34, width: 34, borderRadius: 10, marginBottom: 14 }} />
+                      <div className="tcn-skeleton" style={{ height: 14, width: "70%", marginBottom: 10 }} />
+                      <div className="tcn-skeleton" style={{ height: 10, width: "92%", marginBottom: 6 }} />
+                      <div className="tcn-skeleton" style={{ height: 10, width: "80%" }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         ) : errorMessage ? (
           <div className="tcn-feat-empty" style={{ color: "#dc2626" }}>{errorMessage}</div>
         ) : !filtered.length ? (

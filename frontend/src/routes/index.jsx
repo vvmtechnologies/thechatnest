@@ -116,11 +116,15 @@ export default function Router() {
           { path: "air-gapped-privacy", element: <AirGappedPrivacy /> },
           { path: "gdpr", element: <Gdpr /> },
           { path: "refund-policy", element: <RefundPolicy /> },
+          // Unknown public routes get the branded 404 page (still rendered
+          // inside <WebsiteLayout /> so the navbar + footer remain visible)
+          { path: "*", element: <Page404 /> },
         ],
       },
+      // Anything outside both /app and / also gets the 404
       {
         path: "*",
-        element: <Navigate to={authenticated ? defaultAuthedPath : "/auth/login"} replace />,
+        element: <Page404 />,
       },
     ],
     [authenticated, defaultAuthedPath, isOwner]

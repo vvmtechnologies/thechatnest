@@ -111,30 +111,45 @@ const MessageBubble = ({ msg, theme, onFeedback, onSuggestedClick }) => {
         spacing={1}
       >
         {!isUser && (
-          <Avatar
+          <Box
             sx={{
-              width: 26,
-              height: 26,
-              bgcolor: theme.palette.primary.main,
+              width: 28,
+              height: 28,
+              borderRadius: "9px",
+              background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+              color: "#1a1f3a",
               flexShrink: 0,
               mb: 0.5,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 4px 12px rgba(255,213,74,0.35)",
             }}
           >
-            <PiRobotDuotone size={14} />
-          </Avatar>
+            <PiRobotDuotone size={15} weight="fill" />
+          </Box>
         )}
 
         <Box
           sx={{
             maxWidth: "82%",
             px: 1.5,
-            py: 0.9,
-            borderRadius: isUser ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-            bgcolor: isUser
-              ? theme.palette.primary.main
-              : isDark ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.04)",
+            py: 1,
+            borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+            background: isUser
+              ? "linear-gradient(135deg, #6d5dfc 0%, #4d3eff 100%)"
+              : isDark
+                ? "rgba(255,255,255,0.05)"
+                : "#fafbff",
+            border: isUser
+              ? "1px solid rgba(255,255,255,0.08)"
+              : isDark
+                ? "1px solid rgba(255,255,255,0.06)"
+                : "1px solid rgba(15,23,42,0.06)",
             color: isUser ? "#fff" : theme.palette.text.primary,
-            boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+            boxShadow: isUser
+              ? "0 6px 18px rgba(109,93,252,0.28)"
+              : "0 2px 8px rgba(15,23,42,0.04)",
           }}
         >
           {msg.loading ? (
@@ -186,18 +201,29 @@ const MessageBubble = ({ msg, theme, onFeedback, onSuggestedClick }) => {
 
       {/* #11 Suggested questions */}
       {!isUser && msg.suggestions?.length > 0 && (
-        <Stack direction="row" spacing={0.5} sx={{ pl: 4.5, flexWrap: "wrap", gap: 0.5 }}>
+        <Stack direction="row" spacing={0} sx={{ pl: 4.5, flexWrap: "wrap", gap: 0.6, mt: 0.6 }}>
           {msg.suggestions.map((q, i) => (
             <Box
               key={i}
               onClick={() => onSuggestedClick?.(q)}
               sx={{
-                px: 1, py: 0.4, borderRadius: 2, cursor: "pointer",
-                fontSize: 11, fontWeight: 500,
-                border: `1px solid ${theme.palette.primary.main}`,
-                color: theme.palette.primary.main,
-                "&:hover": { bgcolor: theme.palette.primary.main, color: "#fff" },
-                transition: "all 0.15s",
+                px: 1.2,
+                py: 0.55,
+                borderRadius: "999px",
+                cursor: "pointer",
+                fontSize: 11.5,
+                fontWeight: 600,
+                background: isDark ? "rgba(109,93,252,0.12)" : "rgba(109,93,252,0.06)",
+                border: `1px solid ${isDark ? "rgba(139,124,255,0.4)" : "rgba(109,93,252,0.3)"}`,
+                color: isDark ? "#a99dff" : "#4d3eff",
+                transition: "all 0.18s ease",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
+                  borderColor: "transparent",
+                  color: "#fff",
+                  transform: "translateY(-1px)",
+                  boxShadow: "0 6px 16px rgba(109,93,252,0.32)",
+                },
               }}
             >
               {q}
@@ -419,7 +445,7 @@ const LiveAssistant = () => {
       {/* ── chat window ── */}
       <Slide direction="up" in={open} mountOnEnter unmountOnExit>
         <Paper
-          elevation={8}
+          elevation={0}
           sx={{
             position: "fixed",
             bottom: panelSize === "large" ? 16 : panelSize === "small" ? 80 : 40,
@@ -427,11 +453,12 @@ const LiveAssistant = () => {
             zIndex: 1299,
             width: panelSize === "large" ? 480 : panelSize === "small" ? 320 : 380,
             height: panelSize === "large" ? "calc(100vh - 80px)" : panelSize === "small" ? 420 : 540,
-            borderRadius: 3,
+            borderRadius: "20px",
             overflow: "hidden",
             display: "flex",
             flexDirection: "column",
-            border: `1px solid ${theme.palette.divider}`,
+            border: `1px solid ${theme.palette.mode === "light" ? "rgba(15,23,42,0.08)" : "rgba(255,255,255,0.06)"}`,
+            boxShadow: "0 30px 80px rgba(15,23,42,0.35), 0 12px 28px rgba(15,23,42,0.18)",
             transition: "width 0.25s ease, height 0.25s ease, bottom 0.25s ease",
           }}
         >
@@ -439,61 +466,138 @@ const LiveAssistant = () => {
           <Stack
             direction="row"
             alignItems="center"
-            spacing={1}
+            spacing={1.1}
             sx={{
-              px: 1.5,
-              py: 1.2,
-              background: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+              px: 1.75,
+              py: 1.35,
+              background:
+                "radial-gradient(420px 180px at 0% 0%, rgba(255,213,74,0.18), transparent 60%)," +
+                "radial-gradient(420px 180px at 100% 100%, rgba(109,93,252,0.28), transparent 60%)," +
+                "linear-gradient(135deg, #0b0f1e 0%, #1a1f3a 100%)",
               color: "#fff",
               flexShrink: 0,
+              position: "relative",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 1,
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,213,74,0.45), transparent)",
+              },
             }}
           >
-            <Avatar sx={{ width: 30, height: 30, bgcolor: "rgba(255,255,255,0.2)" }}>
-              <PiRobotDuotone size={17} />
-            </Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle2" fontWeight={700} lineHeight={1.2} fontSize={13}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: "11px",
+                background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                color: "#1a1f3a",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 6px 16px rgba(255,213,74,0.4)",
+                flexShrink: 0,
+              }}
+            >
+              <PiRobotDuotone size={20} weight="fill" />
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                fontWeight={800}
+                lineHeight={1.15}
+                sx={{
+                  fontSize: 14,
+                  letterSpacing: "-0.01em",
+                  color: "#fff",
+                }}
+              >
                 AI Assistant
               </Typography>
-              <Typography variant="caption" sx={{ opacity: 0.85, fontSize: 10 }}>
-                {wsLoading
-                  ? "Loading…"
-                  : wsError
-                    ? "Ready to help"
-                    : "TheChatNest Support"}
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: 10.5,
+                  color: "#ffd54a",
+                  fontWeight: 600,
+                  letterSpacing: 0.06,
+                  textTransform: "uppercase",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: wsError ? "#f59e0b" : "#22c55e",
+                    boxShadow: wsError
+                      ? "0 0 0 3px rgba(245,158,11,0.25)"
+                      : "0 0 0 3px rgba(34,197,94,0.25)",
+                  }}
+                />
+                {wsLoading ? "Loading…" : wsError ? "Ready to help" : "TheChatNest support"}
               </Typography>
             </Box>
-            <Tooltip title="History">
-              <IconButton size="small" onClick={() => setShowHistory((p) => !p)} sx={{ color: "#fff", p: 0.5 }}>
-                <PiClockCounterClockwiseBold size={15} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="New chat">
-              <IconButton size="small" onClick={handleReset} sx={{ color: "#fff", p: 0.5 }}>
-                <PiArrowClockwiseBold size={15} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={panelSize === "large" ? "Shrink" : "Expand"}>
-              <IconButton
-                size="small"
-                onClick={() => setPanelSize((prev) => prev === "small" ? "medium" : prev === "medium" ? "large" : "small")}
-                sx={{ color: "#fff", p: 0.5 }}
-              >
-                {panelSize === "large" ? <PiArrowsInBold size={15} /> : <PiArrowsOutBold size={15} />}
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Close">
-              <IconButton
-                size="small"
-                onClick={() => {
+            {[
+              {
+                title: "History",
+                onClick: () => setShowHistory((p) => !p),
+                Icon: PiClockCounterClockwiseBold,
+              },
+              {
+                title: "New chat",
+                onClick: handleReset,
+                Icon: PiArrowClockwiseBold,
+              },
+              {
+                title: panelSize === "large" ? "Shrink" : "Expand",
+                onClick: () =>
+                  setPanelSize((prev) =>
+                    prev === "small" ? "medium" : prev === "medium" ? "large" : "small"
+                  ),
+                Icon: panelSize === "large" ? PiArrowsInBold : PiArrowsOutBold,
+              },
+              {
+                title: "Close",
+                onClick: () => {
                   setOpen(false);
-                  window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: false } }));
-                }}
-                sx={{ color: "#fff", p: 0.5 }}
-              >
-                <PiXBold size={15} />
-              </IconButton>
-            </Tooltip>
+                  window.dispatchEvent(
+                    new CustomEvent("thechatnest:assistant", { detail: { open: false } })
+                  );
+                },
+                Icon: PiXBold,
+              },
+            ].map(({ title, onClick, Icon }) => (
+              <Tooltip key={title} title={title}>
+                <IconButton
+                  size="small"
+                  onClick={onClick}
+                  sx={{
+                    color: "rgba(255,255,255,0.85)",
+                    width: 28,
+                    height: 28,
+                    borderRadius: "8px",
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    transition: "all 0.18s ease",
+                    "&:hover": {
+                      background: "rgba(255,213,74,0.16)",
+                      borderColor: "rgba(255,213,74,0.45)",
+                      color: "#ffd54a",
+                    },
+                  }}
+                >
+                  <Icon size={13} />
+                </IconButton>
+              </Tooltip>
+            ))}
           </Stack>
 
           {/* workspace warning */}
@@ -596,8 +700,8 @@ const LiveAssistant = () => {
           <Box
             sx={{
               px: 1.5,
-              py: 1.2,
-              borderTop: `1px solid ${theme.palette.divider}`,
+              py: 1.25,
+              borderTop: `1px solid ${theme.palette.mode === "light" ? "rgba(15,23,42,0.06)" : "rgba(255,255,255,0.06)"}`,
               flexShrink: 0,
               bgcolor: theme.palette.background.paper,
             }}
@@ -613,28 +717,97 @@ const LiveAssistant = () => {
               disabled={sending}
               size="small"
               sx={{
-                borderRadius: 3,
-                fontSize: "0.82rem",
+                borderRadius: "999px",
+                fontSize: "0.85rem",
                 pr: 0.5,
-                "& fieldset": { borderColor: theme.palette.divider },
+                pl: 0.5,
+                background: theme.palette.mode === "light" ? "#fafbff" : "rgba(255,255,255,0.03)",
+                "& fieldset": {
+                  borderColor: theme.palette.mode === "light"
+                    ? "rgba(15,23,42,0.1)"
+                    : "rgba(255,255,255,0.1)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(109,93,252,0.5) !important",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#6d5dfc !important",
+                  borderWidth: "1.5px !important",
+                  boxShadow: "0 0 0 4px rgba(109,93,252,0.12)",
+                },
               }}
               endAdornment={
                 <InputAdornment position="end">
                   <IconButton
                     size="small"
-                    color="primary"
                     onClick={handleSend}
                     disabled={!input.trim() || sending}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: !input.trim() || sending
+                        ? theme.palette.mode === "light"
+                          ? "rgba(15,23,42,0.08)"
+                          : "rgba(255,255,255,0.08)"
+                        : "linear-gradient(135deg, #6d5dfc 0%, #4d3eff 100%)",
+                      color: !input.trim() || sending
+                        ? theme.palette.text.disabled
+                        : "#fff !important",
+                      boxShadow: !input.trim() || sending
+                        ? "none"
+                        : "0 6px 16px rgba(109,93,252,0.4)",
+                      transition: "all 0.18s ease",
+                      "&:hover:not(.Mui-disabled)": {
+                        transform: "translateY(-1px) scale(1.04)",
+                        boxShadow: "0 8px 20px rgba(109,93,252,0.55)",
+                      },
+                    }}
                   >
                     {sending ? (
-                      <CircularProgress size={16} />
+                      <CircularProgress size={14} sx={{ color: "inherit" }} />
                     ) : (
-                      <PiPaperPlaneTiltFill size={18} />
+                      <PiPaperPlaneTiltFill size={15} />
                     )}
                   </IconButton>
                 </InputAdornment>
               }
             />
+            <Typography
+              sx={{
+                mt: 0.85,
+                fontSize: 9.5,
+                color: theme.palette.text.secondary,
+                textAlign: "center",
+                letterSpacing: 0.04,
+              }}
+            >
+              Press <Box component="kbd" sx={{
+                px: 0.6,
+                py: 0.1,
+                borderRadius: "4px",
+                background: theme.palette.mode === "light"
+                  ? "rgba(15,23,42,0.06)"
+                  : "rgba(255,255,255,0.08)",
+                border: theme.palette.mode === "light"
+                  ? "1px solid rgba(15,23,42,0.1)"
+                  : "1px solid rgba(255,255,255,0.12)",
+                fontSize: 9,
+                fontFamily: "var(--tcn-font-mono, monospace)",
+              }}>Enter</Box> to send · <Box component="kbd" sx={{
+                px: 0.6,
+                py: 0.1,
+                borderRadius: "4px",
+                background: theme.palette.mode === "light"
+                  ? "rgba(15,23,42,0.06)"
+                  : "rgba(255,255,255,0.08)",
+                border: theme.palette.mode === "light"
+                  ? "1px solid rgba(15,23,42,0.1)"
+                  : "1px solid rgba(255,255,255,0.12)",
+                fontSize: 9,
+                fontFamily: "var(--tcn-font-mono, monospace)",
+              }}>Shift+Enter</Box> for new line
+            </Typography>
           </Box>
           </>
           )}

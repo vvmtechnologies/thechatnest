@@ -206,9 +206,8 @@ const TopBar = () => {
         px={2}
         py="6px"
         height="100%"
-        justifyContent="space-between"
         width={isBrowser ? "100%" : "calc(100vw - 150px)"}
-        sx={dragRegionSx}
+        sx={{ ...dragRegionSx, position: "relative" }}
       >
         {/* Left chunk */}
         <Stack
@@ -304,158 +303,7 @@ const TopBar = () => {
             </Typography>
           </Stack>
 
-          {/* Plan countdown chip */}
-          {plan.loaded && plan.status !== "unknown" && (() => {
-            const r = plan.remainingDays;
-            const isExpired = plan.expired || plan.status === "expired";
-            const isExpiring = plan.status === "expiring";
-            const isTrial = plan.status === "trial";
-
-            const tone = isExpired
-              ? {
-                  bg: "rgba(239,68,68,0.22)",
-                  border: "rgba(239,68,68,0.6)",
-                  color: "#ffffff",
-                  iconBg: "linear-gradient(135deg, #ef4444, #dc2626)",
-                  iconColor: "#ffffff",
-                  Icon: PiWarningCircleDuotone,
-                  label: "Plan expired",
-                  sub: "Renew now",
-                  pulse: true,
-                }
-              : isExpiring
-                ? {
-                    bg: "rgba(245,158,11,0.22)",
-                    border: "rgba(245,158,11,0.6)",
-                    color: "#ffffff",
-                    iconBg: "linear-gradient(135deg, #f59e0b, #d97706)",
-                    iconColor: "#ffffff",
-                    Icon: PiClockCountdownDuotone,
-                    label: `${r} day${r === 1 ? "" : "s"} left`,
-                    sub: plan.planName,
-                    pulse: true,
-                  }
-                : isTrial
-                  ? {
-                      bg: "rgba(109,93,252,0.22)",
-                      border: "rgba(109,93,252,0.6)",
-                      color: "#ffffff",
-                      iconBg: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
-                      iconColor: "#ffffff",
-                      Icon: PiSparkleDuotone,
-                      label:
-                        r !== null && r >= 0 ? `Trial · ${r}d left` : "Trial",
-                      sub: plan.planName,
-                      pulse: false,
-                    }
-                  : {
-                      bg: "rgba(255,213,74,0.2)",
-                      border: "rgba(255,213,74,0.55)",
-                      color: "#ffffff",
-                      iconBg: "linear-gradient(135deg, #ffd54a, #ffb74d)",
-                      iconColor: "#1a1f3a",
-                      Icon: PiCrownSimpleDuotone,
-                      label: plan.planName,
-                      sub:
-                        r !== null && r >= 0 ? `${r} days left` : "Active",
-                      pulse: false,
-                    };
-
-            return (
-              <Box
-                onClick={() => navigate("/app/admin?tab=billing")}
-                sx={{
-                  ml: 1,
-                  pl: 1.1,
-                  pr: 1.3,
-                  py: 0.45,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 0.85,
-                  flexShrink: 0,
-                  borderRadius: 9999,
-                  background: tone.bg,
-                  border: `1px solid ${tone.border}`,
-                  color: tone.color,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "transform 0.18s ease, background 0.18s ease",
-                  ...noDragRegionSx,
-                  "&:hover": {
-                    transform: "translateY(-1px)",
-                    background: tone.bg
-                      .replace("0.16", "0.24")
-                      .replace("0.12", "0.2"),
-                  },
-                  ...(tone.pulse && {
-                    animation: "tcnPlanPulse 2.2s ease-in-out infinite",
-                    "@keyframes tcnPlanPulse": {
-                      "0%, 100%": {
-                        boxShadow: `0 0 0 0 ${tone.border}`,
-                      },
-                      "50%": { boxShadow: `0 0 0 5px transparent` },
-                    },
-                  }),
-                }}
-                title={
-                  plan.endDate
-                    ? `${plan.planName} · ends ${new Date(
-                        plan.endDate
-                      ).toLocaleDateString()}`
-                    : plan.planName
-                }
-              >
-                <Box
-                  sx={{
-                    width: 24,
-                    height: 24,
-                    borderRadius: "50%",
-                    background: tone.iconBg,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: tone.iconColor,
-                    flexShrink: 0,
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
-                  }}
-                >
-                  <tone.Icon size={14} weight="fill" />
-                </Box>
-                <Stack
-                  spacing={0}
-                  direction="row"
-                  alignItems="baseline"
-                  sx={{ minWidth: 0, gap: 0.6 }}
-                >
-                  <Typography
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: 11.5,
-                      lineHeight: 1,
-                      letterSpacing: 0.04,
-                      whiteSpace: "nowrap",
-                      color: "#ffffff",
-                      textShadow: "0 1px 2px rgba(0,0,0,0.4)",
-                    }}
-                  >
-                    {tone.label}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 10.5,
-                      lineHeight: 1,
-                      whiteSpace: "nowrap",
-                      color: "rgba(255,255,255,0.85)",
-                      fontWeight: 500,
-                      display: { xs: "none", md: "inline" },
-                    }}
-                  >
-                    · {tone.sub}
-                  </Typography>
-                </Stack>
-              </Box>
-            );
-          })()}
+          {/* (Plan chip moved to a center-positioned overlay below.) */}
 
           {/* No Internet pill */}
           {!netOK && (
@@ -484,6 +332,151 @@ const TopBar = () => {
             </Box>
           )}
         </Stack>
+
+        {/* Plan countdown chip — absolutely centered on the topbar so it
+            sits between the brand/user info and the action cluster. Hidden
+            on small screens where horizontal space is tight. */}
+        {plan.loaded && plan.status !== "unknown" && (() => {
+          const r = plan.remainingDays;
+          const isExpired = plan.expired || plan.status === "expired";
+          const isExpiring = plan.status === "expiring";
+          const isTrial = plan.status === "trial";
+
+          const tone = isExpired
+            ? {
+                bg: "rgba(239,68,68,0.22)",
+                border: "rgba(239,68,68,0.6)",
+                iconBg: "linear-gradient(135deg, #ef4444, #dc2626)",
+                iconColor: "#ffffff",
+                Icon: PiWarningCircleDuotone,
+                label: "Plan expired",
+                sub: "Renew now",
+                pulse: true,
+              }
+            : isExpiring
+              ? {
+                  bg: "rgba(245,158,11,0.22)",
+                  border: "rgba(245,158,11,0.6)",
+                  iconBg: "linear-gradient(135deg, #f59e0b, #d97706)",
+                  iconColor: "#ffffff",
+                  Icon: PiClockCountdownDuotone,
+                  label: `${r} day${r === 1 ? "" : "s"} left`,
+                  sub: plan.planName,
+                  pulse: true,
+                }
+              : isTrial
+                ? {
+                    bg: "rgba(109,93,252,0.22)",
+                    border: "rgba(109,93,252,0.6)",
+                    iconBg: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
+                    iconColor: "#ffffff",
+                    Icon: PiSparkleDuotone,
+                    label: r !== null && r >= 0 ? `Trial · ${r}d left` : "Trial",
+                    sub: plan.planName,
+                    pulse: false,
+                  }
+                : {
+                    bg: "rgba(255,213,74,0.2)",
+                    border: "rgba(255,213,74,0.55)",
+                    iconBg: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                    iconColor: "#1a1f3a",
+                    Icon: PiCrownSimpleDuotone,
+                    label: plan.planName,
+                    sub: r !== null && r >= 0 ? `${r} days left` : "Active",
+                    pulse: false,
+                  };
+
+          return (
+            <Box
+              onClick={() => navigate("/app/admin?tab=billing")}
+              sx={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                pl: 1.1,
+                pr: 1.3,
+                py: 0.45,
+                display: { xs: "none", md: "inline-flex" },
+                alignItems: "center",
+                gap: 0.85,
+                flexShrink: 0,
+                borderRadius: 9999,
+                background: tone.bg,
+                border: `1px solid ${tone.border}`,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                zIndex: 2,
+                transition: "transform 0.18s ease, background 0.18s ease",
+                ...noDragRegionSx,
+                "&:hover": {
+                  transform: "translate(-50%, calc(-50% - 1px))",
+                  background: tone.bg.replace("0.22", "0.32").replace("0.2", "0.3"),
+                },
+                ...(tone.pulse && {
+                  animation: "tcnPlanPulse 2.2s ease-in-out infinite",
+                  "@keyframes tcnPlanPulse": {
+                    "0%, 100%": { boxShadow: `0 0 0 0 ${tone.border}` },
+                    "50%": { boxShadow: `0 0 0 5px transparent` },
+                  },
+                }),
+              }}
+              title={
+                plan.endDate
+                  ? `${plan.planName} · ends ${new Date(plan.endDate).toLocaleDateString()}`
+                  : plan.planName
+              }
+            >
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  background: tone.iconBg,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: tone.iconColor,
+                  flexShrink: 0,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.25)",
+                }}
+              >
+                <tone.Icon size={14} weight="fill" />
+              </Box>
+              <Stack
+                spacing={0}
+                direction="row"
+                alignItems="baseline"
+                sx={{ minWidth: 0, gap: 0.6 }}
+              >
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: 11.5,
+                    lineHeight: 1,
+                    letterSpacing: 0.04,
+                    whiteSpace: "nowrap",
+                    color: "#ffffff",
+                    textShadow: "0 1px 2px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  {tone.label}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: 10.5,
+                    lineHeight: 1,
+                    whiteSpace: "nowrap",
+                    color: "rgba(255,255,255,0.85)",
+                    fontWeight: 500,
+                  }}
+                >
+                  · {tone.sub}
+                </Typography>
+              </Stack>
+            </Box>
+          );
+        })()}
 
         {/* Right chunk */}
         <Stack direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>

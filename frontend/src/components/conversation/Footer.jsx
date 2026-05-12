@@ -568,16 +568,30 @@ const ConversationFooter = ({
   } = useConversationComposer();
 
   const iconButtonStyles = {
-    color: theme.palette.text.secondary,
-    width: 34,
-    height: 34,
-    borderRadius: "10px",
+    color: theme.palette.mode === "light"
+      ? "rgba(15,23,42,0.55)"
+      : "rgba(255,255,255,0.6)",
+    width: 36,
+    height: 36,
+    borderRadius: "50%",
     p: 0,
-    transition: "background-color 0.16s ease, color 0.16s ease, transform 0.16s ease",
+    background: theme.palette.mode === "light"
+      ? "rgba(15,23,42,0.04)"
+      : "rgba(255,255,255,0.04)",
+    border: theme.palette.mode === "light"
+      ? "1px solid rgba(15,23,42,0.06)"
+      : "1px solid rgba(255,255,255,0.06)",
+    transition: "background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
     "&:hover": {
-      backgroundColor: theme.palette.mode === "light" ? "rgba(109,93,252,0.08)" : "rgba(255,255,255,0.06)",
-      color: theme.palette.mode === "light" ? "#4d3eff" : theme.palette.primary.light,
-      transform: "translateY(-1px)",
+      backgroundColor: theme.palette.mode === "light"
+        ? "rgba(109,93,252,0.1)"
+        : "rgba(139,124,255,0.18)",
+      borderColor: theme.palette.mode === "light"
+        ? "rgba(109,93,252,0.35)"
+        : "rgba(139,124,255,0.45)",
+      color: theme.palette.mode === "light" ? "#4d3eff" : "#a99dff",
+      transform: "translateY(-1.5px)",
+      boxShadow: "0 4px 12px rgba(109,93,252,0.18)",
     },
   };
 
@@ -586,13 +600,15 @@ const ConversationFooter = ({
     color: active ? "#fff" : iconButtonStyles.color,
     background: active
       ? "linear-gradient(135deg, #6d5dfc, #4d3eff)"
-      : "transparent",
-    boxShadow: active ? "0 4px 12px rgba(109,93,252,0.35)" : "none",
+      : iconButtonStyles.background,
+    borderColor: active ? "rgba(109,93,252,0.6)" : iconButtonStyles.border,
+    boxShadow: active ? "0 6px 16px rgba(109,93,252,0.4)" : "none",
     "&:hover": active
       ? {
           background: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
           color: "#fff",
-          transform: "translateY(-1px)",
+          transform: "translateY(-1.5px)",
+          boxShadow: "0 8px 20px rgba(109,93,252,0.5)",
         }
       : iconButtonStyles["&:hover"],
   });
@@ -601,10 +617,14 @@ const ConversationFooter = ({
     <Box
       component="span"
       sx={{
-        width: "1px",
-        height: 18,
-        mx: 0.5,
-        backgroundColor: theme.palette.mode === "light" ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)",
+        width: 4,
+        height: 4,
+        mx: 0.75,
+        borderRadius: "50%",
+        backgroundColor: theme.palette.mode === "light"
+          ? "rgba(15,23,42,0.18)"
+          : "rgba(255,255,255,0.18)",
+        flexShrink: 0,
       }}
     />
   );
@@ -2756,13 +2776,26 @@ const ConversationFooter = ({
           sx={{
             mx: 1.25,
             mb: 1,
-            px: 1.25,
-            py: 0.75,
-            borderRadius: "14px",
-            background: theme.palette.mode === "light" ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)",
-            border: theme.palette.mode === "light"
-              ? "1px solid rgba(15,23,42,0.05)"
-              : "1px solid rgba(255,255,255,0.04)",
+            mt: 0.5,
+            px: 0.5,
+            py: 0,
+            borderRadius: 0,
+            background: "transparent",
+            position: "relative",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              width: 24,
+              height: 1,
+              background: theme.palette.mode === "light"
+                ? "rgba(15,23,42,0.12)"
+                : "rgba(255,255,255,0.1)",
+              borderRadius: 999,
+              opacity: 0,
+            },
             ...(inputReadOnly && {
               pointerEvents: "none",
               opacity: 0.5,

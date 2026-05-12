@@ -378,9 +378,17 @@ const ChatElement = ({
     pickNonEmptyString(
       thread?.label,
       thread?.contact?.name,
+      thread?.name,
+      thread?.displayName,
+      thread?.user?.name,
+      thread?.user?.displayName,
+      thread?.peer?.name,
+      thread?.peerName,
       metaSource?.label,
-      metaSource?.contact?.name
-    ) || "Untitled chat";
+      metaSource?.contact?.name,
+      metaSource?.name,
+      metaSource?.displayName
+    ) || "New conversation";
 
   const initials = useMemo(() => {
     if (initialsOverride) {

@@ -48,6 +48,10 @@ export const useThreadData = () => {
     (threadId) => threadService.markThreadMessagesRead(threadId),
     []
   );
+  const markThreadOpenedByViewer = useCallback(
+    (threadId) => threadService.markThreadOpenedByViewer(threadId),
+    []
+  );
 
   return useMemo(
     () => ({
@@ -66,6 +70,7 @@ export const useThreadData = () => {
       removeMessage,
       removeThread,
       markThreadMessagesRead,
+      markThreadOpenedByViewer,
     }),
     [
       snapshot,
@@ -79,6 +84,7 @@ export const useThreadData = () => {
       removeMessage,
       removeThread,
       markThreadMessagesRead,
+      markThreadOpenedByViewer,
     ]
   );
 };

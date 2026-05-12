@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { Skeleton } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { PiMagnifyingGlass, PiX } from "react-icons/pi";
+import { PiMagnifyingGlass, PiX, PiArrowsClockwiseBold } from "react-icons/pi";
 import React, {
   useCallback,
   useMemo,
@@ -108,6 +108,8 @@ const ChatList = ({
   onUnmuteThread,
   pinnedThreads = {},
   onPinThread,
+  onRefresh,
+  refreshing = false,
 }) => {
   const theme = useTheme();
   const [searchTerm, setSearchTerm] = useState("");
@@ -387,6 +389,42 @@ const ChatList = ({
               <MdOutlineGroups size={18} />
             </IconButton>
           </Tooltip>
+
+          {onRefresh && (
+            <Tooltip title="Refresh conversation list" arrow>
+              <IconButton
+                aria-label="Refresh chat list"
+                size="small"
+                onClick={() => onRefresh()}
+                disabled={refreshing}
+                sx={{
+                  mx: 0.5,
+                  borderRadius: 1,
+                  backgroundColor: theme.palette.background.paper,
+                  color: refreshing
+                    ? theme.palette.primary.main
+                    : theme.palette.text.secondary,
+                  border: `1px solid ${theme.palette.divider}`,
+                  transition: "transform 0.18s ease, background-color 0.18s ease",
+                  "&:hover": {
+                    backgroundColor: theme.palette.action.hover,
+                    color: theme.palette.primary.main,
+                  },
+                  "& svg": {
+                    animation: refreshing
+                      ? "tcnSpin 0.9s linear infinite"
+                      : "none",
+                  },
+                  "@keyframes tcnSpin": {
+                    from: { transform: "rotate(0deg)" },
+                    to: { transform: "rotate(360deg)" },
+                  },
+                }}
+              >
+                <PiArrowsClockwiseBold size={17} />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </Stack>
 

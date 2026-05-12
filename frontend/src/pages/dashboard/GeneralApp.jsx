@@ -249,7 +249,7 @@ const GeneralApp = () => {
   const mascotSrc = appBrandingAssets.mascot;
   const sidebar = useSelector((state) => state.app.sidebar, shallowEqual);
   const currentUser = useCurrentUser();
-  const { orgId: syncedOrgId } = useChatSync(); // fetch real threads from backend and sync into threadService
+  const { orgId: syncedOrgId, refresh: refreshChatSync, syncing: chatSyncing } = useChatSync(); // fetch real threads from backend and sync into threadService
   const storedName = String(currentUser?.displayName || "").trim();
   const welcomeName = storedName || "there";
   const storedProfileRaw = useSecureStorageValue(
@@ -312,6 +312,7 @@ const GeneralApp = () => {
     patchMessage,
     removeMessage: removeStoredMessage,
     markThreadMessagesRead,
+    markThreadOpenedByViewer,
   } = useThreadData();
 
   const fallbackOrgId = useMemo(() => {
@@ -1571,10 +1572,13 @@ const GeneralApp = () => {
         markThreadRead(resolvedId).catch((err) => {
           console.warn("[markRead] API failed, relying on socket thread:focus:", err?.message);
         });
-        markThreadMessagesRead(threadId);
+        // Opening a thread only clears MY unread badge — it does not
+        // (and must not) flip my outgoing messages' read state. The other
+        // party's onReadAck socket event is what flips outgoing → "read".
+        markThreadOpenedByViewer(threadId);
       }
     },
-    [isLocked, activeOrganizationId, updateStoredSelections, isRealThread, resolveThreadId, markThreadMessagesRead]
+    [isLocked, activeOrganizationId, updateStoredSelections, isRealThread, resolveThreadId, markThreadOpenedByViewer]
   );
 
   const handleCreateGroup = useCallback(
@@ -3012,6 +3016,8 @@ const GeneralApp = () => {
                 onUnmuteThread={unmuteThread}
                 pinnedThreads={pinnedThreads}
                 onPinThread={(tid, pinned) => chatSocket?.pinThread?.(tid, pinned)}
+                onRefresh={refreshChatSync}
+                refreshing={chatSyncing}
               />
             </Box>
             <ChatListActionsMenu

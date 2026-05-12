@@ -441,11 +441,19 @@ class ThreadService {
     });
   }
 
-  /** Mark all outgoing messages in a thread as "read" + reset unread count + update readStatus */
+  /**
+   * Called when the OTHER party reads our outgoing messages (via socket read-ack).
+   * Updates every outgoing message's status to "read" so the chat-window ticks
+   * turn green. The chat-list row's `lastMessageStatus` is intentionally NOT
+   * touched here — that comes from the same socket event via `upsertThread`
+   * which carries the actual lastMessageStatus value.
+   *
+   * Does NOT reset viewer's own unreadCount — that's a separate concern handled
+   * by `markThreadOpenedByViewer` (called when *I* open the thread).
+   */
   markThreadMessagesRead(threadId) {
     if (!threadId) return;
     this.commit((current) => {
-      // Update messages status to "read"
       const existing = current.messagesByThread[threadId] ?? [];
       const patched = existing.length
         ? existing.map((msg) =>
@@ -455,13 +463,18 @@ class ThreadService {
           )
         : existing;
 
-      // Also reset thread's unreadCount and readStatus
       const nextThreadsByOrg = { ...current.threadsByOrg };
       for (const [orgId, threads] of Object.entries(nextThreadsByOrg)) {
         const idx = threads.findIndex((t) => t.id === threadId);
         if (idx === -1) continue;
         const updated = [...threads];
-        updated[idx] = { ...updated[idx], unreadCount: 0, readStatus: 'read', lastMessageStatus: 'read' };
+        // Only update lastMessageStatus to 'read' if the row's last message is
+        // outgoing — never override an incoming preview's status.
+        const row = updated[idx];
+        const isLastOut = row?.lastMessageDirection === 'outgoing';
+        updated[idx] = isLastOut
+          ? { ...row, lastMessageStatus: 'read' }
+          : row;
         nextThreadsByOrg[orgId] = updated;
         break;
       }
@@ -469,6 +482,34 @@ class ThreadService {
       return {
         ...current,
         messagesByThread: { ...current.messagesByThread, [threadId]: patched },
+        threadsByOrg: nextThreadsByOrg,
+        updatedAt: Date.now(),
+      };
+    });
+  }
+
+  /**
+   * Called when the CURRENT viewer opens a thread. Only resets the viewer's
+   * unread count + clears the unread-dot. Does NOT touch outgoing message
+   * status — your recipient hasn't read your message just because you opened
+   * your own chat.
+   */
+  markThreadOpenedByViewer(threadId) {
+    if (!threadId) return;
+    this.commit((current) => {
+      const nextThreadsByOrg = { ...current.threadsByOrg };
+      for (const [orgId, threads] of Object.entries(nextThreadsByOrg)) {
+        const idx = threads.findIndex((t) => t.id === threadId);
+        if (idx === -1) continue;
+        const row = threads[idx];
+        if ((row?.unreadCount || 0) === 0) return current;
+        const updated = [...threads];
+        updated[idx] = { ...row, unreadCount: 0 };
+        nextThreadsByOrg[orgId] = updated;
+        break;
+      }
+      return {
+        ...current,
         threadsByOrg: nextThreadsByOrg,
         updatedAt: Date.now(),
       };

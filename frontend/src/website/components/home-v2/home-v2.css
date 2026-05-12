@@ -1134,6 +1134,326 @@
 }
 
 /* ============================================================
+   SECTION 03.5 — A day in the nest (timeline)
+   ============================================================ */
+.v2-day {
+  position: relative;
+  padding: 6rem 0 7rem;
+  background:
+    linear-gradient(180deg, var(--v2-paper) 0%, var(--v2-paper-deep) 100%);
+  color: var(--v2-ink);
+  overflow: hidden;
+}
+.v2-day::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, rgba(11,15,30,0.04) 1px, transparent 1px);
+  background-size: 60px 100%;
+  pointer-events: none;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 10%, #000 90%, transparent 100%);
+}
+.v2-day > .v2-wrap { position: relative; z-index: 1; }
+
+.v2-day-head {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 2rem;
+  align-items: end;
+  margin-bottom: 4rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1.5px solid var(--v2-ink);
+}
+.v2-day-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.v2-day-head .v2-mono {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+.v2-day-title {
+  font-family: "Fraunces", "Playfair Display", Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  color: var(--v2-ink);
+  margin: 0;
+}
+.v2-day-title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--v2-gold-deep);
+  background: linear-gradient(120deg, transparent 0%, rgba(255,213,74,0.4) 50%, transparent 100%);
+  padding: 0 0.15em;
+}
+.v2-day-sub {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--v2-ink-soft);
+  margin: 0;
+  max-width: 440px;
+  justify-self: end;
+  text-align: right;
+}
+
+/* Timeline */
+.v2-day-timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+.v2-day-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1.5px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      var(--v2-ink) 0,
+      var(--v2-ink) 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.v2-day-moment {
+  display: grid;
+  grid-template-columns: 1fr 60px 1fr;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 3.5rem;
+  position: relative;
+}
+.v2-day-moment:last-child { margin-bottom: 0; }
+
+.v2-day-spine {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.v2-day-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--v2-paper);
+  border: 2.5px solid var(--v2-ink);
+  display: inline-block;
+  position: relative;
+}
+.v2-day-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+.v2-day-moment.is-gold .v2-day-dot::after { background: var(--v2-gold); }
+.v2-day-moment.is-violet .v2-day-dot::after { background: var(--v2-violet); }
+.v2-day-moment.is-gold .v2-day-dot {
+  box-shadow: 0 0 0 6px rgba(255,213,74,0.15);
+}
+.v2-day-moment.is-violet .v2-day-dot {
+  box-shadow: 0 0 0 6px rgba(109,93,252,0.15);
+}
+
+.v2-day-card {
+  position: relative;
+  padding: 1.85rem 1.75rem 1.65rem;
+  background: var(--v2-paper);
+  border: 1.5px solid var(--v2-ink);
+  border-radius: 2px;
+  box-shadow: 6px 6px 0 0 var(--v2-ink);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.v2-day-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 9px 9px 0 0 var(--v2-ink);
+}
+.v2-day-moment.is-left .v2-day-card {
+  grid-column: 1 / 2;
+  margin-right: 1.5rem;
+}
+.v2-day-moment.is-right .v2-day-card {
+  grid-column: 3 / 4;
+  margin-left: 1.5rem;
+}
+/* Arrow on card pointing to spine */
+.v2-day-card::before,
+.v2-day-card::after {
+  content: "";
+  position: absolute;
+  top: 28px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+.v2-day-moment.is-left .v2-day-card::before {
+  right: -10px;
+  border-width: 8px 0 8px 10px;
+  border-color: transparent transparent transparent var(--v2-ink);
+}
+.v2-day-moment.is-left .v2-day-card::after {
+  right: -7px;
+  border-width: 7px 0 7px 9px;
+  border-color: transparent transparent transparent var(--v2-paper);
+}
+.v2-day-moment.is-right .v2-day-card::before {
+  left: -10px;
+  border-width: 8px 10px 8px 0;
+  border-color: transparent var(--v2-ink) transparent transparent;
+}
+.v2-day-moment.is-right .v2-day-card::after {
+  left: -7px;
+  border-width: 7px 9px 7px 0;
+  border-color: transparent var(--v2-paper) transparent transparent;
+}
+
+.v2-day-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.v2-day-time {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--v2-ink);
+  line-height: 1;
+}
+.v2-day-moment.is-gold .v2-day-time { color: var(--v2-gold-deep); }
+.v2-day-moment.is-violet .v2-day-time { color: var(--v2-violet); }
+.v2-day-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 3px;
+  background: var(--v2-ink);
+  color: var(--v2-paper);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.v2-day-card h3 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 500;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: var(--v2-ink);
+  margin: 0 0 0.65rem;
+}
+.v2-day-card p {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--v2-ink-soft);
+  margin: 0;
+}
+.v2-day-edge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--v2-gold), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.v2-day-moment.is-violet .v2-day-edge {
+  background: linear-gradient(90deg, transparent, var(--v2-violet), transparent);
+}
+.v2-day-card:hover .v2-day-edge { opacity: 0.7; }
+
+/* Footer */
+.v2-day-foot {
+  margin-top: 4.5rem;
+  padding-top: 1.75rem;
+  border-top: 1.5px solid var(--v2-ink);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.5rem;
+  align-items: center;
+}
+.v2-day-foot .v2-mono {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+.v2-day-foot p {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--v2-ink);
+  margin: 0;
+  justify-self: end;
+  text-align: right;
+  max-width: 520px;
+}
+.v2-day-foot em {
+  font-style: italic;
+  color: var(--v2-gold-deep);
+}
+
+@media (max-width: 900px) {
+  .v2-day { padding: 4.5rem 0 5rem; }
+  .v2-day-head { grid-template-columns: 1fr; align-items: start; }
+  .v2-day-sub { justify-self: start; text-align: left; max-width: 100%; }
+  .v2-day-timeline::before { left: 22px; }
+  .v2-day-moment {
+    grid-template-columns: 44px 1fr;
+    margin-bottom: 2.25rem;
+  }
+  .v2-day-spine { grid-column: 1; }
+  .v2-day-moment.is-left .v2-day-card,
+  .v2-day-moment.is-right .v2-day-card {
+    grid-column: 2;
+    margin-left: 0.85rem;
+    margin-right: 0;
+  }
+  .v2-day-moment.is-left .v2-day-card::before,
+  .v2-day-moment.is-left .v2-day-card::after {
+    left: -10px;
+    right: auto;
+    border-width: 8px 10px 8px 0;
+    border-color: transparent var(--v2-ink) transparent transparent;
+  }
+  .v2-day-moment.is-left .v2-day-card::after {
+    left: -7px;
+    border-width: 7px 9px 7px 0;
+    border-color: transparent var(--v2-paper) transparent transparent;
+  }
+  .v2-day-foot { grid-template-columns: 1fr; gap: 0.85rem; }
+  .v2-day-foot p { justify-self: start; text-align: left; }
+}
+@media (max-width: 540px) {
+  .v2-day-card { padding: 1.4rem 1.25rem 1.25rem; box-shadow: 4px 4px 0 0 var(--v2-ink); }
+  .v2-day-time { font-size: 1.15rem; }
+  .v2-day-card h3 { font-size: 1.25rem; }
+  .v2-day-card p { font-size: 0.92rem; }
+}
+
+/* ============================================================
    SECTION 04 — Pull Quote (editorial break)
    ============================================================ */
 .v2-quote {

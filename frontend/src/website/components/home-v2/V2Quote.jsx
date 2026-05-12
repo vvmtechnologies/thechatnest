@@ -6,16 +6,15 @@ const V2Quote = () => {
       <span className="v2-quote-mark">&ldquo;</span>
       <div className="v2-quote-body">
         <blockquote className="v2-fade">
-          We replaced{" "}
-          <span className="accent">four subscriptions</span>{" "}
-          with TheChatNest and our engineering team finally stopped
-          tab-juggling. The AI summaries alone saved us 9 hours of standup
-          recaps a week.
+          One workspace for{" "}
+          <span className="accent">chat, calls, files, and AI</span>{" "}
+          — without sending your team's conversations to a third-party
+          server you can't audit. That's the whole pitch.
         </blockquote>
         <div className="attribution v2-fade d2">
-          <strong>Meera Iyer</strong>
-          <span>VP Engineering · Folio Studio</span>
-          <span>50-person remote team · India</span>
+          <strong>Built for teams that care about their data</strong>
+          <span>Self-hosted or cloud · Your choice</span>
+          <span>Start free for 14 days — no credit card</span>
         </div>
       </div>
     </section>

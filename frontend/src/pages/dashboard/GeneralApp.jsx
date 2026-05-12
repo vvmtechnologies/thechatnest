@@ -3290,12 +3290,12 @@ const GeneralApp = () => {
                   ? "Syncing your conversations"
                   : hasThreads
                   ? "Pick a conversation"
-                  : `Welcome, ${welcomeName}`;
+                  : `Welcome to your nest, ${welcomeName}`;
                 const subtext = threadsLoading
                   ? "This usually takes a moment. Your chats will appear on the left."
                   : hasThreads
                   ? "Select any chat from the list to open it here."
-                  : "Pick someone from the list to start your first conversation.";
+                  : "Tap the menu (⋯) above the chat list to start a new conversation, create a group, or invite a teammate.";
                 const isDark = theme.palette.mode === "dark";
                 const easeOut = "cubic-bezier(0.23, 1, 0.32, 1)";
                 return (
@@ -3424,6 +3424,42 @@ const GeneralApp = () => {
                       >
                         {subtext}
                       </Typography>
+
+                      {!threadsLoading && !hasThreads && (
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          justifyContent="center"
+                          sx={{ mt: 2, maxWidth: 460 }}
+                        >
+                          {[
+                            { emoji: "💬", text: "Start a 1-on-1 chat" },
+                            { emoji: "👥", text: "Create a group" },
+                            { emoji: "🎉", text: "Invite teammates" },
+                          ].map((tip) => (
+                            <Box
+                              key={tip.text}
+                              sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 0.75,
+                                px: 1.4,
+                                py: 0.7,
+                                borderRadius: 999,
+                                backgroundColor: alpha(theme.palette.primary.main, isDark ? 0.12 : 0.07),
+                                border: `1px solid ${alpha(theme.palette.primary.main, isDark ? 0.25 : 0.15)}`,
+                                fontSize: 12.5,
+                                fontWeight: 600,
+                                color: theme.palette.text.primary,
+                              }}
+                            >
+                              <span aria-hidden style={{ fontSize: 14 }}>{tip.emoji}</span>
+                              {tip.text}
+                            </Box>
+                          ))}
+                        </Stack>
+                      )}
                     </Stack>
                   </Stack>
                 );

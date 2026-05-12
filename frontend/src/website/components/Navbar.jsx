@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   PiArrowCircleUp,
+  PiArrowCircleDown,
   PiCaretDownBold,
   PiList,
   PiX,
@@ -27,6 +28,7 @@ const Navbar = () => {
 
   const [scrolled, setScrolled] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showScrollDown, setShowScrollDown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
   const [appUrl, setAppUrl] = useState("/");
@@ -60,12 +62,21 @@ const Navbar = () => {
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
+      const viewport = window.innerHeight;
+      const doc = document.documentElement;
+      const maxScroll = doc.scrollHeight - viewport;
       setScrolled(y > 12);
       setShowScrollTop(y > 320);
+      // Show scroll-down only near top of page AND when there's room to scroll
+      setShowScrollDown(y < 320 && maxScroll - y > viewport * 0.5);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   // Close menus on route change
@@ -87,6 +98,8 @@ const Navbar = () => {
   }, [menuOpen]);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  const scrollDownOnePage = () =>
+    window.scrollBy({ top: Math.max(window.innerHeight * 0.85, 400), behavior: "smooth" });
 
   return (
     <>
@@ -576,7 +589,7 @@ const Navbar = () => {
         </div>
       </aside>
 
-      {/* Scroll to top button */}
+      {/* Scroll up / down floating buttons */}
       {showScrollTop && (
         <button
           className="scroll-to-top-btn"
@@ -598,7 +611,8 @@ const Navbar = () => {
             boxShadow: "0 10px 24px rgba(109, 93, 252, 0.45)",
             cursor: "pointer",
             zIndex: 1000,
-            transition: "transform 0.2s ease",
+            transition: "transform 0.2s ease, opacity 0.2s ease",
+            animation: "tcnFabIn 0.25s ease-out both",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(-3px)")}
           onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
@@ -606,6 +620,51 @@ const Navbar = () => {
           <PiArrowCircleUp size={28} />
         </button>
       )}
+
+      {showScrollDown && (
+        <button
+          className="scroll-down-btn"
+          onClick={scrollDownOnePage}
+          aria-label="Scroll down"
+          style={{
+            position: "fixed",
+            bottom: "30px",
+            right: "20px",
+            background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+            color: "#1a1f3a",
+            border: "none",
+            borderRadius: "50%",
+            width: "52px",
+            height: "52px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 10px 24px rgba(255, 183, 77, 0.5)",
+            cursor: "pointer",
+            zIndex: 1000,
+            transition: "transform 0.2s ease, opacity 0.2s ease",
+            animation: "tcnFabIn 0.25s ease-out both, tcnFabBob 2.6s ease-in-out 0.4s infinite",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "translateY(3px)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "translateY(0)")}
+        >
+          <PiArrowCircleDown size={28} weight="fill" />
+        </button>
+      )}
+
+      <style>{`
+        @keyframes tcnFabIn {
+          from { opacity: 0; transform: scale(0.6) translateY(8px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes tcnFabBob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(4px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .scroll-down-btn, .scroll-to-top-btn { animation: none !important; }
+        }
+      `}</style>
     </>
   );
 };

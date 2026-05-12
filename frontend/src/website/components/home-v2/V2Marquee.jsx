@@ -1,14 +1,14 @@
 import React from "react";
 
 const METRICS = [
-  { num: "12,400+", label: "teams shipped from" },
   { num: "AES-256", label: "encryption at rest" },
-  { num: "99.94%", label: "uptime last 90 days" },
-  { num: "<200ms", label: "median message delivery" },
-  { num: "SOC 2", label: "Type II audited" },
-  { num: "30s", label: "self-host install" },
+  { num: "TLS 1.3", label: "transport security" },
+  { num: "GDPR", label: "aligned by design" },
   { num: "₹199", label: "per seat / month" },
+  { num: "14 days", label: "free trial. no card." },
+  { num: "Self-host", label: "or cloud — your call" },
   { num: "0", label: "data sold. ever." },
+  { num: "100%", label: "yours to own" },
 ];
 
 const V2Marquee = () => {

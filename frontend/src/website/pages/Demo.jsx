@@ -12,6 +12,7 @@ import {
   PiArrowRightBold,
 } from "react-icons/pi";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import { API_BASE_URL } from "../../config/apiBaseUrl";
 import Seo from "../../components/Seo.jsx";
 
 const HIGHLIGHTS = [
@@ -58,6 +59,14 @@ const Demo = () => {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
+  const sizeToInt = (label) => {
+    const m = String(label || "").match(/(\d+)/g);
+    if (!m || !m.length) return 1;
+    return Math.max(...m.map((n) => Number(n) || 0)) || 1;
+  };
 
   const validate = (k, v) => {
     const s = String(v || "").trim();
@@ -87,14 +96,54 @@ const Demo = () => {
     setErrors((prev) => ({ ...prev, [k]: validate(k, e.target.value) }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const required = ["name", "companyName", "mobile", "email", "scheduledAt"];
     const all = Object.fromEntries(required.map((k) => [k, validate(k, values[k])]));
     setErrors(all);
     setTouched(Object.fromEntries(required.map((k) => [k, true])));
     if (Object.values(all).some(Boolean)) return;
-    setSubmitted(true);
+    if (!API_BASE_URL) {
+      setSubmitError("API base URL is missing.");
+      return;
+    }
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      const detailsBlob = [
+        "[DEMO REQUEST]",
+        `Preferred slot: ${values.scheduledAt} (${values.timezone})`,
+        `Team size bucket: ${values.companySize}`,
+        values.query ? `Notes: ${values.query}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const body = {
+        name: values.name.trim(),
+        country_code: "+91",
+        mobile_number: values.mobile.replace(/[^\d]/g, ""),
+        email_address: values.email.trim().toLowerCase(),
+        company_name: values.companyName.trim(),
+        total_users: sizeToInt(values.companySize),
+        requirement_details: detailsBlob,
+      };
+      const res = await fetch(`${API_BASE_URL}/contact-us`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(body),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSubmitError(payload?.message || "We couldn't submit your demo request. Please try again.");
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setSubmitError("Network error — please check your connection and retry.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -448,11 +497,25 @@ const Demo = () => {
                   onChange={update("query")}
                 />
 
+                {submitError && (
+                  <div style={{
+                    padding: "0.85rem 1rem",
+                    borderRadius: 12,
+                    background: "rgba(239,68,68,0.08)",
+                    border: "1px solid rgba(239,68,68,0.35)",
+                    color: "#b91c1c",
+                    fontSize: "0.88rem",
+                  }}>
+                    {submitError}
+                  </div>
+                )}
+
                 <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
                   <button
                     type="button"
                     className="tcn-demo-reset"
-                    onClick={() =>
+                    disabled={submitting}
+                    onClick={() => {
                       setValues({
                         name: "",
                         companyName: "",
@@ -462,13 +525,16 @@ const Demo = () => {
                         scheduledAt: "",
                         timezone: "GMT +5:30",
                         query: "",
-                      })
-                    }
+                      });
+                      setErrors({});
+                      setTouched({});
+                      setSubmitError("");
+                    }}
                   >
                     Reset
                   </button>
-                  <button type="submit" className="tcn-demo-submit">
-                    Request demo <PiArrowRightBold size={16} />
+                  <button type="submit" className="tcn-demo-submit" disabled={submitting}>
+                    {submitting ? "Sending…" : (<>Request demo <PiArrowRightBold size={16} /></>)}
                   </button>
                 </div>
 

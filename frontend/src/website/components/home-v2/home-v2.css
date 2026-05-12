@@ -394,6 +394,79 @@
 }
 
 /* ============================================================
+   SECTION 01.5 — Trust marquee (between hero and stack)
+   ============================================================ */
+.v2-marquee {
+  background: var(--v2-paper-deep);
+  border-bottom: 1px solid var(--v2-hair);
+  overflow: hidden;
+  padding: 1.1rem 0;
+  position: relative;
+}
+.v2-marquee::before,
+.v2-marquee::after {
+  /* Fade the edges so the loop seam is invisible */
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.v2-marquee::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--v2-paper-deep), transparent);
+}
+.v2-marquee::after {
+  right: 0;
+  background: linear-gradient(-90deg, var(--v2-paper-deep), transparent);
+}
+.v2-marquee-track {
+  display: flex;
+  gap: 3.5rem;
+  width: max-content;
+  animation: v2MarqueeScroll 38s linear infinite;
+  will-change: transform;
+}
+@keyframes v2MarqueeScroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.v2-marquee-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  font-family: var(--v2-font-mono);
+  font-size: 12px;
+  color: var(--v2-ink-muted);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  position: relative;
+  padding-right: 3.5rem;
+}
+.v2-marquee-item::after {
+  content: "";
+  position: absolute;
+  right: 1.5rem;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--v2-gold);
+  transform: translateY(-50%);
+}
+.v2-marquee-item:last-child::after { display: none; }
+.v2-marquee-item b {
+  font-family: var(--v2-font-display);
+  font-variation-settings: "opsz" 24, "SOFT" 50;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--v2-ink);
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================
    SECTION 02 — The Stack (what we replace)
    ============================================================ */
 .v2-stack {

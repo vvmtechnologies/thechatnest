@@ -569,15 +569,32 @@ const ConversationFooter = ({
 
   const iconButtonStyles = {
     color: theme.palette.text.secondary,
-    p: 0.5,
+    width: 34,
+    height: 34,
+    borderRadius: "10px",
+    p: 0,
+    transition: "background-color 0.16s ease, color 0.16s ease, transform 0.16s ease",
+    "&:hover": {
+      backgroundColor: theme.palette.mode === "light" ? "rgba(109,93,252,0.08)" : "rgba(255,255,255,0.06)",
+      color: theme.palette.mode === "light" ? "#4d3eff" : theme.palette.primary.light,
+      transform: "translateY(-1px)",
+    },
   };
 
   const getFormatButtonStyles = (active) => ({
     ...iconButtonStyles,
     color: active ? "#fff" : iconButtonStyles.color,
-    backgroundColor: active
-      ? theme.palette.primary.main
-      : (iconButtonStyles.backgroundColor ?? "transparent"),
+    background: active
+      ? "linear-gradient(135deg, #6d5dfc, #4d3eff)"
+      : "transparent",
+    boxShadow: active ? "0 4px 12px rgba(109,93,252,0.35)" : "none",
+    "&:hover": active
+      ? {
+          background: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
+          color: "#fff",
+          transform: "translateY(-1px)",
+        }
+      : iconButtonStyles["&:hover"],
   });
 
   const verticalDivider = (
@@ -585,8 +602,9 @@ const ConversationFooter = ({
       component="span"
       sx={{
         width: "1px",
-        height: 22,
-        backgroundColor: theme.palette.divider,
+        height: 18,
+        mx: 0.5,
+        backgroundColor: theme.palette.mode === "light" ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.08)",
       }}
     />
   );
@@ -2736,8 +2754,15 @@ const ConversationFooter = ({
           alignItems="center"
           justifyContent="space-between"
           sx={{
-            px: 2,
-            py: 1,
+            mx: 1.25,
+            mb: 1,
+            px: 1.25,
+            py: 0.75,
+            borderRadius: "14px",
+            background: theme.palette.mode === "light" ? "rgba(15,23,42,0.025)" : "rgba(255,255,255,0.03)",
+            border: theme.palette.mode === "light"
+              ? "1px solid rgba(15,23,42,0.05)"
+              : "1px solid rgba(255,255,255,0.04)",
             ...(inputReadOnly && {
               pointerEvents: "none",
               opacity: 0.5,
@@ -2746,7 +2771,7 @@ const ConversationFooter = ({
           }}
           aria-disabled={inputReadOnly || undefined}
         >
-          <Stack direction="row" alignItems="center" spacing={1.25}>
+          <Stack direction="row" alignItems="center" spacing={0.6}>
             <Tooltip title="Attach file">
               <IconButton
                 disableRipple
@@ -2832,7 +2857,7 @@ const ConversationFooter = ({
             </Tooltip>
           </Stack>
 
-          <Stack direction="row" alignItems="center" spacing={1.25}>
+          <Stack direction="row" alignItems="center" spacing={0.6}>
             {canCreatePoll ? (
               <Tooltip title="Create poll">
                 <IconButton

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PiChatsCircle, PiSparkle, PiUserGear, PiVideoConferenceFill } from "react-icons/pi";
+import { PiChatsCircle, PiSparkle, PiUserGear, PiVideoConferenceFill, PiToolboxDuotone } from "react-icons/pi";
 import {
   Box,
   Divider,
@@ -99,6 +99,7 @@ const SideBar = () => {
       if (pathname.startsWith("/app/admin")) return 4;
       // Non-chat dashboard pages — don't highlight the Chats icon
       if (pathname.startsWith("/app/meeting")) return -1;
+      if (pathname.startsWith("/app/tools")) return -1;
       if (pathname === "/app" || pathname.startsWith("/app/")) return 0;
       return null;
     };
@@ -260,6 +261,42 @@ const SideBar = () => {
               <Tooltip title="Meeting" placement="right">
                 <IconButton onClick={() => navigate("/app/meeting")} sx={idleBtnSx}>
                   <PiVideoConferenceFill size={22} />
+                </IconButton>
+              </Tooltip>
+            )}
+            {/* Tools hub — 20 utility tools, brand-blue accent */}
+            {location.pathname.startsWith("/app/tools") ? (
+              <Box
+                sx={{
+                  ...activePillSx,
+                  background: "linear-gradient(135deg, rgba(32,101,209,0.22), rgba(32,101,209,0.10))",
+                  border: "1px solid rgba(32,101,209,0.55)",
+                  boxShadow: "0 6px 18px rgba(32,101,209,0.30), inset 0 1px 0 rgba(255,255,255,0.08)",
+                }}
+              >
+                <IconButton
+                  onClick={() => navigate("/app/tools")}
+                  sx={{ ...activeIconSx, color: "#7eb5ff !important" }}
+                  aria-label="Tools"
+                >
+                  <PiToolboxDuotone size={22} />
+                </IconButton>
+              </Box>
+            ) : (
+              <Tooltip title="Tools" placement="right">
+                <IconButton
+                  onClick={() => navigate("/app/tools")}
+                  sx={{
+                    ...idleBtnSx,
+                    "&:hover": {
+                      color: "#7eb5ff",
+                      background: "rgba(32,101,209,0.10)",
+                      transform: "translateY(-1px)",
+                    },
+                  }}
+                  aria-label="Tools"
+                >
+                  <PiToolboxDuotone size={22} />
                 </IconButton>
               </Tooltip>
             )}

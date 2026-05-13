@@ -10,6 +10,8 @@ import authStore from "../utils/auth";
 const GeneralApp = lazy(() => import("../pages/dashboard/GeneralApp.jsx"));
 const Settings = lazy(() => import("../pages/dashboard/Settings.jsx"));
 const MeetingPage = lazy(() => import("../pages/dashboard/MeetingPage.jsx"));
+const ToolsHub = lazy(() => import("../pages/dashboard/tools/index.jsx"));
+const ToolPage = lazy(() => import("../pages/dashboard/tools/ToolPage.jsx"));
 const GuestMeetingPage = lazy(() => import("../pages/guest/GuestMeetingPage.jsx"));
 const BillingThankYou = lazy(() => import("../pages/dashboard/BillingThankYou.jsx"));
 const LoginPage = lazy(() => import("../pages/auth/Login.jsx"));
@@ -89,6 +91,8 @@ export default function Router() {
           { path: "billing/thank-you", element: <BillingThankYou /> },
           { path: "settings", element: <Settings /> },
           { path: "meeting", element: <MeetingPage /> },
+          { path: "tools", element: <ToolsHub /> },
+          { path: "tools/:slug", element: <ToolPage /> },
           { path: "*", element: <Page404 /> },
         ],
       },

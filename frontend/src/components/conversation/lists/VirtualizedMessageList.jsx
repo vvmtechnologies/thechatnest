@@ -879,7 +879,7 @@ const VirtualizedMessageList = ({
 
   return (
     <Box sx={{ position: "relative", height: "100%" }}>
-      <Collapse in={showSearchBar} timeout={220} appear>
+      <Collapse in={showSearchBar} timeout={220} appear unmountOnExit mountOnEnter>
         <Stack
           spacing={1}
           sx={{

@@ -432,10 +432,44 @@ const MeetingPage = () => {
 
                   {tab === 1 && (
                     <Stack direction="row" spacing={2}>
-                      <TextField fullWidth type="date" label="Date" InputLabelProps={{ shrink: true }}
-                        value={scheduledDate} onChange={(e) => setScheduledDate(e.target.value)} />
-                      <TextField fullWidth type="time" label="Time" InputLabelProps={{ shrink: true }}
-                        value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+                      <TextField
+                        fullWidth
+                        type="date"
+                        label="Date"
+                        InputLabelProps={{ shrink: true }}
+                        value={scheduledDate}
+                        onChange={(e) => setScheduledDate(e.target.value)}
+                        sx={(t) => ({
+                          "& input[type='date']::-webkit-calendar-picker-indicator": {
+                            filter: t.palette.mode === "light" ? "invert(0.45)" : "invert(0.85)",
+                            cursor: "pointer",
+                            opacity: 1,
+                          },
+                          "& input[type='date']": { color: t.palette.text.primary },
+                          "& input[type='date']::-webkit-datetime-edit-fields-wrapper": {
+                            color: t.palette.text.primary,
+                          },
+                        })}
+                      />
+                      <TextField
+                        fullWidth
+                        type="time"
+                        label="Time"
+                        InputLabelProps={{ shrink: true }}
+                        value={scheduledTime}
+                        onChange={(e) => setScheduledTime(e.target.value)}
+                        sx={(t) => ({
+                          "& input[type='time']::-webkit-calendar-picker-indicator": {
+                            filter: t.palette.mode === "light" ? "invert(0.45)" : "invert(0.85)",
+                            cursor: "pointer",
+                            opacity: 1,
+                          },
+                          "& input[type='time']": { color: t.palette.text.primary },
+                          "& input[type='time']::-webkit-datetime-edit-fields-wrapper": {
+                            color: t.palette.text.primary,
+                          },
+                        })}
+                      />
                     </Stack>
                   )}
 

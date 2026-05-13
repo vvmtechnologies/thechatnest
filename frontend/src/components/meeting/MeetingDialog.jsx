@@ -355,6 +355,16 @@ const MeetingDialog = ({ open, onClose, members = [], organizationId, onMeetingC
                     value={scheduledDate}
                     onChange={(e) => setScheduledDate(e.target.value)}
                     InputLabelProps={{ shrink: true }}
+                    sx={(theme) => ({
+                      "& input[type='date']::-webkit-calendar-picker-indicator": {
+                        filter: theme.palette.mode === "light" ? "invert(0.45)" : "invert(0.85)",
+                        cursor: "pointer",
+                        opacity: 1,
+                      },
+                      "& input[type='date']::-webkit-datetime-edit-fields-wrapper": {
+                        color: theme.palette.text.primary,
+                      },
+                    })}
                   />
                   <TextField
                     fullWidth
@@ -363,6 +373,16 @@ const MeetingDialog = ({ open, onClose, members = [], organizationId, onMeetingC
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
                     InputLabelProps={{ shrink: true }}
+                    sx={(theme) => ({
+                      "& input[type='time']::-webkit-calendar-picker-indicator": {
+                        filter: theme.palette.mode === "light" ? "invert(0.45)" : "invert(0.85)",
+                        cursor: "pointer",
+                        opacity: 1,
+                      },
+                      "& input[type='time']::-webkit-datetime-edit-fields-wrapper": {
+                        color: theme.palette.text.primary,
+                      },
+                    })}
                   />
                 </Stack>
                 <TextField

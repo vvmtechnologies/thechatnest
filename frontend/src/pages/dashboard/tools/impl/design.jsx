@@ -196,3 +196,135 @@ export function RegexTester() {
   );
 }
 const escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// ── CSS Gradient Generator ────────────────────────────────────────────
+export function CssGradient() {
+  const [type, setType] = useState("linear");
+  const [angle, setAngle] = useState(135);
+  const [c1, setC1] = useState("#2065D1");
+  const [c2, setC2] = useState("#ffd54a");
+  const css = useMemo(() => {
+    if (type === "linear") return `linear-gradient(${angle}deg, ${c1} 0%, ${c2} 100%)`;
+    return `radial-gradient(circle at center, ${c1} 0%, ${c2} 100%)`;
+  }, [type, angle, c1, c2]);
+  const full = `background: ${css};`;
+  return (
+    <>
+      <ToolSection title="Options">
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" alignItems="center" useFlexGap>
+          <TextField select label="Type" value={type} onChange={(e) => setType(e.target.value)} size="small" SelectProps={{ native: true }} sx={{ minWidth: 130 }}>
+            <option value="linear">linear</option>
+            <option value="radial">radial</option>
+          </TextField>
+          {type === "linear" && (
+            <TextField type="number" label="Angle (°)" value={angle} onChange={(e) => setAngle(Math.max(0, Math.min(360, Number(e.target.value) || 0)))} size="small" sx={{ width: 120 }} />
+          )}
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="caption">Color 1</Typography>
+            <input type="color" value={c1} onChange={(e) => setC1(e.target.value)} style={{ width: 44, height: 36, border: 0, cursor: "pointer", borderRadius: 4 }} />
+            <TextField value={c1} onChange={(e) => setC1(e.target.value)} size="small" sx={{ width: 110, "& input": { fontFamily: monoFont } }} />
+          </Stack>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="caption">Color 2</Typography>
+            <input type="color" value={c2} onChange={(e) => setC2(e.target.value)} style={{ width: 44, height: 36, border: 0, cursor: "pointer", borderRadius: 4 }} />
+            <TextField value={c2} onChange={(e) => setC2(e.target.value)} size="small" sx={{ width: 110, "& input": { fontFamily: monoFont } }} />
+          </Stack>
+        </Stack>
+      </ToolSection>
+      <ToolSection title="Preview">
+        <Box sx={{ height: 220, borderRadius: 2, background: css, border: (t) => `1px solid ${t.palette.divider}` }} />
+      </ToolSection>
+      <CopyRow label="CSS" value={full} />
+    </>
+  );
+}
+
+// ── Box Shadow Generator ──────────────────────────────────────────────
+export function BoxShadow() {
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(10);
+  const [blur, setBlur] = useState(24);
+  const [spread, setSpread] = useState(-4);
+  const [color, setColor] = useState("#0f172a");
+  const [opacity, setOpacity] = useState(0.18);
+  const rgba = useMemo(() => {
+    const m = color.replace("#", "");
+    const r = parseInt(m.slice(0, 2), 16);
+    const g = parseInt(m.slice(2, 4), 16);
+    const b = parseInt(m.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }, [color, opacity]);
+  const shadow = `${x}px ${y}px ${blur}px ${spread}px ${rgba}`;
+  return (
+    <>
+      <ToolSection title="Options">
+        <Stack spacing={1.5}>
+          <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+            <TextField type="number" label="X offset" value={x} onChange={(e) => setX(Number(e.target.value) || 0)} size="small" sx={{ width: 110 }} />
+            <TextField type="number" label="Y offset" value={y} onChange={(e) => setY(Number(e.target.value) || 0)} size="small" sx={{ width: 110 }} />
+            <TextField type="number" label="Blur" value={blur} onChange={(e) => setBlur(Math.max(0, Number(e.target.value) || 0))} size="small" sx={{ width: 110 }} />
+            <TextField type="number" label="Spread" value={spread} onChange={(e) => setSpread(Number(e.target.value) || 0)} size="small" sx={{ width: 110 }} />
+          </Stack>
+          <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="caption">Color</Typography>
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ width: 44, height: 36, border: 0, cursor: "pointer", borderRadius: 4 }} />
+            </Stack>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 220 }}>
+              <Typography variant="caption">Opacity</Typography>
+              <input type="range" min="0" max="1" step="0.01" value={opacity} onChange={(e) => setOpacity(Number(e.target.value))} style={{ flex: 1 }} />
+              <Typography variant="caption" sx={{ fontFamily: monoFont, minWidth: 36 }}>{opacity.toFixed(2)}</Typography>
+            </Stack>
+          </Stack>
+        </Stack>
+      </ToolSection>
+      <ToolSection title="Preview">
+        <Box sx={{ p: 5, display: "flex", justifyContent: "center", borderRadius: 2, bgcolor: "background.paper", border: (t) => `1px solid ${t.palette.divider}` }}>
+          <Box sx={{ width: 180, height: 120, borderRadius: 2, bgcolor: "background.paper", border: (t) => `1px solid ${t.palette.divider}`, boxShadow: shadow }} />
+        </Box>
+      </ToolSection>
+      <CopyRow label="CSS" value={`box-shadow: ${shadow};`} />
+    </>
+  );
+}
+
+// ── Favicon Preview ───────────────────────────────────────────────────
+export function FaviconPreview() {
+  const [url, setUrl] = useState("");
+  const onFile = (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setUrl(reader.result);
+    reader.readAsDataURL(f);
+  };
+  return (
+    <>
+      <ToolSection title="Upload an image">
+        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Button variant="outlined" component="label" size="small">
+            Choose image
+            <input hidden type="file" accept="image/*" onChange={onFile} />
+          </Button>
+          <TextField placeholder="or paste image URL" value={typeof url === "string" && url.startsWith("data:") ? "" : url} onChange={(e) => setUrl(e.target.value)} size="small" sx={{ flex: 1, minWidth: 220 }} />
+        </Stack>
+      </ToolSection>
+      {url ? (
+        <ToolSection title="Preview at common sizes">
+          <Stack direction="row" spacing={3} flexWrap="wrap" useFlexGap>
+            {[16, 32, 48, 64, 96, 128, 180].map((s) => (
+              <Stack key={s} alignItems="center" spacing={0.5}>
+                <Box sx={(t) => ({ p: 1, borderRadius: 1.25, bgcolor: t.palette.mode === "light" ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: `1px dashed ${t.palette.divider}` })}>
+                  <img src={url} alt="" width={s} height={s} style={{ display: "block", objectFit: "contain" }} />
+                </Box>
+                <Typography variant="caption" sx={{ fontFamily: monoFont, fontSize: 11 }}>{s}×{s}</Typography>
+              </Stack>
+            ))}
+          </Stack>
+        </ToolSection>
+      ) : (
+        <Alert severity="info">Upload an image or paste a URL above.</Alert>
+      )}
+    </>
+  );
+}

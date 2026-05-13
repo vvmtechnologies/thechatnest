@@ -34,6 +34,16 @@ import {
   PiGlobeDuotone,
   PiTextAlignLeftDuotone,
   PiClockClockwiseDuotone,
+  PiCodeDuotone,
+  PiTextAaBold,
+  PiPaletteDuotone,
+  PiSquareDuotone,
+  PiAppWindowDuotone,
+  PiTimerDuotone,
+  PiClockCountdownDuotone,
+  PiBabyDuotone,
+  PiPercentDuotone,
+  PiHashDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -56,6 +66,16 @@ const ICON_MAP = {
   PiGlobeDuotone,
   PiTextAlignLeftDuotone,
   PiClockClockwiseDuotone,
+  PiCodeDuotone,
+  PiTextAaBold,
+  PiPaletteDuotone,
+  PiSquareDuotone,
+  PiAppWindowDuotone,
+  PiTimerDuotone,
+  PiClockCountdownDuotone,
+  PiBabyDuotone,
+  PiPercentDuotone,
+  PiHashDuotone,
 };
 
 const ToolsHub = () => {

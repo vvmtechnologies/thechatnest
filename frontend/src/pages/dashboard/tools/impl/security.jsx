@@ -290,3 +290,50 @@ const HashRow = ({ label, value }) => {
     </Stack>
   );
 };
+
+// ── UUID Generator ────────────────────────────────────────────────────
+const uuidV4 = () => {
+  if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+  const buf = new Uint8Array(16);
+  window.crypto.getRandomValues(buf);
+  buf[6] = (buf[6] & 0x0f) | 0x40;
+  buf[8] = (buf[8] & 0x3f) | 0x80;
+  const hex = Array.from(buf).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+};
+
+export function UuidGenerator() {
+  const [count, setCount] = useState(5);
+  const [uppercase, setUppercase] = useState(false);
+  const [list, setList] = useState(() => Array.from({ length: 5 }, () => uuidV4()));
+  const [copied, setCopied] = useState(false);
+  const regenerate = () => setList(Array.from({ length: Math.max(1, Math.min(100, Number(count) || 1)) }, () => uuidV4()));
+  useEffect(() => { regenerate(); /* eslint-disable-next-line */ }, [count]);
+  const display = uppercase ? list.map((u) => u.toUpperCase()) : list;
+  const blob = display.join("\n");
+  const handleCopy = async () => {
+    try { await navigator.clipboard.writeText(blob); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {}
+  };
+  return (
+    <>
+      <ToolSection title="Options">
+        <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
+          <TextField type="number" label="Count" value={count} onChange={(e) => setCount(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} size="small" sx={{ width: 120 }} />
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Switch checked={uppercase} onChange={(e) => setUppercase(e.target.checked)} size="small" />
+            <Typography variant="caption">Uppercase</Typography>
+          </Stack>
+          <Button size="small" startIcon={<PiArrowsClockwiseDuotone size={14} />} onClick={regenerate}>Regenerate</Button>
+        </Stack>
+      </ToolSection>
+      <ToolSection
+        title="UUIDs"
+        action={<Tooltip title={copied ? "Copied!" : "Copy all"}><IconButton size="small" onClick={handleCopy}>{copied ? <PiCheckBold size={16} color="#22c55e" /> : <PiCopyDuotone size={16} />}</IconButton></Tooltip>}
+      >
+        <Box component="pre" sx={(t) => ({ m: 0, p: 2, fontFamily: monoFont, fontSize: 13, lineHeight: 1.7, borderRadius: 1.5, border: `1px solid ${t.palette.divider}`, bgcolor: t.palette.mode === "light" ? "#0f172a" : "rgba(0,0,0,0.4)", color: "#e2e8f0", maxHeight: 360, overflow: "auto" })}>
+          {display.join("\n")}
+        </Box>
+      </ToolSection>
+    </>
+  );
+}

@@ -579,3 +579,137 @@ export function LoremIpsum() {
     </>
   );
 }
+
+// ── XML ↔ JSON ────────────────────────────────────────────────────────
+const xmlToObj = (xmlString) => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlString, "text/xml");
+  if (doc.getElementsByTagName("parsererror").length) {
+    throw new Error("Invalid XML");
+  }
+  const walk = (node) => {
+    if (!node) return null;
+    const obj = {};
+    // attributes
+    if (node.attributes && node.attributes.length) {
+      for (const a of node.attributes) obj[`@${a.name}`] = a.value;
+    }
+    // children
+    const children = Array.from(node.childNodes).filter(
+      (n) => n.nodeType === 1 || (n.nodeType === 3 && n.nodeValue.trim())
+    );
+    if (children.every((c) => c.nodeType === 3)) {
+      return children.map((c) => c.nodeValue.trim()).join("") || null;
+    }
+    children.forEach((c) => {
+      if (c.nodeType === 3) return;
+      const v = walk(c);
+      if (obj[c.nodeName] === undefined) obj[c.nodeName] = v;
+      else if (Array.isArray(obj[c.nodeName])) obj[c.nodeName].push(v);
+      else obj[c.nodeName] = [obj[c.nodeName], v];
+    });
+    return Object.keys(obj).length ? obj : null;
+  };
+  return { [doc.documentElement.nodeName]: walk(doc.documentElement) };
+};
+
+const objToXml = (obj, indent = 0) => {
+  const pad = "  ".repeat(indent);
+  const out = [];
+  Object.entries(obj || {}).forEach(([key, val]) => {
+    if (key.startsWith("@")) return;
+    if (Array.isArray(val)) {
+      val.forEach((v) => out.push(serializeNode(key, v, indent)));
+    } else {
+      out.push(serializeNode(key, val, indent));
+    }
+  });
+  return out.join("\n");
+};
+const serializeNode = (key, val, indent) => {
+  const pad = "  ".repeat(indent);
+  if (val === null || val === undefined) return `${pad}<${key}/>`;
+  if (typeof val !== "object") {
+    return `${pad}<${key}>${String(val).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</${key}>`;
+  }
+  const attrs = Object.entries(val).filter(([k]) => k.startsWith("@")).map(([k, v]) => ` ${k.slice(1)}="${String(v).replace(/"/g, "&quot;")}"`).join("");
+  const inner = objToXml(val, indent + 1);
+  if (!inner) return `${pad}<${key}${attrs}/>`;
+  return `${pad}<${key}${attrs}>\n${inner}\n${pad}</${key}>`;
+};
+
+export function XmlJson() {
+  const [direction, setDirection] = useState("xml-to-json");
+  const [input, setInput] = useState("");
+  const out = useMemo(() => {
+    if (!input.trim()) return { value: "", error: "" };
+    try {
+      if (direction === "xml-to-json") {
+        return { value: JSON.stringify(xmlToObj(input), null, 2), error: "" };
+      }
+      const obj = JSON.parse(input);
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n${objToXml(obj, 0)}`;
+      return { value: xml, error: "" };
+    } catch (e) {
+      return { value: "", error: e.message };
+    }
+  }, [direction, input]);
+  return (
+    <>
+      <ToggleButtonGroup exclusive size="small" value={direction} onChange={(_, v) => v && setDirection(v)} sx={{ mb: 2 }}>
+        <ToggleButton value="xml-to-json">XML → JSON</ToggleButton>
+        <ToggleButton value="json-to-xml">JSON → XML</ToggleButton>
+      </ToggleButtonGroup>
+      <ToolSection title="Input">
+        <TextField value={input} onChange={(e) => setInput(e.target.value)} fullWidth multiline minRows={5} maxRows={14} InputProps={{ sx: { fontFamily: monoFont, fontSize: 13 } }} />
+      </ToolSection>
+      <ResultPane label="Output" value={out.value} error={out.error} />
+    </>
+  );
+}
+
+// ── Case converter ────────────────────────────────────────────────────
+const toCamel = (s) => s.replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : "")).replace(/^[A-Z]/, (m) => m.toLowerCase());
+const toPascal = (s) => { const c = toCamel(s); return c.charAt(0).toUpperCase() + c.slice(1); };
+const toSnake = (s) => s.replace(/([a-z])([A-Z])/g, "$1_$2").replace(/[-\s]+/g, "_").toLowerCase();
+const toKebab = (s) => s.replace(/([a-z])([A-Z])/g, "$1-$2").replace(/[_\s]+/g, "-").toLowerCase();
+const toTitle = (s) => s.replace(/[-_\s]+/g, " ").replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+const toSentence = (s) => { const x = s.replace(/[-_]+/g, " ").toLowerCase(); return x.charAt(0).toUpperCase() + x.slice(1); };
+
+export function CaseConverter() {
+  const [input, setInput] = useState("Hello World — the quick brown fox.");
+  const cases = useMemo(() => [
+    { label: "UPPERCASE", value: input.toUpperCase() },
+    { label: "lowercase", value: input.toLowerCase() },
+    { label: "Title Case", value: toTitle(input) },
+    { label: "Sentence case", value: toSentence(input) },
+    { label: "camelCase", value: toCamel(input) },
+    { label: "PascalCase", value: toPascal(input) },
+    { label: "snake_case", value: toSnake(input) },
+    { label: "kebab-case", value: toKebab(input) },
+    { label: "CONSTANT_CASE", value: toSnake(input).toUpperCase() },
+  ], [input]);
+  return (
+    <>
+      <ToolSection title="Input">
+        <TextField value={input} onChange={(e) => setInput(e.target.value)} fullWidth multiline minRows={3} maxRows={8} InputProps={{ sx: { fontSize: 14 } }} />
+      </ToolSection>
+      <Stack spacing={1.25}>
+        {cases.map((c) => (
+          <CaseRow key={c.label} label={c.label} value={c.value} />
+        ))}
+      </Stack>
+    </>
+  );
+}
+const CaseRow = ({ label, value }) => {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => { try { await navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch {} };
+  return (
+    <Stack direction="row" spacing={1} alignItems="center">
+      <Box sx={{ minWidth: 140, fontFamily: monoFont, fontSize: 11, fontWeight: 700, color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</Box>
+      <TextField value={value} size="small" fullWidth InputProps={{ readOnly: true, sx: { fontFamily: monoFont, fontSize: 13 } }} />
+      <IconButton size="small" onClick={copy}>{copied ? <PiCheckBold size={14} color="#22c55e" /> : <PiCopyDuotone size={14} />}</IconButton>
+    </Stack>
+  );
+};

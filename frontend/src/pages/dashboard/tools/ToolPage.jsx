@@ -35,6 +35,18 @@ const REGISTRY = {
   "timezone-converter":  lazyNamed(() => import("./impl/productivity.jsx"), "TimezoneConverter"),
   "word-counter":        lazyNamed(() => import("./impl/productivity.jsx"), "WordCounter"),
   "timestamp-converter": lazyNamed(() => import("./impl/productivity.jsx"), "TimestampConverter"),
+
+  // ── batch 2 ─────────────────────────────────────────────────────────
+  "xml-json":            lazyNamed(() => import("./impl/converters.jsx"), "XmlJson"),
+  "case-converter":      lazyNamed(() => import("./impl/converters.jsx"), "CaseConverter"),
+  "css-gradient":        lazyNamed(() => import("./impl/design.jsx"), "CssGradient"),
+  "box-shadow":          lazyNamed(() => import("./impl/design.jsx"), "BoxShadow"),
+  "favicon-preview":     lazyNamed(() => import("./impl/design.jsx"), "FaviconPreview"),
+  "stopwatch":           lazyNamed(() => import("./impl/productivity.jsx"), "Stopwatch"),
+  "pomodoro":            lazyNamed(() => import("./impl/productivity.jsx"), "Pomodoro"),
+  "age-calculator":      lazyNamed(() => import("./impl/productivity.jsx"), "AgeCalculator"),
+  "percentage-calc":     lazyNamed(() => import("./impl/productivity.jsx"), "PercentageCalc"),
+  "uuid-generator":      lazyNamed(() => import("./impl/security.jsx"), "UuidGenerator"),
 };
 
 const ToolPage = () => {

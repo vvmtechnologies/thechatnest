@@ -264,42 +264,63 @@ const SideBar = () => {
                 </IconButton>
               </Tooltip>
             )}
-            {/* Tools hub — 20 utility tools, brand-blue accent */}
-            {location.pathname.startsWith("/app/tools") ? (
-              <Box
-                sx={{
-                  ...activePillSx,
-                  background: "linear-gradient(135deg, rgba(32,101,209,0.22), rgba(32,101,209,0.10))",
-                  border: "1px solid rgba(32,101,209,0.55)",
-                  boxShadow: "0 6px 18px rgba(32,101,209,0.30), inset 0 1px 0 rgba(255,255,255,0.08)",
-                }}
-              >
-                <IconButton
-                  onClick={() => navigate("/app/tools")}
-                  sx={{ ...activeIconSx, color: "#7eb5ff !important" }}
-                  aria-label="Tools"
-                >
-                  <PiToolboxDuotone size={22} />
-                </IconButton>
-              </Box>
-            ) : (
-              <Tooltip title="Tools" placement="right">
-                <IconButton
+            {/* Tools hub — polished brand-blue gradient tile (always vibrant) */}
+            {(() => {
+              const isActive = location.pathname.startsWith("/app/tools");
+              const tile = (
+                <Box
                   onClick={() => navigate("/app/tools")}
                   sx={{
-                    ...idleBtnSx,
+                    width: 44,
+                    height: 44,
+                    borderRadius: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    position: "relative",
+                    background: isActive
+                      ? "linear-gradient(135deg, #2065D1 0%, #1242a3 100%)"
+                      : "linear-gradient(135deg, rgba(32,101,209,0.18) 0%, rgba(32,101,209,0.08) 100%)",
+                    border: isActive
+                      ? "1px solid rgba(126,181,255,0.6)"
+                      : "1px solid rgba(126,181,255,0.20)",
+                    color: isActive ? "#ffffff" : "#7eb5ff",
+                    boxShadow: isActive
+                      ? "0 8px 22px rgba(32,101,209,0.50), inset 0 1px 0 rgba(255,255,255,0.18)"
+                      : "0 4px 12px rgba(32,101,209,0.18), inset 0 1px 0 rgba(255,255,255,0.06)",
+                    transition: "all 0.2s ease",
                     "&:hover": {
-                      color: "#7eb5ff",
-                      background: "rgba(32,101,209,0.10)",
-                      transform: "translateY(-1px)",
+                      transform: "translateY(-2px) scale(1.04)",
+                      boxShadow: "0 10px 26px rgba(32,101,209,0.55), inset 0 1px 0 rgba(255,255,255,0.18)",
+                      background: "linear-gradient(135deg, #2070e0 0%, #1242a3 100%)",
+                      color: "#ffffff",
                     },
                   }}
                   aria-label="Tools"
                 >
-                  <PiToolboxDuotone size={22} />
-                </IconButton>
-              </Tooltip>
-            )}
+                  <PiToolboxDuotone size={22} weight="duotone" />
+                  {/* tiny "new" dot to draw the eye, fades when active */}
+                  {!isActive && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 6,
+                        right: 6,
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
+                        boxShadow: "0 0 0 2px #0b0f1e",
+                      }}
+                    />
+                  )}
+                </Box>
+              );
+              return isActive ? tile : (
+                <Tooltip title="Tools" placement="right">{tile}</Tooltip>
+              );
+            })()}
             <Divider sx={{ width: "32px", borderColor: "rgba(255,255,255,0.08)" }} />
             {role !== 4 &&
               (selected === 4 ? (

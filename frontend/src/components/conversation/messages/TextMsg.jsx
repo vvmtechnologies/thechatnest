@@ -150,13 +150,20 @@ const MeetingInviteCard = ({ metadata }) => {
 
   return (
     <Box
-      sx={{
-        borderRadius: 2,
-        overflow: "hidden",
-        maxWidth: 320,
-        border: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
+      data-meeting-invite-card
+      sx={(theme) => {
+        const isLight = theme.palette.mode === "light";
+        return {
+          borderRadius: 2,
+          overflow: "hidden",
+          maxWidth: 320,
+          border: `1px solid ${isLight ? "rgba(15,23,42,0.12)" : "rgba(255,255,255,0.14)"}`,
+          bgcolor: isLight ? "#ffffff" : theme.palette.background.paper,
+          color: theme.palette.text.primary,
+          boxShadow: isLight
+            ? "0 6px 18px rgba(15,23,42,0.10)"
+            : "0 6px 18px rgba(0,0,0,0.45)",
+        };
       }}
     >
       {/* Header */}
@@ -171,29 +178,44 @@ const MeetingInviteCard = ({ metadata }) => {
         }}
       >
         <PiVideoCameraBold size={18} color="#fff" />
-        <Typography variant="subtitle2" sx={{ color: "#fff", fontWeight: 600 }}>
+        <Typography variant="subtitle2" sx={{ color: "#fff !important", fontWeight: 600 }}>
           Meeting Invite
         </Typography>
       </Box>
 
       {/* Body */}
-      <Stack sx={{ px: 2, py: 1.5 }} spacing={1}>
-        <Typography variant="subtitle2" fontWeight={700} noWrap>
+      <Stack
+        sx={(theme) => ({
+          px: 2,
+          py: 1.5,
+          color: theme.palette.text.primary,
+        })}
+        spacing={1}
+      >
+        <Typography
+          variant="subtitle2"
+          fontWeight={700}
+          noWrap
+          sx={(theme) => ({ color: `${theme.palette.text.primary} !important` })}
+        >
           {meetingTitle || "Meeting"}
         </Typography>
 
         <Stack direction="row" alignItems="center" spacing={0.5}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={(theme) => ({ color: `${theme.palette.text.secondary} !important` })}
+          >
             ID:
           </Typography>
           <Typography
             variant="body2"
-            sx={{
+            sx={(theme) => ({
               fontFamily: "monospace",
               fontWeight: 700,
-              color: "primary.main",
+              color: `${theme.palette.primary.main} !important`,
               letterSpacing: 1,
-            }}
+            })}
           >
             {meetingId}
           </Typography>
@@ -201,13 +223,20 @@ const MeetingInviteCard = ({ metadata }) => {
             component="span"
             onClick={handleCopy}
             sx={{ cursor: "pointer", display: "inline-flex", ml: 0.5 }}
+            aria-label={copied ? "Copied" : "Copy meeting ID"}
           >
-            <PiCopyBold size={13} color={copied ? "#4caf50" : "#999"} />
+            <PiCopyBold
+              size={13}
+              color={copied ? "#22c55e" : "#9ca3af"}
+            />
           </Box>
         </Stack>
 
         {scheduledAt && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={(theme) => ({ color: `${theme.palette.text.secondary} !important` })}
+          >
             {new Date(scheduledAt).toLocaleString([], {
               dateStyle: "medium",
               timeStyle: "short",
@@ -226,6 +255,9 @@ const MeetingInviteCard = ({ metadata }) => {
             fontWeight: 600,
             borderRadius: 1.5,
             py: 0.75,
+            color: "#fff !important",
+            bgcolor: "primary.main",
+            "&:hover": { bgcolor: "primary.dark" },
           }}
         >
           Join Meeting

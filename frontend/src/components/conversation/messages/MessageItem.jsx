@@ -118,9 +118,12 @@ const bubbleStyles = (theme, own, { isEmojiOnly = false } = {}) => {
         "0 8px 22px rgba(109, 93, 252, 0.28), inset 0 1px 0 rgba(255,255,255,0.14)",
       minWidth: 110,
       maxWidth: "min(45vw, 75vw)",
-      // Children text/links should also adopt white
+      // Children text/links should also adopt white — except meeting invite
+      // card which has its own light/dark surface inside the bubble.
       "& a": { color: "#ffd54a", textDecoration: "underline" },
       "& .MuiTypography-root": { color: "inherit" },
+      "& [data-meeting-invite-card]": { color: "initial" },
+      "& [data-meeting-invite-card] .MuiTypography-root": { color: "unset" },
     };
   }
 

@@ -26,8 +26,10 @@ import {
   PiArrowClockwiseBold,
   PiLinkBold,
   PiUsersThreeBold,
+  PiQrCodeDuotone,
 } from "react-icons/pi";
 import { getUpcomingMeetings, getPastMeetings, rsvpMeeting, deleteMeeting, getMeetingAttendance } from "../../services/meetingApi.js";
+import ShareViaQRDialog from "../common/ShareViaQRDialog.jsx";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Snackbar } from "@mui/material";
 import useCurrentUser from "../../hooks/useCurrentUser.js";
 import MeetingDetailsDialog from "./MeetingDetailsDialog.jsx";
@@ -70,6 +72,20 @@ const MeetingsList = ({ onJoinMeeting, onClose }) => {
   // Full-info "click on a card" details dialog
   const [detailsOpenId, setDetailsOpenId] = useState(null);
   const [detailsToast, setDetailsToast] = useState("");
+  // Share via QR dialog
+  const [qrShare, setQrShare] = useState({ open: false, url: "", title: "", meetingId: "" });
+
+  const buildInviteUrl = (meetingCode) =>
+    `${window.location.origin}/app/meeting?join=${encodeURIComponent(meetingCode)}`;
+
+  const openQrShare = (meeting) => {
+    setQrShare({
+      open: true,
+      url: buildInviteUrl(meeting.meeting_id),
+      title: meeting.title || "Meeting Invite",
+      meetingId: meeting.meeting_id,
+    });
+  };
 
   const openAttendance = async (meeting) => {
     setAttendanceOpen(true);
@@ -263,11 +279,23 @@ const MeetingsList = ({ onJoinMeeting, onClose }) => {
                         />
                       </Tooltip>
                       {tab !== "past" && (
-                        <Tooltip title="Copy invite link">
-                          <IconButton size="small" onClick={(e) => { e.stopPropagation(); copyInviteLink(m.meeting_id); }} sx={{ p: 0.5 }}>
-                            <PiLinkBold size={12} />
-                          </IconButton>
-                        </Tooltip>
+                        <>
+                          <Tooltip title="Copy invite link">
+                            <IconButton size="small" onClick={(e) => { e.stopPropagation(); copyInviteLink(m.meeting_id); }} sx={{ p: 0.5 }}>
+                              <PiLinkBold size={12} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Share via QR">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => { e.stopPropagation(); openQrShare(m); }}
+                              sx={{ p: 0.5 }}
+                              aria-label="Share via QR"
+                            >
+                              <PiQrCodeDuotone size={13} />
+                            </IconButton>
+                          </Tooltip>
+                        </>
                       )}
                       {tab === "past" && Array.isArray(m.participant_count) ? null : tab === "past" && typeof m.attendee_count === "number" ? (
                         <Typography variant="caption" color="text.secondary">
@@ -397,6 +425,15 @@ const MeetingsList = ({ onJoinMeeting, onClose }) => {
         onClose={() => setDetailsToast("")}
         message={detailsToast}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      />
+
+      <ShareViaQRDialog
+        open={qrShare.open}
+        url={qrShare.url}
+        title={qrShare.title}
+        subtitle={qrShare.meetingId ? `Meeting ID: ${qrShare.meetingId}` : ""}
+        filename={qrShare.meetingId ? `meeting-${qrShare.meetingId}` : "meeting-qr"}
+        onClose={() => setQrShare({ open: false, url: "", title: "", meetingId: "" })}
       />
     </Box>
   );

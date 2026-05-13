@@ -40,7 +40,9 @@ import {
   PiGifBold,
   PiMicrophoneBold,
   PiClockBold,
+  PiEyeDuotone,
 } from "react-icons/pi";
+import MarkdownPreviewDialog from "./MarkdownPreviewDialog.jsx";
 import { TbDragDrop } from "react-icons/tb";
 import useComposerActions from "./useComposerActions.js";
 import useMediaRecorder from "./useMediaRecorder.js";
@@ -384,6 +386,9 @@ const ConversationFooter = ({
   ];
   const [isMessageEmpty, setIsMessageEmpty] = useState(true);
   const [isComposerDragActive, setIsComposerDragActive] = useState(false);
+  // Markdown preview dialog
+  const [mdPreviewOpen, setMdPreviewOpen] = useState(false);
+  const [mdPreviewSource, setMdPreviewSource] = useState("");
   // GIF picker
   const [isGifPickerOpen, setIsGifPickerOpen] = useState(false);
   const [gifAvailable, setGifAvailable] = useState(false);
@@ -2240,6 +2245,11 @@ const ConversationFooter = ({
           setIsGifPickerOpen(false);
         }}
       />
+      <MarkdownPreviewDialog
+        open={mdPreviewOpen}
+        source={mdPreviewSource}
+        onClose={() => setMdPreviewOpen(false)}
+      />
       <ScheduleMessagePicker
         anchorEl={scheduleAnchor}
         open={Boolean(scheduleAnchor)}
@@ -2909,6 +2919,24 @@ const ConversationFooter = ({
                 onClick={applyCodeBlock}
               >
                 <PiCode size={20} />
+              </IconButton>
+            </Tooltip>
+
+            <Tooltip title="Preview markdown">
+              <IconButton
+                disableRipple
+                sx={iconButtonStyles}
+                onClick={() => {
+                  const text =
+                    plainTextRef.current ||
+                    editorRef.current?.innerText ||
+                    "";
+                  setMdPreviewSource(text);
+                  setMdPreviewOpen(true);
+                }}
+                aria-label="Preview markdown"
+              >
+                <PiEyeDuotone size={20} />
               </IconButton>
             </Tooltip>
 

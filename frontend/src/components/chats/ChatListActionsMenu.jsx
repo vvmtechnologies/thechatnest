@@ -14,11 +14,13 @@ import {
   PiUsersThreeBold,
   PiXBold,
   PiVideoCameraBold,
+  PiQrCodeDuotone,
 } from "react-icons/pi";
 import GroupMembersDialog from "./GroupMembersDialog.jsx";
 import BroadcastDialog from "./BroadcastDialog.jsx";
 import MeetingDialog from "../meeting/MeetingDialog.jsx";
 import MeetingRoom from "../meeting/MeetingRoom.jsx";
+import ShareViaQRDialog from "../common/ShareViaQRDialog.jsx";
 import { useMeetingContext } from "../../contexts/MeetingContext.jsx";
 import useCurrentUser from "../../hooks/useCurrentUser.js";
 import { useSocket } from "../../contexts/SocketContext.jsx";
@@ -41,6 +43,7 @@ const ChatListActionsMenu = ({
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [meetingDialogOpen, setMeetingDialogOpen] = useState(false);
   const [meetingRoomOpen, setMeetingRoomOpen] = useState(false);
+  const [shareMeQrOpen, setShareMeQrOpen] = useState(false);
   const meeting = useMeetingContext();
   const [toast, setToast] = useState({
     open: false,
@@ -285,6 +288,13 @@ const ChatListActionsMenu = ({
           >
             Broadcast
           </Button>
+          <Button
+            onClick={() => { setShareMeQrOpen(true); handleCloseMenu(); }}
+            startIcon={<PiQrCodeDuotone size={16} />}
+            sx={{ justifyContent: "flex-start", color: "text.primary" }}
+          >
+            Share my QR
+          </Button>
         </Stack>
       </Popover>
 
@@ -341,6 +351,22 @@ const ChatListActionsMenu = ({
           {toast.message}
         </Alert>
       </Snackbar>
+
+      <ShareViaQRDialog
+        open={shareMeQrOpen}
+        url={(() => {
+          if (!currentUser?.email) return `${window.location.origin}/auth/register`;
+          return `${window.location.origin}/auth/register?invite=${encodeURIComponent(currentUser.email)}`;
+        })()}
+        title="Add me on TheChatNest"
+        subtitle={
+          currentUser?.name || currentUser?.label
+            ? `${currentUser.name || currentUser.label}${currentUser?.email ? ` · ${currentUser.email}` : ""}`
+            : "Scan to register and connect"
+        }
+        filename={`thechatnest-${(currentUser?.email || "invite").replace(/[^a-z0-9]/gi, "-").toLowerCase()}`}
+        onClose={() => setShareMeQrOpen(false)}
+      />
     </>
   );
 };

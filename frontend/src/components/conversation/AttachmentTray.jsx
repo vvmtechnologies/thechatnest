@@ -10,9 +10,10 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
-import { PiPlus, PiX, PiSparkle, PiArrowsLeftRight, PiCheck } from "react-icons/pi";
+import { PiPlus, PiX, PiSparkle, PiArrowsLeftRight, PiCheck, PiFileArrowDownDuotone } from "react-icons/pi";
 import FileAttachmentTile from "./files/FileAttachmentTile.jsx";
 import { removeImageBackground, convertImageFormat } from "../../utils/imageProcessor";
+import { convertFile, getTargetsFor, detectKind } from "../../utils/documentConverter";
 
 // Output formats offered in the per-image "Convert" menu. JPEG / WebP get
 // quality 0.85 (sweet spot of size vs visual fidelity). PNG stays lossless.
@@ -70,6 +71,25 @@ const AttachmentTray = ({
       if (out && out !== file) onReplaceFile?.(id, out);
       const ext = targetMime.split("/")[1].toUpperCase();
       showSnackbar?.(`Converted to ${ext}`, "success");
+    } catch (err) {
+      showSnackbar?.(err?.message || "Conversion failed", "error");
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
+  // Non-image document conversions (docx/xlsx/pdf/csv/text → other formats).
+  // Loaded lazily — libraries are CDN-fetched only when the user clicks.
+  const handleDocConvert = async (id, targetId, targetLabel) => {
+    setConvertMenu({ anchorEl: null, id: null });
+    if (!id || convertingId) return;
+    const file = getAttachmentFile?.(id);
+    if (!file) return;
+    setConvertingId(id);
+    try {
+      const out = await convertFile(file, targetId);
+      if (out && out !== file) onReplaceFile?.(id, out);
+      showSnackbar?.(`Converted to ${targetLabel}`, "success");
     } catch (err) {
       showSnackbar?.(err?.message || "Conversion failed", "error");
     } finally {
@@ -159,7 +179,13 @@ const AttachmentTray = ({
           // the gif on purpose.
           const isProcessable = isImage && item.mime !== "image/gif" && Boolean(onReplaceFile);
           const canRemoveBg = isProcessable;
-          const canConvert = isProcessable;
+          // Document targets (docx → pdf/md/text, xlsx → json/csv, etc.)
+          // available for non-image files when we have a real File handle.
+          const fileHandle = !isImage && onReplaceFile ? getAttachmentFile?.(item.id) : null;
+          const docTargets = fileHandle ? getTargetsFor(fileHandle) : [];
+          const canConvertImage = isProcessable;
+          const canConvertDoc = !isImage && docTargets.length > 0;
+          const canConvert = canConvertImage || canConvertDoc;
           const isRemovingBg = bgRemovingId === item.id;
           const isConverting = convertingId === item.id;
           const isBusy = isRemovingBg || isConverting;
@@ -178,7 +204,13 @@ const AttachmentTray = ({
                 overlayAction={
                   <Stack direction="row" spacing={0.5}>
                     {canConvert && (
-                      <Tooltip title="Convert format (PNG / JPG / WebP)">
+                      <Tooltip
+                        title={
+                          canConvertImage
+                            ? "Convert format (PNG / JPG / WebP)"
+                            : `Convert to ${docTargets.map((t) => t.label).join(" / ")}`
+                        }
+                      >
                         <span>
                           <IconButton
                             size="small"
@@ -192,7 +224,11 @@ const AttachmentTray = ({
                               boxShadow: theme.shadows[1],
                             }}
                           >
-                            <PiArrowsLeftRight size={10} />
+                            {canConvertImage ? (
+                              <PiArrowsLeftRight size={10} />
+                            ) : (
+                              <PiFileArrowDownDuotone size={11} />
+                            )}
                           </IconButton>
                         </span>
                       </Tooltip>
@@ -259,12 +295,13 @@ const AttachmentTray = ({
         })}
       </Stack>
 
-      {/* Per-image "Convert to ..." menu — anchored to the icon that opened it. */}
+      {/* "Convert to ..." menu — content switches between image format options
+          and document conversion targets based on the file kind. */}
       <Menu
         anchorEl={convertMenu.anchorEl}
         open={Boolean(convertMenu.anchorEl)}
         onClose={() => setConvertMenu({ anchorEl: null, id: null })}
-        slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 220 } } }}
+        slotProps={{ paper: { sx: { borderRadius: 2, minWidth: 240 } } }}
       >
         <Box sx={{ px: 2, pt: 1, pb: 0.5 }}>
           <Typography variant="caption" sx={{ fontWeight: 700, color: "text.secondary", textTransform: "uppercase", letterSpacing: 0.4 }}>
@@ -273,35 +310,70 @@ const AttachmentTray = ({
         </Box>
         {(() => {
           const targetItem = attachments.find((a) => a.id === convertMenu.id);
-          const currentMime = String(targetItem?.mime || "").toLowerCase();
-          return FORMAT_OPTIONS.map((opt) => {
-            const isCurrent = currentMime === opt.mime;
+          if (!targetItem) return null;
+          const isImageTarget = targetItem.mime?.startsWith?.("image/");
+
+          if (isImageTarget) {
+            const currentMime = String(targetItem.mime || "").toLowerCase();
+            return FORMAT_OPTIONS.map((opt) => {
+              const isCurrent = currentMime === opt.mime;
+              return (
+                <MenuItem
+                  key={opt.mime}
+                  onClick={() => handleConvert(convertMenu.id, opt.mime)}
+                  disabled={isCurrent}
+                  sx={{ alignItems: "flex-start", py: 1, gap: 1 }}
+                >
+                  <Box sx={{ width: 18, mt: 0.25 }}>
+                    {isCurrent ? <PiCheck size={14} color={theme.palette.primary.main} /> : null}
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                      {opt.label}
+                      {isCurrent && (
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1, fontWeight: 500 }}>
+                          (current)
+                        </Typography>
+                      )}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {opt.hint}
+                    </Typography>
+                  </Box>
+                </MenuItem>
+              );
+            });
+          }
+
+          // Document conversion targets
+          const handle = getAttachmentFile?.(targetItem.id);
+          const targets = handle ? getTargetsFor(handle) : [];
+          if (!targets.length) {
             return (
-              <MenuItem
-                key={opt.mime}
-                onClick={() => handleConvert(convertMenu.id, opt.mime)}
-                disabled={isCurrent}
-                sx={{ alignItems: "flex-start", py: 1, gap: 1 }}
-              >
-                <Box sx={{ width: 18, mt: 0.25 }}>
-                  {isCurrent ? <PiCheck size={14} color={theme.palette.primary.main} /> : null}
-                </Box>
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                    {opt.label}
-                    {isCurrent && (
-                      <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1, fontWeight: 500 }}>
-                        (current)
-                      </Typography>
-                    )}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {opt.hint}
-                  </Typography>
-                </Box>
+              <MenuItem disabled sx={{ py: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No conversions available for this file type
+                </Typography>
               </MenuItem>
             );
-          });
+          }
+          return targets.map((opt) => (
+            <MenuItem
+              key={opt.id}
+              onClick={() => handleDocConvert(convertMenu.id, opt.id, opt.label)}
+              sx={{ alignItems: "flex-start", py: 1, gap: 1 }}
+            >
+              <Box sx={{ width: 18, mt: 0.25 }} />
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                  {opt.label}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {opt.desc}
+                </Typography>
+              </Box>
+            </MenuItem>
+          ));
         })()}
       </Menu>
     </Box>

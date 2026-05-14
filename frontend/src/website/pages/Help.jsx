@@ -2,14 +2,12 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   PiHouseDuotone,
   PiQuestionDuotone,
-  PiPlayCircleDuotone,
   PiHeadsetDuotone,
   PiBookOpenDuotone,
   PiMagnifyingGlassDuotone,
   PiXBold,
   PiArrowRightBold,
   PiSparkleDuotone,
-  PiChatTeardropDotsDuotone,
   PiClockCountdownDuotone,
   PiUserCheckDuotone,
 } from "react-icons/pi";
@@ -17,7 +15,6 @@ import { Link, useLocation } from "react-router-dom";
 import Home from "../components/HelpCenter/Home.jsx";
 import Faq from "../components/HelpCenter/Faq.jsx";
 import HowTo from "../components/HelpCenter/HowTo.jsx";
-import Videos from "../components/HelpCenter/Videos.jsx";
 import Support from "../components/HelpCenter/Support.jsx";
 import FinalCta from "../components/layout/FinalCta.jsx";
 import Seo from "../../components/Seo.jsx";
@@ -26,7 +23,6 @@ const TABS = [
   { key: "home", label: "Overview", Icon: PiHouseDuotone, header: "How can we help you?" },
   { key: "howTo", label: "How-to guides", Icon: PiBookOpenDuotone, header: "How-to guides" },
   { key: "faqs", label: "FAQs", Icon: PiQuestionDuotone, header: "Frequently asked questions" },
-  { key: "videos", label: "Videos", Icon: PiPlayCircleDuotone, header: "Video tutorials" },
   { key: "support", label: "Contact support", Icon: PiHeadsetDuotone, header: "Talk to a human" },
 ];
 
@@ -76,7 +72,6 @@ const Help = () => {
     home: <Home setActiveTab={setActiveTab} />,
     howTo: <HowTo />,
     faqs: <Faq />,
-    videos: <Videos />,
     support: <Support />,
   };
 
@@ -489,9 +484,9 @@ const Help = () => {
               <div className="lbl">Articles</div>
             </div>
             <div className="tcn-help-stat">
-              <div className="ic"><PiPlayCircleDuotone size={20} /></div>
-              <div className="num">40+</div>
-              <div className="lbl">Videos</div>
+              <div className="ic"><PiQuestionDuotone size={20} /></div>
+              <div className="num">{40}+</div>
+              <div className="lbl">FAQs</div>
             </div>
             <div className="tcn-help-stat">
               <div className="ic"><PiClockCountdownDuotone size={20} /></div>
@@ -533,7 +528,6 @@ const Help = () => {
               <p>
                 {activeTab === "howTo" && "Hands-on, step-by-step walkthroughs for the features you actually use."}
                 {activeTab === "faqs" && "Answers to the most common questions — sorted by topic."}
-                {activeTab === "videos" && "Watch and learn — short clips covering every workflow."}
                 {activeTab === "support" && "Real engineers and product folks. No chatbots."}
               </p>
             </div>

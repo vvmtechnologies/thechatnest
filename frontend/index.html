@@ -109,6 +109,37 @@
         ]
       }
     </script>
+
+    <!-- Google Analytics (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R1EX9EP6NN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-R1EX9EP6NN');
+    </script>
+
+    <!-- Tawk.to live chat — deferred load on first user interaction
+         (or 8s timeout) so it doesn't hurt Lighthouse or mobile perf. -->
+    <script>
+      (function () {
+        var loaded = false;
+        function loadTawk() {
+          if (loaded) return;
+          loaded = true;
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://embed.tawk.to/6921899209fe7e195f1e9015/1jalg2phd";
+          s.charset = "UTF-8";
+          s.setAttribute("crossorigin", "*");
+          document.head.appendChild(s);
+        }
+        ["scroll", "mousemove", "touchstart", "keydown"].forEach(function (e) {
+          document.addEventListener(e, loadTawk, { once: true, passive: true });
+        });
+        setTimeout(loadTawk, 8000);
+      })();
+    </script>
   </head>
   <body>
     <noscript>

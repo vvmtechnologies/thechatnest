@@ -2,14 +2,12 @@ import React from "react";
 import {
   PiBookOpenDuotone,
   PiQuestionDuotone,
-  PiPlayCircleDuotone,
   PiHeadsetDuotone,
   PiChatTeardropDotsDuotone,
   PiVideoConferenceDuotone,
   PiUsersThreeDuotone,
   PiCreditCardDuotone,
   PiDeviceMobileSpeakerDuotone,
-  PiShieldCheckDuotone,
   PiArrowRightBold,
   PiLightningDuotone,
   PiCaretRightBold,
@@ -351,18 +349,6 @@ const Home = ({ setActiveTab }) => {
             <span>
               <span className="label">FAQs</span>
               <span className="sub">Answers to common questions</span>
-            </span>
-          </button>
-
-          <button
-            className="tcn-help-quick-tile"
-            style={{ "--tint": "#dc2626", "--tint-soft": "rgba(220,38,38,0.1)" }}
-            onClick={() => setActiveTab("videos")}
-          >
-            <span className="ic"><PiPlayCircleDuotone size={20} /></span>
-            <span>
-              <span className="label">Video tutorials</span>
-              <span className="sub">Visual walkthroughs</span>
             </span>
           </button>
 

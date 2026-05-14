@@ -17,6 +17,7 @@ import {
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 import Seo from "../../components/Seo.jsx";
+import PricingCalculator from "../components/PricingCalculator.jsx";
 
 const TRUST_BADGES = [
   { label: "AES-256-GCM", icon: "🔒" },
@@ -859,6 +860,9 @@ const Pricing = () => {
           </div>
         </div>
       </section>
+
+      {/* ─── Savings calculator (currency + team-size slider + ROI) ── */}
+      <PricingCalculator />
 
       {/* ─── Comparison table ─────────────────────────────── */}
       <section className="tcn-compare-section">

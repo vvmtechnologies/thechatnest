@@ -15,6 +15,10 @@ import { appBrandingAssets } from "./data/CommonData.js";
 import authStore from "./utils/auth.js";
 import { ensureCsrfCookie } from "./utils/csrf.js";
 import { API_BASE_URL } from "./config/apiBaseUrl.js";
+import { initSentry } from "./utils/sentry.js";
+
+// Initialize Sentry lazily — only fires if VITE_SENTRY_DSN is set.
+initSentry();
 
 // Ensure dev environment stays clear of any previously installed SWs.
 if (import.meta.env.DEV && "serviceWorker" in navigator) {

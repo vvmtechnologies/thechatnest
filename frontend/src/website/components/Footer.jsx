@@ -30,6 +30,7 @@ const linkGroups = [
       { label: "How it Works", to: "/how-it-works" },
       { label: "Contact", to: "/contact" },
       { label: "Book a Demo", to: "/demo" },
+      { label: "Brand Kit", to: "/brand" },
     ],
   },
   {
@@ -42,8 +43,10 @@ const linkGroups = [
     ],
   },
   {
-    title: "Privacy & Legal",
+    title: "Trust",
     links: [
+      { label: "Security", to: "/security" },
+      { label: "System status", to: "/status" },
       { label: "Privacy Policy", to: "/saas-privacy" },
       { label: "GDPR", to: "/gdpr" },
       { label: "Refund Policy", to: "/refund-policy" },

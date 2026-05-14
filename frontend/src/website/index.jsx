@@ -5,6 +5,8 @@ import Navbar from "./components/Navbar.jsx";
 import "./website.css";
 import "./redesign.css";
 import Footer from "./components/Footer.jsx";
+import StickyCtaBar from "./components/StickyCtaBar.jsx";
+import CookieConsent from "./components/CookieConsent.jsx";
 
 function WebsiteIndex() {
   return (
@@ -15,6 +17,8 @@ function WebsiteIndex() {
         <Outlet />
       </main>
       <Footer />
+      <StickyCtaBar />
+      <CookieConsent />
     </div>
   );
 }

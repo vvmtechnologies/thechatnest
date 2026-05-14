@@ -11,6 +11,7 @@ import {
 } from "react-icons/pi";
 import { Link } from "react-router-dom";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
+import NewsletterSignup from "./NewsletterSignup.jsx";
 
 const linkGroups = [
   {
@@ -26,11 +27,21 @@ const linkGroups = [
   {
     title: "Company",
     links: [
-      { label: "Home", to: "/" },
+      { label: "Why TheChatNest", to: "/why-thechatnest" },
       { label: "How it Works", to: "/how-it-works" },
+      { label: "Blog", to: "/blog" },
       { label: "Contact", to: "/contact" },
-      { label: "Book a Demo", to: "/demo" },
       { label: "Brand Kit", to: "/brand" },
+      { label: "Referrals", to: "/referrals" },
+    ],
+  },
+  {
+    title: "Solutions",
+    links: [
+      { label: "For engineering", to: "/for-engineering" },
+      { label: "For sales", to: "/for-sales" },
+      { label: "For remote teams", to: "/for-remote" },
+      { label: "For agencies", to: "/for-agencies" },
     ],
   },
   {
@@ -168,6 +179,45 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* Newsletter strip — sits between the link grid and the legal footer */}
+        <div
+          className="tcn-footer-newsletter"
+          style={{
+            margin: "2rem 0 1.5rem",
+            padding: "1.65rem 1.85rem",
+            borderRadius: 18,
+            background: "linear-gradient(135deg, rgba(109,93,252,0.12), rgba(32,101,209,0.08))",
+            border: "1px solid rgba(255,255,255,0.08)",
+            display: "grid",
+            gridTemplateColumns: "minmax(220px, 1fr) minmax(280px, 1.2fr)",
+            gap: "1.5rem",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontFamily: '"JetBrains Mono", monospace',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#ffd54a",
+                marginBottom: 4,
+              }}
+            >
+              Field notes
+            </div>
+            <div style={{ fontWeight: 800, fontSize: "1.05rem", color: "#fff", lineHeight: 1.3 }}>
+              What we shipped this month, in your inbox.
+            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
+              One email a month. Unsubscribe in one click.
+            </div>
+          </div>
+          <NewsletterSignup variant="inline" />
+        </div>
+
         <div className="tcn-footer-bottom">
           <div className="tcn-footer-copyright">
             &copy; {new Date().getFullYear()} {brandName || "TheChatNest"}. All rights reserved.
@@ -175,7 +225,7 @@ const Footer = () => {
           <div className="tcn-footer-badges">
             <span className="tcn-footer-badge">
               <PiShieldCheckDuotone size={14} />
-              SOC 2 · GDPR · AES-256
+              GDPR · AES-256 · TLS 1.3
             </span>
           </div>
         </div>

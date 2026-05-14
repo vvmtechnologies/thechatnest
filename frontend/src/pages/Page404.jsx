@@ -1,15 +1,83 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   PiArrowLeftBold,
   PiArrowRightBold,
   PiCompassDuotone,
   PiMagnifyingGlassDuotone,
+  PiLightbulbDuotone,
 } from "react-icons/pi";
 import Seo from "../components/Seo.jsx";
 
+// Known public routes that we want to suggest on 404. The slug after
+// the trailing slash is what we fuzzy-match against the user's path.
+const KNOWN_ROUTES = [
+  { label: "Home",                to: "/" },
+  { label: "Pricing",             to: "/pricing" },
+  { label: "Features",            to: "/features" },
+  { label: "Compare",             to: "/compare" },
+  { label: "Why TheChatNest",     to: "/why-thechatnest" },
+  { label: "Downloads",           to: "/downloads" },
+  { label: "How it works",        to: "/how-it-works" },
+  { label: "Demo",                to: "/demo" },
+  { label: "Contact",             to: "/contact" },
+  { label: "Help center",         to: "/help" },
+  { label: "Blog",                to: "/blog" },
+  { label: "Brand kit",           to: "/brand" },
+  { label: "Security",            to: "/security" },
+  { label: "System status",       to: "/status" },
+  { label: "Referrals",           to: "/referrals" },
+  { label: "Versions",            to: "/versions" },
+  { label: "For engineering",     to: "/for-engineering" },
+  { label: "For sales",           to: "/for-sales" },
+  { label: "For remote",          to: "/for-remote" },
+  { label: "For agencies",        to: "/for-agencies" },
+  { label: "Sign in",             to: "/auth/login" },
+  { label: "Start free trial",    to: "/auth/register" },
+  { label: "Privacy policy",      to: "/saas-privacy" },
+  { label: "GDPR",                to: "/gdpr" },
+  { label: "Refund policy",       to: "/refund-policy" },
+];
+
+// Simple Levenshtein distance (small + cheap; 30ish routes max).
+const levenshtein = (a, b) => {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + cost
+      );
+    }
+  }
+  return dp[m][n];
+};
+
 const Page404 = () => {
   const { pathname } = useLocation();
+
+  // Best-effort "Did you mean?" — strip leading slash and slashes, then
+  // fuzzy-match against known route slugs.
+  const suggestions = useMemo(() => {
+    const raw = pathname.toLowerCase().replace(/^\/+|\/+$/g, "").replace(/\//g, "-");
+    if (!raw) return [];
+    const scored = KNOWN_ROUTES.map((r) => {
+      const slug = r.to.toLowerCase().replace(/^\/+|\/+$/g, "").replace(/\//g, "-");
+      const dist = levenshtein(raw, slug);
+      const sub = slug.includes(raw) || raw.includes(slug) ? -2 : 0;
+      return { ...r, score: dist + sub };
+    });
+    scored.sort((a, b) => a.score - b.score);
+    // Show up to 3 close matches (distance < 6) but always at least 0 results if none close.
+    return scored.filter((s) => s.score < 7).slice(0, 3);
+  }, [pathname]);
 
   return (
     <div className="tcn-404">
@@ -115,6 +183,52 @@ const Page404 = () => {
           margin-bottom: 2.5rem;
           word-break: break-all;
         }
+        .tcn-404-suggest {
+          margin: -1rem auto 2.25rem;
+          max-width: 460px;
+          padding: 1.25rem 1.4rem;
+          background: rgba(255,213,74,0.08);
+          border: 1px solid rgba(255,213,74,0.3);
+          border-radius: 14px;
+          text-align: left;
+        }
+        .tcn-404-suggest-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: #ffd54a;
+          margin-bottom: 0.75rem;
+        }
+        .tcn-404-suggest-list {
+          display: flex;
+          flex-direction: column;
+          gap: 0.4rem;
+        }
+        .tcn-404-suggest-link {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.6rem 0.85rem;
+          border-radius: 8px;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #fff !important;
+          font-weight: 600;
+          font-size: 0.9rem;
+          text-decoration: none !important;
+          transition: all 0.18s ease;
+        }
+        .tcn-404-suggest-link:hover {
+          background: rgba(255,213,74,0.12);
+          border-color: rgba(255,213,74,0.4);
+          color: #ffd54a !important;
+          transform: translateX(3px);
+        }
         .tcn-404-actions {
           display: flex;
           gap: 0.75rem;
@@ -204,6 +318,23 @@ const Page404 = () => {
           </div>
         )}
 
+        {suggestions.length > 0 && (
+          <div className="tcn-404-suggest">
+            <span className="tcn-404-suggest-label">
+              <PiLightbulbDuotone size={14} />
+              Did you mean…
+            </span>
+            <div className="tcn-404-suggest-list">
+              {suggestions.map((s) => (
+                <Link key={s.to} to={s.to} className="tcn-404-suggest-link">
+                  {s.label}
+                  <PiArrowRightBold size={11} />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="tcn-404-actions">
           <Link to="/" className="tcn-404-btn primary">
             <PiArrowLeftBold size={14} /> Back to home
@@ -220,7 +351,7 @@ const Page404 = () => {
             <Link to="/features">Features</Link>
             <Link to="/downloads">Downloads</Link>
             <Link to="/contact">Contact</Link>
-            <Link to="/blogs">Blog</Link>
+            <Link to="/blog">Blog</Link>
           </div>
         </div>
       </div>

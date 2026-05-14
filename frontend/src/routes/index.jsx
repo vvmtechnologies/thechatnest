@@ -35,6 +35,10 @@ const Versions = lazy(() => import("../website/pages/Versions.jsx"));
 const Brand = lazy(() => import("../website/pages/Brand.jsx"));
 const Security = lazy(() => import("../website/pages/Security.jsx"));
 const Status = lazy(() => import("../website/pages/Status.jsx"));
+const Why = lazy(() => import("../website/pages/Why.jsx"));
+const Referrals = lazy(() => import("../website/pages/Referrals.jsx"));
+const UseCase = lazy(() => import("../website/pages/UseCase.jsx"));
+const Blog = lazy(() => import("../website/pages/Blog.jsx"));
 const SaasPrivacy = lazy(() => import("../website/pages/SaasPrivacy.jsx"));
 const Gdpr = lazy(() => import("../website/pages/Gdpr.jsx"));
 const RefundPolicy = lazy(() => import("../website/pages/RefundPolicy.jsx"));
@@ -111,6 +115,14 @@ export default function Router() {
           { path: "brand", element: <Brand /> },
           { path: "security", element: <Security /> },
           { path: "status", element: <Status /> },
+          { path: "why-thechatnest", element: <Why /> },
+          { path: "referrals", element: <Referrals /> },
+          { path: "for-engineering", element: <UseCase /> },
+          { path: "for-sales", element: <UseCase /> },
+          { path: "for-remote", element: <UseCase /> },
+          { path: "for-agencies", element: <UseCase /> },
+          { path: "blog", element: <Blog /> },
+          { path: "blog/:slug", element: <Blog /> },
           // Legacy routes redirected to consolidated pages
           { path: "blogs", element: <Navigate to="/" replace /> },
           { path: "channel-partner", element: <Navigate to="/contact" replace /> },

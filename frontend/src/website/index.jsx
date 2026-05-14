@@ -7,6 +7,7 @@ import "./redesign.css";
 import Footer from "./components/Footer.jsx";
 import StickyCtaBar from "./components/StickyCtaBar.jsx";
 import CookieConsent from "./components/CookieConsent.jsx";
+import CommandPalette from "./components/CommandPalette.jsx";
 
 function WebsiteIndex() {
   return (
@@ -19,6 +20,7 @@ function WebsiteIndex() {
       <Footer />
       <StickyCtaBar />
       <CookieConsent />
+      <CommandPalette />
     </div>
   );
 }

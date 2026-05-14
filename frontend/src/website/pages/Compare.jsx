@@ -36,11 +36,12 @@ import {
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 import Seo from "../../components/Seo.jsx";
 
-// ─── 20 features exclusive to TheChatNest ──────────────────────────────
-// Each one is a real feature that Slack, Microsoft Teams AND Troop Messenger
-// all lack. Sourced from the prior feature-comparison matrix.
+// ─── Features that set TheChatNest apart ──────────────────────────────
+// Each entry is either fully exclusive (none of Slack/Teams/Troop ship it)
+// or strongly differentiated (at most one competitor has a partial / paid
+// implementation). Sourced from the full 102-feature comparison matrix.
 const EXCLUSIVE = [
-  // Messaging (3)
+  // Messaging (6)
   {
     title: "Broadcast to Groups",
     desc: "Send one message to many groups simultaneously — one click, hundreds of teams informed.",
@@ -62,6 +63,27 @@ const EXCLUSIVE = [
     Icon: PiClockCountdownDuotone,
     tint: "#2065D1",
   },
+  {
+    title: "Voice-to-Text Transcription",
+    desc: "Every voice message and recording transcribed automatically — searchable, scannable, accessible.",
+    category: "Messaging",
+    Icon: PiUserSoundDuotone,
+    tint: "#2065D1",
+  },
+  {
+    title: "Forward to Multiple Contacts",
+    desc: "Forward any message to multiple contacts in one action. Slack & Teams force you one-by-one.",
+    category: "Messaging",
+    Icon: PiPaperPlaneTiltDuotone,
+    tint: "#2065D1",
+  },
+  {
+    title: "Offline Message Queue",
+    desc: "Compose anywhere — flight mode, weak signal. Messages queue locally and auto-send the second you're back online, with retry.",
+    category: "Messaging",
+    Icon: PiBackspaceDuotone,
+    tint: "#2065D1",
+  },
 
   // Audio & Video (2)
   {
@@ -79,7 +101,7 @@ const EXCLUSIVE = [
     tint: "#ef4444",
   },
 
-  // AI (3)
+  // AI (8 — TheChatNest's strongest moat)
   {
     title: "AI App Guide",
     desc: "Built-in AI assistant answers how-to questions in English, Hindi or Hinglish — no separate chatbot tool needed.",
@@ -101,8 +123,50 @@ const EXCLUSIVE = [
     Icon: PiSparkleDuotone,
     tint: "#a855f7",
   },
+  {
+    title: "AI Live Assistant",
+    desc: "Built-in AI chatbot for instant in-app answers and troubleshooting — pinned to your sidebar.",
+    category: "AI & Smart Features",
+    Icon: PiChatTeardropDotsDuotone,
+    tint: "#a855f7",
+  },
+  {
+    title: "Smart Compose (Auto-Complete)",
+    desc: "Type the first few words, accept an AI suggestion. Tab → done. Teams ships a watered-down version; Slack and Troop don't ship it at all.",
+    category: "AI & Smart Features",
+    Icon: PiFastForwardDuotone,
+    tint: "#a855f7",
+  },
+  {
+    title: "Smart Reply Suggestions",
+    desc: "Three contextual replies generated for every incoming message — matched to the sender's language.",
+    category: "AI & Smart Features",
+    Icon: PiSparkleDuotone,
+    tint: "#a855f7",
+  },
+  {
+    title: "Auto-Translate (14 Languages)",
+    desc: "Translate any incoming message into your language with one tap. Slack only has it via paid add-ons.",
+    category: "AI & Smart Features",
+    Icon: PiUserSoundDuotone,
+    tint: "#a855f7",
+  },
+  {
+    title: "AI Semantic Search",
+    desc: "Search by meaning, not exact keywords. \"That doc about Q4 budget\" finds it even if no message literally said that.",
+    category: "AI & Smart Features",
+    Icon: PiMagnifyingGlassDuotone,
+    tint: "#a855f7",
+  },
+  {
+    title: "AI Call Notes",
+    desc: "Auto-generated meeting summary, key points, and action items at the end of every call.",
+    category: "AI & Smart Features",
+    Icon: PiBookOpenDuotone,
+    tint: "#a855f7",
+  },
 
-  // Privacy (1)
+  // Privacy (3)
   {
     title: "Chat Lock (PIN)",
     desc: "Lock individual chats behind a 4-digit PIN. Loan your laptop without leaking sensitive threads.",
@@ -110,13 +174,41 @@ const EXCLUSIVE = [
     Icon: PiLockKeyDuotone,
     tint: "#16a34a",
   },
+  {
+    title: "IP & Platform Restrictions",
+    desc: "Restrict workspace access by IP range and platform type. Lock the office down without paying for Slack Enterprise Grid.",
+    category: "Privacy & Security",
+    Icon: PiShieldCheckDuotone,
+    tint: "#16a34a",
+  },
+  {
+    title: "Self-Hosted & Air-Gapped",
+    desc: "Deploy on your own infra — private cloud or fully air-gapped. Slack and Teams require their cloud, period.",
+    category: "Privacy & Security",
+    Icon: PiCloudDuotone,
+    tint: "#16a34a",
+  },
 
-  // Admin (1)
+  // Admin (3)
   {
     title: "OTP Verification Logs",
     desc: "Super-admins can audit every OTP — codes, attempts, IPs, devices. Forensics built-in.",
     category: "Admin & Management",
     Icon: PiShieldCheckDuotone,
+    tint: "#0891b2",
+  },
+  {
+    title: "Departments & Designations",
+    desc: "Organize users by department, designation, and location. Built-in HR-ready structure, not a paid add-on.",
+    category: "Admin & Management",
+    Icon: PiUsersThreeDuotone,
+    tint: "#0891b2",
+  },
+  {
+    title: "Built-in Payment History & Invoices",
+    desc: "Complete payment trail, downloadable invoices, billing addresses — all native. No external portal bouncing.",
+    category: "Admin & Management",
+    Icon: PiCreditCardDuotone,
     tint: "#0891b2",
   },
 
@@ -298,12 +390,14 @@ const Compare = () => {
           letter-spacing: -0.02em;
           max-width: 920px;
           margin: 0 auto 1rem;
+          color: #ffffff;
         }
         .tcn-cmp-hero h1 .accent {
           background: linear-gradient(135deg, #ffd54a, #ffb74d);
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
+          -webkit-text-fill-color: transparent;
         }
         .tcn-cmp-hero p.lede {
           color: rgba(255,255,255,0.72);

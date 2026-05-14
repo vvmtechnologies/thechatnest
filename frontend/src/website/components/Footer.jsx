@@ -81,14 +81,22 @@ const Footer = () => {
     return ["support@thechatnest.com", "sales@thechatnest.com"];
   }, [emails]);
 
+  // Strip any legacy "teamchatx" / "aabhyasa" handles that might still
+  // live in the DB and fall back to the canonical TheChatNest URLs so
+  // the buttons NEVER link to the old brand.
+  const cleanSocialUrl = (url, fallback) => {
+    const s = String(url || "").trim();
+    if (!s || /teamchatx|aabhyasa/i.test(s)) return fallback;
+    return s;
+  };
   const socialLinks = useMemo(
     () => ({
-      facebook: social?.facebook || "#",
-      twitter: social?.twitter || "#",
-      instagram: social?.instagram || "#",
-      youtube: social?.youtube || "#",
-      linkedin: social?.linkedin || "#",
-      pinterest: social?.pinterest || "#",
+      facebook:  cleanSocialUrl(social?.facebook,  "https://www.facebook.com/thechatnest"),
+      twitter:   cleanSocialUrl(social?.twitter,   "https://x.com/thechatnest"),
+      instagram: cleanSocialUrl(social?.instagram, "https://www.instagram.com/thechatnest"),
+      youtube:   cleanSocialUrl(social?.youtube,   "https://youtube.com/@thechatnest"),
+      linkedin:  cleanSocialUrl(social?.linkedin,  "https://www.linkedin.com/company/thechatnest"),
+      pinterest: cleanSocialUrl(social?.pinterest, "https://www.pinterest.com/thechatnest"),
     }),
     [social]
   );
@@ -121,18 +129,22 @@ const Footer = () => {
             </div>
 
             <div className="tcn-footer-socials">
-              {socials.map(({ key, Icon, label }) => (
-                <a
-                  key={key}
-                  href={socialLinks[key]}
-                  aria-label={label}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="tcn-social-btn"
-                >
-                  <Icon size={18} />
-                </a>
-              ))}
+              {socials.map(({ key, Icon, label }) => {
+                const linkLabel = `${brandName || "TheChatNest"} on ${label}`;
+                return (
+                  <a
+                    key={key}
+                    href={socialLinks[key]}
+                    aria-label={linkLabel}
+                    title={linkLabel}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="tcn-social-btn"
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
             </div>
           </div>
 

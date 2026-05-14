@@ -475,24 +475,45 @@ const Referrals = () => {
       <section className="tcn-ref-hero">
         <div className="container">
           <span className="tcn-ref-eyebrow">
-            <PiGiftDuotone size={12} /> Referral program
+            <PiGiftDuotone size={12} /> Referral program · Launching Q2 2026
           </span>
           <h1>
             Refer a team. <span className="accent">Both get a free month.</span>
           </h1>
           <p className="lede">
-            Help us reach teams who're overpaying for messaging. Share your link, they sign up, both of you save real money.
+            We're launching the referral program in Q2 2026. Drop your email below and we'll
+            ping you the moment your referral link is ready — and credit your first three
+            successful referrals retroactively.
           </p>
 
           <div className="tcn-ref-mock">
-            <div className="tcn-ref-mock-url">{sampleLink}</div>
-            <button type="button" className="tcn-ref-mock-btn" onClick={handleCopy} aria-label="Copy sample link">
+            <div className="tcn-ref-mock-url" style={{ opacity: 0.6 }}>{sampleLink}</div>
+            <button type="button" className="tcn-ref-mock-btn" onClick={handleCopy} aria-label="Copy sample link" style={{ opacity: 0.6 }}>
               {copied ? <PiCheckBold size={13} /> : <PiCopyDuotone size={13} />}
-              {copied ? "Copied" : "Copy"}
+              {copied ? "Copied" : "Sample"}
             </button>
           </div>
           <div style={{ marginTop: 12, fontSize: 12, color: "rgba(255,255,255,0.55)" }}>
-            Your real referral link appears in Settings → Referrals once you sign in.
+            That's a sample link — real ones are coming with the launch.
+          </div>
+          <div
+            style={{
+              marginTop: 16,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 14px",
+              borderRadius: 999,
+              background: "rgba(255,213,74,0.12)",
+              border: "1px solid rgba(255,213,74,0.3)",
+              color: "#ffd54a",
+              fontFamily: "JetBrains Mono, monospace",
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+            }}
+          >
+            <PiSparkleDuotone size={11} /> EARLY-BIRD CREDIT · FIRST 3 REFERRALS COUNT BACKDATED
           </div>
         </div>
       </section>

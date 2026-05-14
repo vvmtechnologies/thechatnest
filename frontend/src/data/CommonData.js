@@ -1675,10 +1675,9 @@ export const mockMessages = {
       direction: "outgoing",
       author: { id: "agent-self", name: "You" },
       content: {
-        url: "../assets/Images/default_wallpaper_main.png",
-        thumbnail:
-          "../assets/Images/default_wallpaper_main.png",
-        fileName: "default_wallpaper_main.png",
+        url: "/wallpapers/tcn-pattern.svg",
+        thumbnail: "/wallpapers/tcn-pattern.svg",
+        fileName: "wallpaper-preview.svg",
         fileSize: "512 KB",
         caption: "Sharing the capture for visual QA.",
         uploadState: "uploading",

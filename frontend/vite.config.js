@@ -61,15 +61,29 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 900,
+    // Strip console.* and debugger statements from production bundles.
+    // Keep console.error/warn so genuine runtime issues still surface
+    // (Sentry captures them too).
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-mui': ['@mui/material', '@emotion/react', '@emotion/styled'],
           'vendor-editor': ['react-syntax-highlighter'],
+          'vendor-redux': ['react-redux', '@reduxjs/toolkit'],
+          'vendor-helmet': ['react-helmet-async'],
+          'vendor-icons': ['react-icons/pi', 'react-icons/tb', 'react-icons/ai', 'react-icons/bs', 'react-icons/fc', 'react-icons/fi', 'react-icons/md'],
         },
       },
     },
+  },
+  esbuild: {
+    // Drop console.log/info/debug from prod. console.error and .warn stay.
+    pure: process.env.NODE_ENV === 'production'
+      ? ['console.log', 'console.info', 'console.debug', 'console.trace']
+      : [],
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
   },
   resolve: {
     alias: {

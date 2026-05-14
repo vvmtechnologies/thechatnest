@@ -28,17 +28,35 @@ const TRUST_BADGES = [
 ];
 
 const COMPARE_ROWS = [
+  // Core messaging — included on every paid plan + trial.
   { feature: "1:1 & group messaging", trial: true, startup: true, basic: true, business: true },
+  { feature: "Threads, reactions & replies", trial: true, startup: true, basic: true, business: true },
   { feature: "HD audio & video calls", trial: true, startup: true, basic: true, business: true },
-  { feature: "Screen sharing", trial: true, startup: true, basic: true, business: true },
+  { feature: "Screen sharing in meetings", trial: true, startup: true, basic: true, business: true },
+  // Storage + history
   { feature: "File sharing & storage", trial: "1 GB", startup: "10 GB / user", basic: "50 GB / user", business: "200 GB / user" },
   { feature: "Message history", trial: "14 days", startup: "Unlimited", basic: "Unlimited", business: "Unlimited" },
-  { feature: "Group polls & broadcasts", trial: false, startup: true, basic: true, business: true },
-  { feature: "Custom roles & permissions", trial: false, startup: false, basic: true, business: true },
-  { feature: "AI assistant & summaries", trial: false, startup: false, basic: true, business: true },
-  { feature: "SSO / SAML", trial: false, startup: false, basic: false, business: true },
-  { feature: "Audit logs & DLP", trial: false, startup: false, basic: false, business: true },
-  { feature: "Self-hosted / on-premise", trial: false, startup: false, basic: false, business: true },
+  // Broadcasts — exclusive lever
+  { feature: "Broadcast to multiple groups", trial: false, startup: true, basic: true, business: true },
+  { feature: "Broadcast with file attachments", trial: false, startup: true, basic: true, business: true },
+  // AI — actually shipped
+  { feature: "AI tone adjuster + grammar", trial: false, startup: true, basic: true, business: true },
+  { feature: "AI smart compose + replies", trial: false, startup: false, basic: true, business: true },
+  { feature: "AI auto-translate (14 languages)", trial: false, startup: false, basic: true, business: true },
+  { feature: "AI meeting summaries", trial: false, startup: false, basic: true, business: true },
+  // Privacy / security — shipped
+  { feature: "Chat lock with PIN", trial: true, startup: true, basic: true, business: true },
+  { feature: "Disappearing messages", trial: false, startup: true, basic: true, business: true },
+  { feature: "AES-256 encryption at rest", trial: true, startup: true, basic: true, business: true },
+  { feature: "Trusted device management", trial: true, startup: true, basic: true, business: true },
+  // Admin
+  { feature: "Departments & designations", trial: false, startup: false, basic: true, business: true },
+  { feature: "Activity log + OTP audit", trial: false, startup: false, basic: true, business: true },
+  { feature: "Built-in invoicing (Stripe)", trial: false, startup: true, basic: true, business: true },
+  // Roadmap — clearly labelled
+  { feature: "SSO / SAML (Okta, Azure AD, Google)", trial: false, startup: false, basic: false, business: "Q2 2026" },
+  { feature: "Customer-managed keys (BYOK)", trial: false, startup: false, basic: false, business: "Q2 2026" },
+  { feature: "Self-hosted / on-premise", trial: false, startup: false, basic: false, business: "Talk to us" },
   { feature: "Dedicated success manager", trial: false, startup: false, basic: false, business: true },
 ];
 

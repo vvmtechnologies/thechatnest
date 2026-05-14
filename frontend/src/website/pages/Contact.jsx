@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Alert,
@@ -46,6 +46,7 @@ const Contact = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const formMountedAtRef = useRef(Date.now());
   const [isCountriesLoading, setIsCountriesLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -251,6 +252,20 @@ const Contact = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    // Honeypot — humans don't see this field; bots auto-fill it.
+    // Silently drop the submission to keep the form looking successful.
+    const honeypot = event.currentTarget.elements.namedItem("website")?.value;
+    if (honeypot) {
+      setSuccessMessage("Thanks! We'll be in touch within 24 hours.");
+      resetForm();
+      return;
+    }
+    // Time-since-mount check — bots submit in <2s, humans take 5s+
+    const dwellMs = Date.now() - (formMountedAtRef.current || Date.now());
+    if (dwellMs < 1500) {
+      setSuccessMessage("Thanks! We'll be in touch within 24 hours.");
+      return;
+    }
     setErrorMessage("");
     setSuccessMessage("");
 
@@ -289,7 +304,7 @@ const Contact = () => {
       email_address: emailAddress,
       company_name: companyName,
       total_users: totalUsers,
-      requirement_details: requirementDetails,
+      requirement_details: `[CONTACT]\n${requirementDetails}`,
     };
 
     try {
@@ -864,6 +879,28 @@ const Contact = () => {
               <p className="form-sub">
                 Fill the form below and our team will get back within 24 hours.
               </p>
+
+              {/* Honeypot — humans don't see this, bots do. */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  width: "1px",
+                  height: "1px",
+                  overflow: "hidden",
+                  opacity: 0,
+                }}
+              >
+                <label htmlFor="website">Your website (leave blank)</label>
+                <input
+                  type="text"
+                  id="website"
+                  name="website"
+                  tabIndex="-1"
+                  autoComplete="off"
+                />
+              </div>
 
               <div style={{ display: "grid", gap: "1rem" }}>
                 <TextField

@@ -77,10 +77,24 @@ const registrationLimiter = rateLimit({
   handler: formatHandler('1 hour'),
 });
 
+// Public-form limiter — 6 submissions per IP per hour for /contact-us
+// (and any other unauthenticated lead-capture endpoints). Combined with
+// the honeypot field and submit-dwell check on the client, this is enough
+// to keep automated form-spam manageable without blocking real prospects.
+const publicFormLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 6,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', code: 'rate_limited', message: 'Too many submissions. Please try again later.' },
+  handler: formatHandler('1 hour'),
+});
+
 module.exports = {
   authLimiter,
   passwordResetLimiter,
   otpResendLimiter,
   refreshLimiter,
   registrationLimiter,
+  publicFormLimiter,
 };

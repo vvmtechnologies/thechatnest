@@ -46,24 +46,42 @@ const COMPONENTS = [
   },
 ];
 
-const fetchWithTimeout = (url, opts = {}, ms = 6000) =>
-  Promise.race([
-    fetch(url, { method: "GET", cache: "no-store", ...opts }),
-    new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms)),
-  ]);
-
+// Build a probe URL that survives CORS / mixed-content rules.
+// - Same-origin marketing site: relative path, never blocked.
+// - Cross-origin API health: `mode: "no-cors"` returns an opaque response
+//   that's still useful for latency + reachability (we just can't read
+//   the status code). Combined with AbortController for timeouts.
 const probe = async (component) => {
   if (!component.url) return { status: "unknown", latency: null };
   const start = performance.now();
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 6000);
+
   try {
-    const res = await fetchWithTimeout(component.url, {}, 6000);
+    const isSameOrigin = component.url.startsWith(window.location.origin);
+    const res = await fetch(component.url, {
+      method: "GET",
+      cache: "no-store",
+      signal: controller.signal,
+      // Opaque-mode for cross-origin probes; same-origin gets real status.
+      mode: isSameOrigin ? "cors" : "no-cors",
+      credentials: "omit",
+    });
     const latency = Math.round(performance.now() - start);
-    if (res.ok && (!component.expectStatus || res.status === component.expectStatus)) {
+    // Same-origin: we can read status; cross-origin opaque: any non-throw = reachable.
+    const ok = isSameOrigin
+      ? res.ok && (!component.expectStatus || res.status === component.expectStatus)
+      : true; // opaque response means request completed without network error
+    if (ok) {
       return { status: latency > 3000 ? "degraded" : "operational", latency };
     }
     return { status: "degraded", latency };
-  } catch {
-    return { status: "down", latency: null };
+  } catch (err) {
+    // AbortError = timeout, TypeError = network/CORS preflight failure
+    const latency = Math.round(performance.now() - start);
+    return { status: "down", latency: err.name === "AbortError" ? latency : null };
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 };
 

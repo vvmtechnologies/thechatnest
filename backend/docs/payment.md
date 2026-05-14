@@ -254,7 +254,7 @@ After success:
 # Docs Sync (2026-03-10)
 
 - Payment flow now confirms checkout through the app thank-you screen and then redirects to admin billing.
-- Success handling includes payment-history persistence, invoice creation using `INV-TCX...`, success mail dispatch, activity-log creation, notification triggering, and frontend celebration.
+- Success handling includes payment-history persistence, invoice creation using `INV-TCN...`, success mail dispatch, activity-log creation, notification triggering, and frontend celebration.
 - Failed flows persist exact `failure_reason JSONB` and emit billing activity-log entries.
 
 ---

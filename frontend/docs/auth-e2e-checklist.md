@@ -92,4 +92,4 @@ Last updated: 2026-03-09
   - land on `BillingThankYou`
   - see confetti/notification
   - confirm redirect to admin billing
-  - verify payment history row and `INV-TCX...` invoice format
+  - verify payment history row and `INV-TCN...` invoice format

@@ -377,7 +377,7 @@ const findPaymentByInvoiceNumber = async (invoiceNumber, tx = null) => {
 const buildPaymentInvoiceNumber = (paymentId) => {
   const numericId = Number(paymentId);
   if (!Number.isInteger(numericId) || numericId <= 0) return null;
-  return `INV-TCX${100 + numericId}`;
+  return `INV-TCN${100 + numericId}`;
 };
 
 const createPaymentHistory = async ({

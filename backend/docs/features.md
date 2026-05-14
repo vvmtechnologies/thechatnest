@@ -185,7 +185,7 @@ Last updated: 2026-03-13
 - Billing feature set now includes:
   - exact structured payment failure reasons
   - reusable billing activity logging
-  - deterministic invoice numbering (`INV-TCX...`)
+  - deterministic invoice numbering (`INV-TCN...`)
   - thank-you confirmation flow before admin redirect
   - enriched Stripe metadata/customer payloads
 

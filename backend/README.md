@@ -987,7 +987,7 @@ Performance note:
 # Docs Sync (2026-03-10)
 
 - Billing backend now records activity-log entries for checkout create/confirm, failed payment init, failed confirm, and billing-address save.
-- `payment_history.invoice_number` generation is now based on the auto-increment `payment_id` and follows the `INV-TCX...` format.
+- `payment_history.invoice_number` generation is now based on the auto-increment `payment_id` and follows the `INV-TCN...` format.
 - Stripe checkout session creation now sends richer metadata and customer details while still excluding direct third-party Stripe API docs from repo documentation.
 - Payment failure persistence now stores exact structured `failure_reason JSONB`.
 

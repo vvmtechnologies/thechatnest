@@ -2221,7 +2221,7 @@ const Billing = ({ adminData }) => {
           invoice: String(
             row?.invoice_number ||
               (row?.payment_id
-                ? `INV-TCX${100 + toNumber(row?.payment_id, index + 1)}`
+                ? `INV-TCN${100 + toNumber(row?.payment_id, index + 1)}`
                 : "Pending"),
           ),
           amount: toNumber(row?.amount, 0),

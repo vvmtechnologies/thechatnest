@@ -737,7 +737,7 @@ Use this exact sequence for fastest ramp-up.
 - Shared subscription normalization now lives in `frontend/src/utils/subscription.js`.
   - `buildSubscriptionView(currentPlan, { activeUsers })` is the standard helper for plan name, status, expiry, cycle label, remaining days, and license usage.
 - Billing views now consistently use shared helpers for subscription state, expiry display, site-details resolution, and notifications.
-- Invoice labels should prefer the backend-generated `INV-TCX...` value and only fall back to the same pattern client-side.
+- Invoice labels should prefer the backend-generated `INV-TCN...` value and only fall back to the same pattern client-side.
 - Subscription UI state is now standardized through `frontend/src/utils/subscription.js`.
   - Use `buildSubscriptionView(currentPlan, { activeUsers })` for plan name, status, expiry label, cycle label, remaining days, and license usage.
   - Admin `Home`, `Billing`, and `Payment History` should reuse this helper instead of recalculating subscription fields inline.

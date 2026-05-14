@@ -11,7 +11,7 @@ const competitors = [
   {
     key: "thechatnest",
     name: "TheChatNest",
-    short: "TCX",
+    short: "TCN",
     color: "#0162c4",
     radarColor: "#0162c4",
     gradient: "linear-gradient(135deg, #0162c4, #0288d1)",
@@ -395,7 +395,7 @@ const RadarChart = ({ size = 420 }) => {
           />
         ))}
 
-      {/* Vertex dots for TCX (highlight peaks) */}
+      {/* Vertex dots for TCN (highlight peaks) */}
       {categories.map((cat, i) => {
         const score = categoryScoreFor(cat, "thechatnest");
         const max = categoryMax(cat);
@@ -957,7 +957,7 @@ const Compare = () => {
                         ) : (
                           <>
                             <span style={{ color: v.winner.color, fontWeight: 700 }}>{v.winner.name} leads</span>
-                            <span> · TCX scores {usEntry.score}/{v.max}</span>
+                            <span> · TCN scores {usEntry.score}/{v.max}</span>
                           </>
                         )}
                       </div>

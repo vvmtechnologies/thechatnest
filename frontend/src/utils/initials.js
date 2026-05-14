@@ -1,4 +1,4 @@
-const DEFAULT_FALLBACK = "TCX";
+const DEFAULT_FALLBACK = "TCN";
 
 /**
  * Builds a two-character uppercase string using the first letters of each word.

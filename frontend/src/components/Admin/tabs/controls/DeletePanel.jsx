@@ -23,7 +23,7 @@ const DEFAULTS = {
 const ROLE_LABELS = {
   user: "User",
   globalMember: "Global Member",
-  tcxAdmin: "TCX Admin",
+  tcxAdmin: "TCN Admin",
 };
 
 // ── API ↔ UI converters ────────────────────────────────────────────────────

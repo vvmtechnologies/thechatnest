@@ -141,7 +141,7 @@ Recent docs update:
 # Docs Sync (2026-03-10)
 
 - Billing and subscription flows were refreshed across frontend and backend.
-- Invoice numbers now use `payment_history.payment_id` and render as `INV-TCX...` instead of timestamp-based values.
+- Invoice numbers now use `payment_history.payment_id` and render as `INV-TCN...` instead of timestamp-based values.
 - Admin billing now relies on shared frontend helpers for date, site-details, notification, and subscription view normalization.
 - Payment success flow now routes through `BillingThankYou` before redirecting back to admin billing.
 - Billing activity events are now written into `activity_log` for checkout create, confirm, failures, and billing-address save.

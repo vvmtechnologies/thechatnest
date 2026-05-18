@@ -342,24 +342,28 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ─── ID CARD — boarding-pass style, two halves ─── */}
-      <View style={z.idCardWrap}>
-        {/* Left vertical stripe — user's deterministic color */}
-        <View style={[z.idStripe, { backgroundColor: userStripe }]}>
-          <Text style={z.idStripeText} numberOfLines={1}>{initials} · {role.toUpperCase()}</Text>
-        </View>
-
-        {/* Main body */}
-        <View style={[z.idCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
-          {/* Decorative grid pattern in background */}
-          <View style={z.gridPattern} pointerEvents="none">
+      {/* ─── HERO — gradient banner with overlapping avatar ─── */}
+      <View style={z.heroWrap}>
+        {/* Gradient banner background */}
+        <View style={[z.banner, { backgroundColor: userStripe }]}>
+          <View style={[z.bannerGlow, { backgroundColor: userStripe }]} />
+          <View style={z.bannerDots} pointerEvents="none">
             {Array.from({ length: 6 }).map((_, i) => (
-              <View key={i} style={[z.gridLine, { top: 16 + i * 22, backgroundColor: t.divider }]} />
+              <View key={i} style={[z.bannerDot, { left: 30 + i * 60, top: 18 + (i % 2) * 26 }]} />
             ))}
           </View>
+          {/* Top-right "edit photo" hint */}
+          <View style={z.heroInitials}>
+            <Text style={z.heroInitialsText}>{initials}</Text>
+          </View>
+        </View>
 
-          <View style={z.idCardTop}>
-            <TouchableOpacity activeOpacity={0.7} onPress={async () => {
+        {/* Card body that overlaps the banner */}
+        <View style={[z.heroCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          {/* Avatar — overlaps the banner */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={async () => {
               try {
                 const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [1, 1] });
                 if (result.canceled || !result.assets?.[0]) return;
@@ -375,50 +379,51 @@ export default function ProfileScreen() {
                   refreshUser();
                 } else { toast('Updated', 'success'); }
               } catch (e) { toast(e?.response?.data?.message || 'Upload failed', 'error'); }
-            }} style={z.avatarWrap}>
-              <View style={[z.avatarFrame, { borderColor: userStripe + '80' }]}>
-                <Avatar uri={p.profile_url || p.avatar} name={p.name} size={70} />
-              </View>
-              <View style={[z.cameraBadge, { backgroundColor: userStripe, borderColor: t.surface }]}>
-                <Ionicons name="camera" size={11} color={t.bg} />
-              </View>
-            </TouchableOpacity>
+            }}
+            style={z.avatarPlate}
+          >
+            <View style={[z.avatarRing, { backgroundColor: t.surface }]}>
+              <Avatar uri={p.profile_url || p.avatar} name={p.name} size={92} />
+            </View>
+            <View style={[z.cameraBadge, { backgroundColor: userStripe, borderColor: t.surface }]}>
+              <Ionicons name="camera" size={12} color="#fff" />
+            </View>
+          </TouchableOpacity>
 
-            <View style={z.idCardInfo}>
-              <Text style={[z.idLabel, { color: t.textTer }]}>NAME</Text>
-              <Text style={[z.idName, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
-              <Text style={[z.idEmail, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
-            </View>
-          </View>
+          {/* Name + role */}
+          <Text style={[z.heroName, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
+          <Text style={[z.heroEmail, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
 
-          {/* Perforated divider (boarding-pass tear-off) */}
-          <View style={z.perforation}>
-            <View style={[z.perfNotchLeft, { backgroundColor: t.bg }]} />
-            <View style={z.perfDots}>
-              {Array.from({ length: 14 }).map((_, i) => (
-                <View key={i} style={[z.perfDot, { backgroundColor: t.divider }]} />
-              ))}
+          <View style={z.heroPills}>
+            <View style={[z.heroRolePill, { backgroundColor: userStripe + '22', borderColor: userStripe + '66' }]}>
+              <View style={[z.heroRoleDot, { backgroundColor: userStripe }]} />
+              <Text style={[z.heroRoleText, { color: userStripe }]}>{role}</Text>
             </View>
-            <View style={[z.perfNotchRight, { backgroundColor: t.bg }]} />
-          </View>
-
-          {/* Bottom row — 3 stat fields like a passport */}
-          <View style={z.idStats}>
-            <View style={z.idStatItem}>
-              <Text style={[z.idLabel, { color: t.textTer }]}>ROLE</Text>
-              <Text style={[z.idStatValue, { color: t.text }]} numberOfLines={1}>{role}</Text>
-            </View>
-            <View style={[z.idStatDivider, { backgroundColor: t.divider }]} />
-            <View style={z.idStatItem}>
-              <Text style={[z.idLabel, { color: t.textTer }]}>MEMBER SINCE</Text>
-              <Text style={[z.idStatValue, { color: t.text }]} numberOfLines={1}>{joinLabel}</Text>
-            </View>
-            <View style={[z.idStatDivider, { backgroundColor: t.divider }]} />
-            <View style={z.idStatItem}>
-              <Text style={[z.idLabel, { color: t.textTer }]}>ID</Text>
-              <Text style={[z.idStatValue, { color: t.text, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }) }]} numberOfLines={1}>
+            <View style={[z.heroIdPill, { backgroundColor: t.bg, borderColor: t.divider }]}>
+              <Ionicons name="finger-print" size={11} color={t.textTer} />
+              <Text style={[z.heroIdText, { color: t.textSec }]}>
                 #{String(p.user_id || p.id || '—').padStart(4, '0')}
               </Text>
+            </View>
+          </View>
+
+          {/* Stats strip (3 cells) */}
+          <View style={[z.heroStats, { borderColor: t.divider }]}>
+            <View style={z.heroStatCell}>
+              <Text style={[z.heroStatValue, { color: t.text }]}>{joinLabel}</Text>
+              <Text style={[z.heroStatLabel, { color: t.textTer }]}>JOINED</Text>
+            </View>
+            <View style={[z.heroStatDivider, { backgroundColor: t.divider }]} />
+            <View style={z.heroStatCell}>
+              <Text style={[z.heroStatValue, { color: t.text }]} numberOfLines={1}>
+                {organizations?.length || 1}
+              </Text>
+              <Text style={[z.heroStatLabel, { color: t.textTer }]}>WORKSPACES</Text>
+            </View>
+            <View style={[z.heroStatDivider, { backgroundColor: t.divider }]} />
+            <View style={z.heroStatCell}>
+              <Text style={[z.heroStatValue, { color: '#22c55e' }]}>● Active</Text>
+              <Text style={[z.heroStatLabel, { color: t.textTer }]}>ACCOUNT</Text>
             </View>
           </View>
         </View>
@@ -992,118 +997,138 @@ const z = StyleSheet.create({
   },
   logoutBtnText: { fontSize: 11, fontWeight: '800', color: '#ef4444', letterSpacing: 0.2 },
 
-  // ─── ID CARD (boarding-pass style) ────────────
-  idCardWrap: {
-    flexDirection: 'row',
+  // ─── HERO (gradient banner + overlapping avatar) ────────────
+  heroWrap: {
     marginHorizontal: 14,
-    borderRadius: 18,
+    borderRadius: 22,
     overflow: 'hidden',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 18 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 20 },
       android: { elevation: 6 },
     }),
   },
-  idStripe: {
-    width: 32,
-    alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 14,
-  },
-  idStripeText: {
-    color: '#11162a',
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 2.2,
-    transform: [{ rotate: '-90deg' }],
-    width: 220,
-    textAlign: 'center',
-  },
-  idCard: {
-    flex: 1,
-    paddingHorizontal: 16, paddingVertical: 16,
-    borderWidth: 1, borderLeftWidth: 0,
-    borderTopRightRadius: 18, borderBottomRightRadius: 18,
+  banner: {
+    height: 110,
     position: 'relative',
     overflow: 'hidden',
   },
-  gridPattern: {
+  bannerGlow: {
     position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    opacity: 0.35,
+    top: -60, right: -40,
+    width: 200, height: 200, borderRadius: 100,
+    opacity: 0.45,
   },
-  gridLine: {
+  bannerDots: { position: 'absolute', inset: 0 },
+  bannerDot: {
     position: 'absolute',
-    left: 0, right: 0,
-    height: StyleSheet.hairlineWidth,
+    width: 4, height: 4, borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
-  idCardTop: {
-    flexDirection: 'row',
+  heroInitials: {
+    position: 'absolute',
+    right: 18, top: 18,
+    width: 38, height: 38, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  heroInitialsText: {
+    color: '#fff',
+    fontSize: 14, fontWeight: '900',
+    letterSpacing: 0.4,
+  },
+  heroCard: {
+    paddingTop: 50,
+    paddingHorizontal: 18, paddingBottom: 18,
+    borderTopWidth: 0,
     alignItems: 'center',
-    gap: 14,
-  },
-  avatarFrame: {
-    padding: 3, borderRadius: 16,
-    borderWidth: 2,
-  },
-  idCardInfo: { flex: 1, minWidth: 0 },
-  idLabel: {
-    fontSize: 9, fontWeight: '900',
-    letterSpacing: 1.8,
-    marginBottom: 2,
-  },
-  idName: {
-    fontSize: 18, fontWeight: '900',
-    letterSpacing: -0.4,
-    marginBottom: 3,
-  },
-  idEmail: { fontSize: 12, fontWeight: '500' },
-
-  // Perforated divider
-  perforation: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 14,
-    marginHorizontal: -16,
-    height: 1,
     position: 'relative',
   },
-  perfNotchLeft: {
+  avatarPlate: {
     position: 'absolute',
-    left: -8, top: -8,
-    width: 16, height: 16, borderRadius: 8,
+    top: -50, alignSelf: 'center',
+    zIndex: 10,
   },
-  perfNotchRight: {
-    position: 'absolute',
-    right: -8, top: -8,
-    width: 16, height: 16, borderRadius: 8,
+  avatarRing: {
+    padding: 4, borderRadius: 60,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 10 },
+      android: { elevation: 4 },
+    }),
   },
-  perfDots: {
-    flex: 1,
+  heroName: {
+    fontSize: 22, fontWeight: '900',
+    letterSpacing: -0.5,
+    textAlign: 'center',
+    marginTop: 6,
+  },
+  heroEmail: {
+    fontSize: 13, fontWeight: '500',
+    marginTop: 3,
+    textAlign: 'center',
+  },
+  heroPills: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 12,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  heroRolePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 11, paddingVertical: 5,
+    borderRadius: 999, borderWidth: 1,
+  },
+  heroRoleDot: { width: 6, height: 6, borderRadius: 3 },
+  heroRoleText: {
+    fontSize: 11, fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  heroIdPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 999, borderWidth: 1,
+  },
+  heroIdText: {
+    fontSize: 11, fontWeight: '800',
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
+  },
+  heroStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-evenly',
-    paddingHorizontal: 14,
+    width: '100%',
+    marginTop: 16,
+    paddingTop: 14,
+    borderTopWidth: 1,
   },
-  perfDot: { width: 4, height: 1.5, borderRadius: 1 },
-
-  // ID stats (bottom row of card)
-  idStats: { flexDirection: 'row', alignItems: 'stretch', gap: 0 },
-  idStatItem: { flex: 1, paddingHorizontal: 4 },
-  idStatDivider: { width: 1, marginHorizontal: 8 },
-  idStatValue: {
+  heroStatCell: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  heroStatValue: {
     fontSize: 13, fontWeight: '800',
     letterSpacing: -0.2,
   },
+  heroStatLabel: {
+    fontSize: 9, fontWeight: '900',
+    letterSpacing: 1.2,
+  },
+  heroStatDivider: {
+    width: 1, height: 26,
+  },
 
-  // Status floater (sits below ID card)
+  // Status pill (sits below hero card)
   statusFloater: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginHorizontal: 14, marginTop: 10,
-    paddingHorizontal: 14, paddingVertical: 11,
-    borderRadius: 14, borderWidth: 1,
+    marginHorizontal: 14, marginTop: 12,
+    paddingHorizontal: 16, paddingVertical: 13,
+    borderRadius: 16, borderWidth: 1,
   },
   statusFloaterLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
   statusFloaterEdit: {
-    width: 28, height: 28, borderRadius: 10,
+    width: 32, height: 32, borderRadius: 11,
     alignItems: 'center', justifyContent: 'center',
   },
 

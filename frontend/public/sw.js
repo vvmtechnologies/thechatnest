@@ -3,7 +3,11 @@ const APP_BRANDING_ASSETS = {
     notificationIcon: '/thechatnest_logo_element.png',
 };
 
-const CACHE_NAME = 'thechatnest-cache-v3';
+// Bump on each deploy where SW logic changes. v4 fixes white-screen
+// on stale cached JS chunks: scripts are now network-first so a new
+// Vercel build's chunks are fetched fresh instead of returning the
+// stale cache (which would 404 → ChunkLoadError → blank screen).
+const CACHE_NAME = 'thechatnest-cache-v4';
 
 const getPrecacheUrls = () => [
     // Do NOT cache '/': it can serve different content depending on deploy
@@ -54,9 +58,31 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Cache-first for static assets
+    // Hashed Vite chunks (`/assets/*-HASH.js|css`) need network-first.
+    // A cached old chunk would 404 the next deploy → white screen.
+    const url = new URL(req.url);
+    const isHashedAsset = url.pathname.startsWith('/assets/') &&
+        /-[A-Za-z0-9_]{6,}\.(js|css)$/.test(url.pathname);
+
+    if (isHashedAsset) {
+        event.respondWith(
+            fetch(req)
+                .then((res) => {
+                    if (res && res.ok) {
+                        const copy = res.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+                    }
+                    return res;
+                })
+                .catch(() => caches.match(req))
+        );
+        return;
+    }
+
+    // Cache-first for true static assets (images, fonts) — these don't
+    // change per deploy and benefit from offline caching.
     const destination = req.destination;
-    if (['script', 'style', 'image', 'font'].includes(destination)) {
+    if (['image', 'font', 'style'].includes(destination)) {
         event.respondWith(
             caches.match(req).then((cached) => {
                 if (cached) return cached;

@@ -20,6 +20,37 @@ import { initSentry } from "./utils/sentry.js";
 // Initialize Sentry lazily — only fires if VITE_SENTRY_DSN is set.
 initSentry();
 
+// ─── Chunk-load recovery ───────────────────────────────────────────
+// After a Vercel deploy the old index.html in the user's tab still
+// references hashed chunks (e.g. Compare-BVNY945C.js) that 404 on
+// the new build. The first navigation throws "Failed to fetch
+// dynamically imported module" and React renders a white screen.
+// Catch it once, force a fresh fetch of index.html, and reload.
+const RELOAD_KEY = "tcn:chunk-reload";
+const onChunkError = (event) => {
+  const msg = String(event?.reason?.message || event?.message || "");
+  const isChunkErr =
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /Loading chunk \d+ failed/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    /ChunkLoadError/i.test(msg);
+  if (!isChunkErr) return;
+  // Only reload once per session — if it fails again, it's a real bug
+  // (network down) and looping would trap the user.
+  if (sessionStorage.getItem(RELOAD_KEY)) return;
+  sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+  event.preventDefault?.();
+  // Bypass HTTP cache so the new index.html + new chunk map are fetched.
+  window.location.reload();
+};
+window.addEventListener("error", onChunkError);
+window.addEventListener("unhandledrejection", onChunkError);
+// Clear the reload-once flag if the page lives long enough — lets a
+// later deploy recover too.
+window.addEventListener("load", () => {
+  setTimeout(() => sessionStorage.removeItem(RELOAD_KEY), 30_000);
+});
+
 // Ensure dev environment stays clear of any previously installed SWs.
 if (import.meta.env.DEV && "serviceWorker" in navigator) {
   navigator.serviceWorker

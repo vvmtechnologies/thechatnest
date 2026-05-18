@@ -14,17 +14,20 @@
         "simulator": true
       },
       "env": {
-        "API_BASE_URL": "https://dream-s3pi.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://thechatnest-api.onrender.com"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
       },
-      "node": "22.16.0",
+      "ios": {
+        "simulator": false
+      },
       "env": {
-        "API_BASE_URL": "https://dream-s3pi.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://thechatnest-api.onrender.com"
       }
     },
     "production": {
@@ -33,7 +36,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "API_BASE_URL": "https://dream-s3pi.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://thechatnest-api.onrender.com"
       }
     }
   },

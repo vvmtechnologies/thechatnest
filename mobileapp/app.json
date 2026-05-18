@@ -118,7 +118,7 @@
         "expo-notifications",
         {
           "icon": "./assets/icon.png",
-          "color": "#ea4c89"
+          "color": "#ffd54a"
         }
       ],
       [
@@ -132,7 +132,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "66b479ed-b39e-4110-85d2-1fbebbe3d4cb"
+        "projectId": "9641c7d5-bb92-47bc-a0bd-36583d1700e3"
       }
     },
     "owner": "thakurbhavesh1725"

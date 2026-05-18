@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 const ThemeContext = createContext({});
 
-const DEFAULT_ACCENT = '#ea4c89';
+const DEFAULT_ACCENT = '#ffd54a'; // TheChatNest brand gold
 const FONT_SIZES = { Small: 13, Normal: 15, Large: 17 };
 const FONTS = {
   'SF Display': Platform.OS === 'ios' ? 'System' : 'sans-serif',
@@ -34,20 +34,20 @@ const buildTheme = (isDark, accent, fontFamily, fontSizeKey) => {
   if (isDark) {
     return {
       ...base, mode: 'dark',
-      bg: '#0b1120', surface: '#1e293b', surfaceAlt: '#1e293b', surfaceHover: '#253346',
-      card: '#1e293b', cardAlt: '#162032',
-      text: '#f1f5f9', textSec: '#94a3b8', textTer: '#64748b', textQuad: '#475569',
-      border: '#334155', borderLight: '#1e293b', borderMed: '#475569',
-      icon: '#64748b', iconActive: '#94a3b8',
-      blue: '#3b82f6', blueBg: 'rgba(59,130,246,0.15)', blueSoft: 'rgba(59,130,246,0.08)',
-      green: '#22c55e', greenBg: 'rgba(34,197,94,0.15)', greenSoft: 'rgba(34,197,94,0.08)',
-      red: '#ef4444', redBg: 'rgba(239,68,68,0.15)', redSoft: 'rgba(239,68,68,0.08)',
-      yellow: '#f59e0b', yellowBg: 'rgba(245,158,11,0.15)',
-      purple: '#8b5cf6', purpleBg: 'rgba(139,92,246,0.15)',
-      shadow: 'rgba(0,0,0,0.3)', shadowMed: 'rgba(0,0,0,0.4)', overlay: 'rgba(0,0,0,0.6)',
-      tabBg: '#0f172a', inputBg: '#0f172a', inputBorder: '#334155', inputFocusBorder: accent,
-      chatBg: '#0b141a', divider: '#1e293b', skeleton: '#334155',
-      bubbleOwn: '#1a3a2a', bubbleOther: '#1e293b', bubbleOwnText: '#e2e8f0', bubbleOtherText: '#f1f5f9',
+      bg: '#0b0f1e', surface: '#11162a', surfaceAlt: '#1a1f3a', surfaceHover: '#222948',
+      card: '#11162a', cardAlt: '#0e1326',
+      text: '#f1f5f9', textSec: '#a8b0c5', textTer: '#7882a3', textQuad: '#4d5478',
+      border: '#222948', borderLight: '#1a1f3a', borderMed: '#2d345a',
+      icon: '#7882a3', iconActive: '#a8b0c5',
+      blue: '#6d5dfc', blueBg: 'rgba(109,93,252,0.18)', blueSoft: 'rgba(109,93,252,0.08)',
+      green: '#22c55e', greenBg: 'rgba(34,197,94,0.18)', greenSoft: 'rgba(34,197,94,0.08)',
+      red: '#ef4444', redBg: 'rgba(239,68,68,0.18)', redSoft: 'rgba(239,68,68,0.08)',
+      yellow: '#ffb74d', yellowBg: 'rgba(255,183,77,0.18)',
+      purple: '#6d5dfc', purpleBg: 'rgba(109,93,252,0.18)',
+      shadow: 'rgba(0,0,0,0.4)', shadowMed: 'rgba(0,0,0,0.55)', overlay: 'rgba(0,0,0,0.65)',
+      tabBg: '#0b0f1e', inputBg: '#11162a', inputBorder: '#222948', inputFocusBorder: accent,
+      chatBg: '#0b0f1e', divider: '#1a1f3a', skeleton: '#222948',
+      bubbleOwn: '#1f2750', bubbleOther: '#11162a', bubbleOwnText: '#f1f5f9', bubbleOtherText: '#e2e8f0',
     };
   }
   return {

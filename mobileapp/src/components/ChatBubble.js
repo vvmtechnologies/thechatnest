@@ -15,7 +15,7 @@ const isEmojiOnly = (txt) => {
 };
 
 // Links → external browser, Files/Images/Videos → in-app preview
-const openInApp = (url, color) => url && WebBrowser.openBrowserAsync(url, { presentationStyle: 'pageSheet', controlsColor: color || '#ea4c89' });
+const openInApp = (url, color) => url && WebBrowser.openBrowserAsync(url, { presentationStyle: 'pageSheet', controlsColor: color || '#ffd54a' });
 const openExternal = (url) => url && Linking.openURL(url);
 
 // URL regex — detects both https://... AND bare domains like thechatnest.com, google.com/path
@@ -217,7 +217,7 @@ function AudioPlayerWidget({ url, duration: metaDuration, isOwn, metaColor, Foot
 
   return (
     <View style={z.audioRow}>
-      <TouchableOpacity style={[z.audioPlayBtn, { backgroundColor: isOwn ? '#4caf50' : '#ea4c89' }]} onPress={togglePlay}>
+      <TouchableOpacity style={[z.audioPlayBtn, { backgroundColor: isOwn ? '#4caf50' : '#ffd54a' }]} onPress={togglePlay}>
         <Ionicons name={isPlaying ? 'pause' : 'play'} size={18} color="#fff" />
       </TouchableOpacity>
       <View style={z.audioCenter}>
@@ -225,14 +225,14 @@ function AudioPlayerWidget({ url, duration: metaDuration, isOwn, metaColor, Foot
           {[10, 16, 8, 20, 14, 22, 10, 18, 6, 16, 12, 20, 8, 14, 18, 10, 22, 6, 16, 12].map((h, i) => (
             <View key={i} style={[z.waveBar, {
               height: h,
-              backgroundColor: (i / 20) <= progress ? (isOwn ? '#4caf50' : '#ea4c89') : (isOwn ? '#6d9b5d55' : '#8696a055'),
+              backgroundColor: (i / 20) <= progress ? (isOwn ? '#4caf50' : '#ffd54a') : (isOwn ? '#6d9b5d55' : '#8696a055'),
             }]} />
           ))}
         </View>
         <View style={z.audioDurRow}>
           <Text style={[z.audioDur, { color: metaColor }]}>{displayTime}</Text>
           <TouchableOpacity onPress={cycleSpeed} style={z.speedBtn} activeOpacity={0.6}>
-            <Text style={[z.speedText, { color: isOwn ? '#4caf50' : '#ea4c89' }]}>{SPEEDS[speedIdx]}x</Text>
+            <Text style={[z.speedText, { color: isOwn ? '#4caf50' : '#ffd54a' }]}>{SPEEDS[speedIdx]}x</Text>
           </TouchableOpacity>
           {Footer}
         </View>
@@ -285,7 +285,7 @@ function PollWidget({ content, metadata, isOwn, accentColor, onVote, messageId }
   );
 }
 
-export default function ChatBubble({ message, isOwn, showName, onAction, accentColor = '#ea4c89', textSize = 15, onReact, onPollVote, viewerIsAdmin, onImagePress, isDark = false }) {
+export default function ChatBubble({ message, isOwn, showName, onAction, accentColor = '#ffd54a', textSize = 15, onReact, onPollVote, viewerIsAdmin, onImagePress, isDark = false }) {
   const [expanded, setExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const ACCENT = accentColor;

@@ -101,14 +101,18 @@ const connectSocket = async (forceNew = false) => {
 
     const socket = io(SOCKET_URL, {
       auth: { token },
-      // Try websocket first (lower latency, no upgrade round-trip); fall back to
-      // long-polling only if the network/proxy blocks WS.
-      transports: ['websocket', 'polling'],
-      upgrade: true,
+      // Polling-only on mobile — Render's HTTP/1.1 proxy strips the WS upgrade
+      // header, which triggers a noisy `connect_error: websocket error` AFTER
+      // the polling handshake already succeeded. Polling handles 1k+ msg/sec
+      // per user just fine; we can re-enable upgrade once we move to a proper
+      // WS-capable proxy (Cloudflare WS, Fly.io, or our own VPS).
+      transports: ['polling'],
+      upgrade: false,
       reconnection: true,
       reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 15000,
+      randomizationFactor: 0.5,
       timeout: 45000,
       forceNew: true,
     });
@@ -144,15 +148,20 @@ const connectSocket = async (forceNew = false) => {
 
     let authRetries = 0;
     socket.on('connect_error', async (err) => {
-      console.log('[socket] connect_error:', err.message);
-      // On ANY connect_error, try refreshing token (might be expired)
-      if (authRetries < 3) {
+      const msg = err?.message || 'unknown';
+      // Only log auth/server failures — silence the noisy transport errors
+      // that happen during the polling→websocket upgrade race or on network
+      // hiccups (socket.io will auto-retry these anyway).
+      if (!/websocket error|xhr poll error|timeout/i.test(msg)) {
+        console.log('[socket] connect_error:', msg);
+      }
+      // On auth failure, try refreshing token (might be expired)
+      if (/auth|token|jwt|expired|unauthorized/i.test(msg) && authRetries < 3) {
         authRetries++;
         const newToken = await doRefresh();
         if (newToken) {
           lastToken = newToken;
           socket.auth = { token: newToken };
-          // Force reconnect with new token
           await SecureStore.setItemAsync('accessToken', newToken);
         }
       }

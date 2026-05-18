@@ -69,7 +69,7 @@ const getTimeAgo = (d) => {
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 };
 
-const PRESET_COLORS = ['#ea4c89', '#2065D1', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#0f172a'];
+const PRESET_COLORS = ['#ffd54a', '#6d5dfc', '#ffb74d', '#22c55e', '#0ea5e9', '#ec4899', '#f59e0b', '#11162a'];
 const FONTS_LIST = ['SF Display', 'Poppins', 'Noto Sans', 'Inter', 'Roboto'];
 const FONT_SIZES_LIST = ['Small', 'Normal', 'Large'];
 
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   const [loadingDevices, setLoadingDevices] = useState(false);
 
   // Customize
-  const [hexInput, setHexInput] = useState(currentBrand || '#ea4c89');
+  const [hexInput, setHexInput] = useState(currentBrand || '#ffd54a');
   useEffect(() => { setHexInput(currentBrand); }, [currentBrand]);
 
   // Notification tone
@@ -321,9 +321,25 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[z.root, { backgroundColor: t.bg }]} edges={['top', 'bottom']}>
-      {/* ─── Fixed Profile Header ─── */}
-      <View style={[z.profileCard, { backgroundColor: t.card }]}>
-        <View style={z.profileTop}>
+      {/* ─── Top brand row ─── */}
+      <View style={[z.topBar, { borderBottomColor: t.divider }]}>
+        <View style={z.topBarLeft}>
+          <View style={z.brandTile}>
+            <Ionicons name="person" size={14} color="#6e4f10" />
+          </View>
+          <Text style={[z.topBarTitle, { color: t.text }]}>Profile</Text>
+        </View>
+        <TouchableOpacity style={[z.logoutBtn, { backgroundColor: 'rgba(239,68,68,0.1)' }]} onPress={handleLogout} activeOpacity={0.7}>
+          <Ionicons name="log-out-outline" size={18} color="#ef4444" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ─── Profile Hero Card (centered, big avatar) ─── */}
+      <View style={[z.profileCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
+        <View style={z.heroAccent} />
+        <View style={z.heroAccentViolet} />
+
+        <View style={z.profileTopCenter}>
           <TouchableOpacity activeOpacity={0.7} onPress={async () => {
             try {
               const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [1, 1] });
@@ -340,36 +356,57 @@ export default function ProfileScreen() {
                 refreshUser();
               } else { toast('Updated', 'success'); }
             } catch (e) { toast(e?.response?.data?.message || 'Upload failed', 'error'); }
-          }}>
-            <Avatar uri={p.profile_url || p.avatar} name={p.name} size={62} />
+          }} style={z.avatarWrap}>
+            <View style={z.avatarRingBig}>
+              <Avatar uri={p.profile_url || p.avatar} name={p.name} size={86} />
+            </View>
             <View style={z.cameraBadge}>
-              <Ionicons name="camera" size={12} color="#fff" />
+              <Ionicons name="camera" size={12} color="#6e4f10" />
             </View>
           </TouchableOpacity>
-          <View style={z.profileInfo}>
-            <Text style={[z.profileName, { color: t.text }]}>{p.name || 'User'}</Text>
-            <Text style={[z.profileEmail, { color: t.textSec }]}>{p.email}</Text>
-            <View style={[z.rolePill, { backgroundColor: `${t.accent}12` }]}>
-              <Text style={[z.roleText, { color: t.accent }]}>{role}</Text>
-            </View>
+          <Text style={[z.profileNameCenter, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
+          <Text style={[z.profileEmailCenter, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
+          <View style={[z.rolePill, { backgroundColor: 'rgba(255,213,74,0.15)', borderColor: 'rgba(255,213,74,0.4)', marginTop: 10 }]}>
+            <View style={z.rolePillDot} />
+            <Text style={[z.roleText, { color: t.accent }]}>{role}</Text>
           </View>
-          <TouchableOpacity style={[z.logoutBtn, { backgroundColor: `${t.red}10` }]} onPress={handleLogout} activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={18} color={t.red} />
-          </TouchableOpacity>
         </View>
+
         {/* Status bar */}
-        <TouchableOpacity style={[z.statusBar, { backgroundColor: isDark ? '#0f172a' : '#f8fafc', borderColor: t.divider }]}
+        <TouchableOpacity style={[z.statusBar, { backgroundColor: t.bg, borderColor: t.divider }]}
           onPress={() => setShowStatusPicker(true)} activeOpacity={0.7}>
           <View style={[z.statusDot, { backgroundColor: STATUS_OPTIONS.find(s => s.key === myStatus)?.color || '#22c55e' }]} />
           <Text style={[z.statusLabel, { color: t.text }]}>{myStatus}</Text>
           {statusText ? <Text style={[z.statusCustom, { color: t.textSec }]} numberOfLines={1}> — {statusText}</Text> : null}
-          <Ionicons name="chevron-forward" size={14} color={t.textTer} style={{ marginLeft: 'auto' }} />
+          <Ionicons name="pencil" size={12} color={t.textTer} style={{ marginLeft: 'auto' }} />
         </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}
         contentContainerStyle={z.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[t.accent]} />}>
+
+        {/* Quick-action grid — 4 most-used settings */}
+        <View style={z.quickGrid}>
+          {[
+            { icon: 'qr-code',       label: 'Linked\ndevices',  tint: '#6d5dfc', onPress: () => router.push('/chat/linked-devices') },
+            { icon: 'shield-checkmark', label: 'Privacy &\nsecurity', tint: '#22c55e', onPress: () => router.push('/chat/privacy') },
+            { icon: 'notifications', label: 'Notifications',    tint: '#0ea5e9', onPress: () => router.push('/chat/notifications') },
+            { icon: 'help-circle',   label: 'Help &\nsupport',  tint: '#f59e0b', onPress: () => router.push('/chat/help') },
+          ].map((q) => (
+            <TouchableOpacity
+              key={q.label}
+              style={[z.quickGridCard, { backgroundColor: t.surface, borderColor: t.divider }]}
+              onPress={q.onPress}
+              activeOpacity={0.7}
+            >
+              <View style={[z.quickGridIcon, { backgroundColor: q.tint + '22' }]}>
+                <Ionicons name={q.icon} size={18} color={q.tint} />
+              </View>
+              <Text style={[z.quickGridLabel, { color: t.text }]}>{q.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         {/* ═══════════ ADMIN (only for admins) ═══════════ */}
         {(Number(user?.role_id) <= 3 && Number(user?.role_id) >= 1) && (
@@ -577,7 +614,7 @@ export default function ProfileScreen() {
             <View style={[z.hexWrap, { borderColor: t.border, backgroundColor: t.inputBg }]}>
               <Text style={[z.hexLabel, { color: t.textTer }]}>HEX</Text>
               <TextInput style={[z.hexInput, { color: t.text }]} value={hexInput} onChangeText={setHexInput}
-                placeholder="#ea4c89" placeholderTextColor={t.textTer} maxLength={7} autoCapitalize="characters" />
+                placeholder="#ffd54a" placeholderTextColor={t.textTer} maxLength={7} autoCapitalize="characters" />
             </View>
             <TouchableOpacity style={[z.hexApply, { backgroundColor: currentBrand }]}
               onPress={() => { setBrand(hexInput); toast('Applied!', 'success'); }} activeOpacity={0.85}>
@@ -882,30 +919,122 @@ function InfoRow({ icon, label, value, t, last }) {
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const z = StyleSheet.create({
   root: { flex: 1 },
-  scroll: { paddingBottom: 60 },
+  scroll: { paddingBottom: 120 },
 
-  // Profile header
+  // Top bar
+  topBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brandTile: {
+    width: 30, height: 30, borderRadius: 9,
+    backgroundColor: '#ffd54a',
+    alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 8 },
+      android: { elevation: 4 },
+    }),
+  },
+  topBarTitle: { fontSize: 22, fontWeight: '900', letterSpacing: -0.4 },
+  logoutBtn: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+
+  // Profile card
   profileCard: {
-    paddingHorizontal: 18, paddingVertical: 18, marginBottom: 6,
-    ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8 }, android: { elevation: 2 } }),
+    paddingHorizontal: 18, paddingVertical: 18,
+    marginHorizontal: 12, marginTop: 12, marginBottom: 6,
+    borderRadius: 20, borderWidth: 1,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12 },
+      android: { elevation: 2 },
+    }),
+  },
+  heroAccent: {
+    position: 'absolute',
+    top: -50, right: -50,
+    width: 160, height: 160, borderRadius: 80,
+    backgroundColor: '#ffd54a',
+    opacity: 0.1,
+  },
+  heroAccentViolet: {
+    position: 'absolute',
+    bottom: -60, left: -50,
+    width: 140, height: 140, borderRadius: 70,
+    backgroundColor: '#6d5dfc',
+    opacity: 0.08,
   },
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  profileInfo: { flex: 1 },
-  profileName: { fontSize: 19, fontWeight: '800' },
-  profileEmail: { fontSize: 13, marginTop: 2 },
-  rolePill: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, marginTop: 4 },
-  roleText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
-  cameraBadge: { position: 'absolute', bottom: -2, right: -2, width: 24, height: 24, borderRadius: 12, backgroundColor: '#3b82f6', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  logoutBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  profileTopCenter: { alignItems: 'center', paddingVertical: 6 },
+  avatarWrap: { position: 'relative' },
+  avatarRing: {
+    padding: 3,
+    borderRadius: 38,
+    borderWidth: 2,
+    borderColor: 'rgba(255,213,74,0.5)',
+  },
+  avatarRingBig: {
+    padding: 4,
+    borderRadius: 50,
+    borderWidth: 2.5,
+    borderColor: 'rgba(255,213,74,0.5)',
+  },
+  profileInfo: { flex: 1, minWidth: 0 },
+  profileName: { fontSize: 19, fontWeight: '900', letterSpacing: -0.3 },
+  profileEmail: { fontSize: 13, marginTop: 3 },
+  profileNameCenter: {
+    fontSize: 22, fontWeight: '900', letterSpacing: -0.5,
+    marginTop: 14, textAlign: 'center',
+  },
+  profileEmailCenter: { fontSize: 13, marginTop: 4, textAlign: 'center' },
+
+  // Quick action grid
+  quickGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    paddingHorizontal: 12, paddingTop: 8, gap: 8,
+  },
+  quickGridCard: {
+    width: '48.5%',
+    paddingVertical: 14, paddingHorizontal: 12,
+    borderRadius: 14, borderWidth: 1,
+    gap: 10,
+  },
+  quickGridIcon: {
+    width: 36, height: 36, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  quickGridLabel: { fontSize: 12, fontWeight: '800', letterSpacing: -0.1, lineHeight: 15 },
+  rolePillRow: { flexDirection: 'row', marginTop: 8 },
+  rolePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 999, borderWidth: 1,
+  },
+  rolePillDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#ffd54a' },
+  roleText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 },
+  cameraBadge: {
+    position: 'absolute', bottom: 2, right: 2,
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: '#ffd54a',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 3, borderColor: '#11162a',
+    ...Platform.select({
+      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.5, shadowRadius: 8 },
+      android: { elevation: 4 },
+    }),
+  },
 
   // Section — expandable
   section: {
     marginHorizontal: 12, marginTop: 8, borderRadius: 16, overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
     ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6 }, android: { elevation: 1 } }),
   },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  sectionIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  sectionLabel: { flex: 1, fontSize: 15, fontWeight: '700' },
+  sectionIcon: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  sectionLabel: { flex: 1, fontSize: 14.5, fontWeight: '700', letterSpacing: -0.2 },
   sectionBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   sectionBadgeText: { fontSize: 11, fontWeight: '800' },
   sectionBody: { paddingHorizontal: 16, paddingBottom: 16, borderTopWidth: StyleSheet.hairlineWidth },
@@ -991,10 +1120,14 @@ const z = StyleSheet.create({
   pinSetupRow: { paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
 
   // Status bar under profile
-  statusBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
-  statusDot: { width: 10, height: 10, borderRadius: 5 },
-  statusLabel: { fontSize: 14, fontWeight: '700' },
-  statusCustom: { fontSize: 13, flex: 1 },
+  statusBar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginTop: 14, paddingHorizontal: 14, paddingVertical: 11,
+    borderRadius: 14, borderWidth: 1,
+  },
+  statusDot: { width: 9, height: 9, borderRadius: 4.5 },
+  statusLabel: { fontSize: 13, fontWeight: '800', letterSpacing: -0.1 },
+  statusCustom: { fontSize: 12, flex: 1 },
 
   // Status picker modal
   statusOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },

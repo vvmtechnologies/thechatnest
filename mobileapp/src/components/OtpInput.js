@@ -1,3 +1,8 @@
+// ─── OTP Input — TheChatNest ───────────────────────────────────────
+//
+// 6-box code input. Adapts to dark surfaces (navy + gold) by default.
+// Pass `mode="light"` if rendering on a light background.
+
 import { useRef, useState } from 'react';
 import { View, TextInput, StyleSheet, Dimensions } from 'react-native';
 
@@ -5,7 +10,9 @@ const OTP_LENGTH = 6;
 const { width } = Dimensions.get('window');
 const BOX_SIZE = Math.min(48, (width - 80) / OTP_LENGTH - 8);
 
-export default function OtpInput({ value, onChange }) {
+const GOLD = '#ffd54a';
+
+export default function OtpInput({ value, onChange, mode = 'dark' }) {
   const inputs = useRef([]);
   const [focused, setFocused] = useState(-1);
   const digits = (value || '').split('').concat(Array(OTP_LENGTH).fill('')).slice(0, OTP_LENGTH);
@@ -30,6 +37,11 @@ export default function OtpInput({ value, onChange }) {
     }
   };
 
+  const isLight = mode === 'light';
+  const base = isLight ? styles.boxLight : styles.boxDark;
+  const focus = isLight ? styles.focusLight : styles.focusDark;
+  const filled = isLight ? styles.filledLight : styles.filledDark;
+
   return (
     <View style={styles.row}>
       {digits.map((digit, i) => (
@@ -38,8 +50,9 @@ export default function OtpInput({ value, onChange }) {
           ref={r => (inputs.current[i] = r)}
           style={[
             styles.box,
-            focused === i && styles.boxFocus,
-            digit && styles.boxFilled,
+            base,
+            focused === i && focus,
+            digit && filled,
           ]}
           value={digit}
           onChangeText={t => handleChange(t, i)}
@@ -63,22 +76,46 @@ const styles = StyleSheet.create({
     width: BOX_SIZE,
     height: BOX_SIZE + 8,
     borderRadius: 14,
-    borderWidth: 2,
-    borderColor: '#e2e8f0',
-    backgroundColor: '#fafbfc',
+    borderWidth: 1.5,
     textAlign: 'center',
     fontSize: 22,
     fontWeight: '800',
+  },
+
+  // Dark variant (glass on navy)
+  boxDark: {
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#f1f5f9',
+  },
+  focusDark: {
+    borderColor: GOLD,
+    backgroundColor: 'rgba(255,213,74,0.08)',
+    shadowColor: GOLD,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  filledDark: {
+    borderColor: GOLD,
+    backgroundColor: 'rgba(255,213,74,0.12)',
+  },
+
+  // Light variant
+  boxLight: {
+    borderColor: '#e2e8f0',
+    backgroundColor: '#fafbfc',
     color: '#0f172a',
   },
-  boxFocus: {
-    borderColor: '#ea4c89',
-    backgroundColor: '#eef2ff',
-    shadowColor: '#ea4c89',
+  focusLight: {
+    borderColor: GOLD,
+    backgroundColor: '#fffbeb',
+    shadowColor: GOLD,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 3,
   },
-  boxFilled: { borderColor: '#ea4c89', backgroundColor: '#fff' },
+  filledLight: { borderColor: GOLD, backgroundColor: '#fff' },
 });

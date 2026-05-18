@@ -27,6 +27,7 @@ const linkGroups = [
   {
     title: "Company",
     links: [
+      { label: "About", to: "/about" },
       { label: "Why TheChatNest", to: "/why-thechatnest" },
       { label: "How it Works", to: "/how-it-works" },
       { label: "Blog", to: "/blog" },
@@ -54,10 +55,11 @@ const linkGroups = [
     ],
   },
   {
-    title: "Trust",
+    title: "Trust & Legal",
     links: [
       { label: "Security", to: "/security" },
       { label: "System status", to: "/status" },
+      { label: "Terms of Service", to: "/terms" },
       { label: "Privacy Policy", to: "/saas-privacy" },
       { label: "GDPR", to: "/gdpr" },
       { label: "Refund Policy", to: "/refund-policy" },

@@ -40,6 +40,8 @@ const Referrals = lazy(() => import("../website/pages/Referrals.jsx"));
 const UseCase = lazy(() => import("../website/pages/UseCase.jsx"));
 const Blog = lazy(() => import("../website/pages/Blog.jsx"));
 const Maintenance = lazy(() => import("../website/pages/Maintenance.jsx"));
+const Terms = lazy(() => import("../website/pages/Terms.jsx"));
+const About = lazy(() => import("../website/pages/About.jsx"));
 const SaasPrivacy = lazy(() => import("../website/pages/SaasPrivacy.jsx"));
 const Gdpr = lazy(() => import("../website/pages/Gdpr.jsx"));
 const RefundPolicy = lazy(() => import("../website/pages/RefundPolicy.jsx"));
@@ -125,6 +127,8 @@ export default function Router() {
           { path: "blog", element: <Blog /> },
           { path: "blog/:slug", element: <Blog /> },
           { path: "maintenance", element: <Maintenance /> },
+          { path: "terms", element: <Terms /> },
+          { path: "about", element: <About /> },
           // Legacy routes redirected to consolidated pages
           { path: "blogs", element: <Navigate to="/" replace /> },
           { path: "channel-partner", element: <Navigate to="/contact" replace /> },

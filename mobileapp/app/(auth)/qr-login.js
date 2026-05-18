@@ -1,11 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, FlatList, Alert } from 'react-native';
+// ─── TheChatNest Mobile — Linked Devices & QR Scanner ──────────────
+//
+// Navy + gold aesthetic, glass cards, animated scanner frame.
+// All trusted-devices + QR confirm API logic preserved.
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  View, Text, TouchableOpacity, StyleSheet, ActivityIndicator,
+  FlatList, Alert, Animated, Platform, Easing,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StatusBar } from 'expo-status-bar';
+import * as Haptics from 'expo-haptics';
 import api from '../../src/api/config';
 import { useToast } from '../../src/components/Toast';
-import { useTheme } from '../../src/store/ThemeContext';
+import { brand, colors, spacing, radius, fontSize, fontWeight } from '../../src/theme/colors';
 
 let CameraView, useCameraPermissions;
 try {
@@ -23,25 +34,30 @@ const getTimeAgo = (d) => {
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+const FRAME = 250;
+
 export default function LinkedDevicesScreen() {
-  const { theme: t, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const toast = useToast();
 
-  const [mode, setMode] = useState('list'); // 'list' | 'scan'
+  const [mode, setMode] = useState('list');
   const [devices, setDevices] = useState([]);
   const [loadingDevices, setLoadingDevices] = useState(true);
   const [scanned, setScanned] = useState(false);
   const [processing, setProcessing] = useState(false);
 
-  const ACCENT = t.accent;
-  const bg = isDark ? '#0b141a' : '#fff';
-  const headerBg = isDark ? '#1f2c34' : ACCENT;
-  const cardBg = isDark ? '#1e293b' : '#f8fafc';
-  const textColor = isDark ? '#f1f5f9' : '#0f172a';
-  const subColor = isDark ? '#64748b' : '#94a3b8';
+  // Scanner line animation
+  const scanLine = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (mode !== 'scan') return;
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(scanLine, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(scanLine, { toValue: 0, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+  }, [mode]);
 
-  // Load linked devices
   const loadDevices = useCallback(async () => {
     setLoadingDevices(true);
     try {
@@ -54,35 +70,35 @@ export default function LinkedDevicesScreen() {
 
   useEffect(() => { loadDevices(); }, []);
 
-  // Revoke device
   const revokeDevice = useCallback((deviceId, name) => {
-    Alert.alert('Remove Device', `Remove "${name || 'Unknown'}" from linked devices?`, [
+    Alert.alert('Remove device', `Remove "${name || 'Unknown'}" from linked devices?`, [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: async () => {
-        try {
-          await api.post(`/auth/trusted-devices/${deviceId}/revoke`);
-          setDevices(prev => prev.filter(d => d.device_id !== deviceId));
-          toast('Device removed', 'success');
-        } catch { toast('Failed', 'error'); }
-      }},
+      {
+        text: 'Remove', style: 'destructive', onPress: async () => {
+          try {
+            await api.post(`/auth/trusted-devices/${deviceId}/revoke`);
+            setDevices(prev => prev.filter(d => d.device_id !== deviceId));
+            try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+            toast('Device removed', 'success');
+          } catch { toast('Failed', 'error'); }
+        }
+      },
     ]);
   }, [toast]);
 
-  // QR scan handler
   const handleBarCodeScanned = async ({ data }) => {
     if (scanned || processing) return;
     setScanned(true);
     setProcessing(true);
+    try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
     try {
       let qrToken = data;
       try { const parsed = JSON.parse(data); qrToken = parsed.qrToken || parsed.token || data; } catch {}
-
-      // api interceptor auto-attaches Bearer token from SecureStore
       const { data: res } = await api.post('/auth/qr/confirm', { qrToken });
       if (res?.status === 'success' || res?.data?.ok) {
         toast('Web browser linked!', 'success');
         setMode('list');
-        loadDevices(); // refresh list
+        loadDevices();
       } else {
         toast(res?.message || 'QR expired or invalid', 'error');
         setScanned(false);
@@ -94,100 +110,160 @@ export default function LinkedDevicesScreen() {
     finally { setProcessing(false); }
   };
 
-  // Scanner mode
+  // ─── Scanner mode ───
   if (mode === 'scan') {
+    const lineY = scanLine.interpolate({ inputRange: [0, 1], outputRange: [10, FRAME - 10] });
     return (
-      <View style={[s.root, { backgroundColor: '#000' }]}>
+      <View style={s.scanRoot}>
+        <StatusBar style="light" />
         {CameraView ? (
-          <CameraView style={s.camera}
+          <CameraView
+            style={s.camera}
             barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned} />
+            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+          />
         ) : (
-          <View style={s.noCam}><Text style={s.noCamText}>Camera not available</Text></View>
+          <View style={s.noCam}>
+            <Ionicons name="camera-outline" size={48} color="rgba(255,255,255,0.4)" />
+            <Text style={s.noCamText}>Camera not available</Text>
+          </View>
         )}
+
+        {/* Dim overlay outside frame */}
+        <View style={s.dimTop} />
+        <View style={s.dimBottom} />
+        <View style={s.dimLeft} />
+        <View style={s.dimRight} />
 
         {/* Header overlay */}
         <View style={[s.scanHeader, { paddingTop: insets.top + 8 }]}>
-          <TouchableOpacity onPress={() => { setMode('list'); setScanned(false); }} style={s.scanBackBtn}>
-            <Ionicons name="close" size={26} color="#fff" />
+          <TouchableOpacity
+            onPress={() => { setMode('list'); setScanned(false); }}
+            style={s.scanBackBtn}
+            hitSlop={10}
+          >
+            <Ionicons name="close" size={22} color="#fff" />
           </TouchableOpacity>
-          <Text style={s.scanTitle}>Scan QR Code</Text>
-          <View style={{ width: 44 }} />
+          <Text style={s.scanTitle}>Scan QR code</Text>
+          <View style={{ width: 40 }} />
         </View>
 
         {/* Scanner frame */}
-        <View style={s.scanOverlay}>
+        <View style={s.scanOverlay} pointerEvents="none">
           <View style={s.scanFrame}>
             <View style={[s.corner, s.tl]} />
             <View style={[s.corner, s.tr]} />
             <View style={[s.corner, s.bl]} />
             <View style={[s.corner, s.br]} />
+            {!scanned && (
+              <Animated.View
+                style={[s.scanLine, { transform: [{ translateY: lineY }] }]}
+              >
+                <LinearGradient
+                  colors={['transparent', brand.gold, 'transparent']}
+                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                  style={{ height: 2 }}
+                />
+              </Animated.View>
+            )}
           </View>
-          <Text style={s.scanHint}>Point camera at QR code on{'\n'}TheChatNest web login page</Text>
-          {processing && <ActivityIndicator color="#fff" style={{ marginTop: 16 }} />}
+          <Text style={s.scanHint}>
+            Point camera at QR code on{'\n'}TheChatNest web login page
+          </Text>
+          {processing && <ActivityIndicator color={brand.gold} style={{ marginTop: 18 }} />}
         </View>
 
         {scanned && !processing && (
-          <TouchableOpacity style={s.rescanBtn} onPress={() => setScanned(false)} activeOpacity={0.8}>
-            <Ionicons name="refresh" size={18} color="#fff" />
-            <Text style={s.rescanText}>Scan Again</Text>
+          <TouchableOpacity
+            style={s.rescanBtn}
+            onPress={() => setScanned(false)}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={brand.gradientGold}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              style={s.rescanInner}
+            >
+              <Ionicons name="refresh" size={16} color={brand.goldInk} />
+              <Text style={s.rescanText}>Scan again</Text>
+            </LinearGradient>
           </TouchableOpacity>
         )}
       </View>
     );
   }
 
-  // List mode
+  // ─── List mode ───
   return (
-    <View style={[s.root, { backgroundColor: bg }]}>
+    <View style={s.root}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={brand.gradientHero}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <View style={s.glowGold} />
+
       {/* Header */}
-      <View style={[s.header, { backgroundColor: headerBg, paddingTop: insets.top + 6 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#fff" />
+      <View style={[s.header, { paddingTop: insets.top + 6 }]}>
+        <TouchableOpacity onPress={() => router.back()} style={s.backBtn} hitSlop={10}>
+          <Ionicons name="chevron-back" size={22} color={colors.textOnDark} />
         </TouchableOpacity>
-        <Text style={s.headerTitle}>Linked Devices</Text>
+        <Text style={s.headerTitle}>Linked devices</Text>
+        <View style={{ width: 36 }} />
       </View>
 
       <FlatList
         data={devices}
         keyExtractor={(d, i) => String(d.device_id || i)}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 50 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
         refreshing={loadingDevices}
         onRefresh={loadDevices}
         ListHeaderComponent={
           <>
-            {/* Link new device button */}
-            <TouchableOpacity style={[s.linkBtn, { backgroundColor: `${ACCENT}10`, borderColor: ACCENT }]}
-              onPress={() => { setScanned(false); setMode('scan'); }} activeOpacity={0.7}>
-              <View style={[s.linkIcon, { backgroundColor: ACCENT }]}>
-                <Ionicons name="qr-code" size={24} color="#fff" />
-              </View>
+            {/* Link new device CTA */}
+            <TouchableOpacity
+              style={s.linkBtn}
+              onPress={() => { setScanned(false); setMode('scan'); }}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={brand.gradientGold}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+                style={s.linkIcon}
+              >
+                <Ionicons name="qr-code" size={26} color={brand.goldInk} />
+              </LinearGradient>
               <View style={{ flex: 1 }}>
-                <Text style={[s.linkTitle, { color: textColor }]}>Link a Device</Text>
-                <Text style={[s.linkSub, { color: subColor }]}>Scan QR code from web browser to login</Text>
+                <Text style={s.linkTitle}>Link a device</Text>
+                <Text style={s.linkSub}>Scan QR from web to sign in</Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={subColor} />
+              <Ionicons name="arrow-forward" size={18} color={brand.gold} />
             </TouchableOpacity>
 
             {/* How it works */}
-            <View style={[s.howCard, { backgroundColor: cardBg }]}>
-              <Text style={[s.howTitle, { color: textColor }]}>How it works</Text>
+            <View style={s.howCard}>
+              <Text style={s.howTitle}>How it works</Text>
               {[
-                { step: '1', text: 'Open TheChatNest on your web browser' },
-                { step: '2', text: 'Click "Login via QR Code" on the login page' },
-                { step: '3', text: 'Tap "Link a Device" above and scan the QR code' },
-              ].map((item, i) => (
+                'Open TheChatNest in your web browser',
+                'Click "Login via QR Code" on the login page',
+                'Tap "Link a device" above and scan the QR',
+              ].map((text, i) => (
                 <View key={i} style={s.howRow}>
-                  <View style={[s.howStep, { backgroundColor: `${ACCENT}15` }]}>
-                    <Text style={[s.howStepText, { color: ACCENT }]}>{item.step}</Text>
+                  <View style={s.howStep}>
+                    <Text style={s.howStepText}>{i + 1}</Text>
                   </View>
-                  <Text style={[s.howText, { color: subColor }]}>{item.text}</Text>
+                  <Text style={s.howText}>{text}</Text>
                 </View>
               ))}
             </View>
 
-            {/* Devices header */}
-            <Text style={[s.sectionTitle, { color: textColor }]}>Active Devices</Text>
+            <View style={s.sectionTitleRow}>
+              <Text style={s.sectionTitle}>Active devices</Text>
+              <Text style={s.sectionCount}>
+                {devices.length || (loadingDevices ? '…' : '0')}
+              </Text>
+            </View>
           </>
         }
         renderItem={({ item: d, index }) => {
@@ -196,31 +272,41 @@ export default function LinkedDevicesScreen() {
           const isAndroid = os.includes('android');
           const isIOS = os.includes('ios') || os.includes('mac');
           const isWindows = os.includes('windows');
-          let devIcon = 'monitor', devColor = '#3b82f6';
+          let devIcon = 'monitor';
+          let devColor = '#6d5dfc';
           if (isAndroid) { devIcon = 'android'; devColor = '#3DDC84'; }
-          else if (isIOS) { devIcon = 'apple'; devColor = '#999'; }
-          else if (isWindows) { devIcon = 'microsoft-windows'; devColor = '#00A4EF'; }
+          else if (isIOS) { devIcon = 'apple'; devColor = '#e2e8f0'; }
+          else if (isWindows) { devIcon = 'microsoft-windows'; devColor = '#0ea5e9'; }
 
           return (
-            <View style={[s.deviceRow, { backgroundColor: cardBg }]}>
-              <View style={[s.deviceIcon, { backgroundColor: `${isCurrent ? '#22c55e' : devColor}12` }]}>
-                <MaterialCommunityIcons name={devIcon} size={22} color={isCurrent ? '#22c55e' : devColor} />
+            <View style={s.deviceRow}>
+              <View style={[s.deviceIcon, { backgroundColor: `${devColor}1f` }]}>
+                <MaterialCommunityIcons name={devIcon} size={22} color={devColor} />
               </View>
               <View style={{ flex: 1 }}>
                 <View style={s.deviceNameRow}>
-                  <Text style={[s.deviceName, { color: textColor }]}>{d.device_name || 'Unknown Device'}</Text>
-                  {isCurrent && <View style={[s.currentBadge, { backgroundColor: '#22c55e15' }]}><Text style={s.currentText}>This device</Text></View>}
+                  <Text style={s.deviceName}>{d.device_name || 'Unknown device'}</Text>
+                  {isCurrent && (
+                    <View style={s.currentBadge}>
+                      <View style={s.currentDot} />
+                      <Text style={s.currentText}>This device</Text>
+                    </View>
+                  )}
                 </View>
-                <Text style={[s.deviceMeta, { color: subColor }]}>
+                <Text style={s.deviceMeta} numberOfLines={1}>
                   {[d.os_name, d.city, d.country].filter(Boolean).join(' · ')}
                 </Text>
-                <Text style={[s.deviceTime, { color: subColor }]}>
+                <Text style={s.deviceTime}>
                   {isCurrent ? 'Active now' : `Last active ${getTimeAgo(d.last_active_at)}`}
                 </Text>
               </View>
               {!isCurrent && (
-                <TouchableOpacity style={[s.revokeBtn, { backgroundColor: '#ef444412' }]}
-                  onPress={() => revokeDevice(d.device_id, d.device_name)} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={s.revokeBtn}
+                  onPress={() => revokeDevice(d.device_id, d.device_name)}
+                  activeOpacity={0.7}
+                  hitSlop={6}
+                >
                   <Ionicons name="trash-outline" size={16} color="#ef4444" />
                 </TouchableOpacity>
               )}
@@ -230,8 +316,8 @@ export default function LinkedDevicesScreen() {
         ListEmptyComponent={
           loadingDevices ? null : (
             <View style={s.empty}>
-              <Ionicons name="phone-portrait-outline" size={44} color={subColor} />
-              <Text style={[s.emptyText, { color: subColor }]}>No devices found</Text>
+              <Ionicons name="phone-portrait-outline" size={36} color={colors.textOnDarkSubtle} />
+              <Text style={s.emptyText}>No devices yet</Text>
             </View>
           )
         }
@@ -240,62 +326,308 @@ export default function LinkedDevicesScreen() {
   );
 }
 
-const FRAME = 240;
 const s = StyleSheet.create({
-  root: { flex: 1 },
+  root: { flex: 1, backgroundColor: brand.navy },
+
+  glowGold: {
+    position: 'absolute',
+    top: -100, right: -80,
+    width: 320, height: 320,
+    borderRadius: 160,
+    backgroundColor: brand.gold,
+    opacity: 0.05,
+  },
 
   // Header
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingBottom: 14, elevation: 6 },
-  backBtn: { padding: 8, minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff', letterSpacing: -0.2 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.black,
+    color: colors.textOnDark,
+    letterSpacing: -0.3,
+  },
 
-  // Link button
-  linkBtn: { flexDirection: 'row', alignItems: 'center', gap: 14, marginHorizontal: 14, marginTop: 16, padding: 16, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed' },
-  linkIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', elevation: 2 },
-  linkTitle: { fontSize: 16, fontWeight: '800' },
-  linkSub: { fontSize: 12, marginTop: 2 },
+  // Link CTA
+  linkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,213,74,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,213,74,0.25)',
+  },
+  linkIcon: {
+    width: 50, height: 50, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: brand.gold,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  linkTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnDark,
+  },
+  linkSub: {
+    fontSize: fontSize.xs,
+    color: colors.textOnDarkMuted,
+    marginTop: 2,
+  },
 
   // How it works
-  howCard: { marginHorizontal: 14, marginTop: 16, padding: 18, borderRadius: 18, elevation: 1 },
-  howTitle: { fontSize: 15, fontWeight: '800', marginBottom: 14 },
-  howRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  howStep: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  howStepText: { fontSize: 13, fontWeight: '900' },
-  howText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  howCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  howTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnDark,
+    marginBottom: spacing.md,
+    letterSpacing: -0.2,
+  },
+  howRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 10,
+  },
+  howStep: {
+    width: 24, height: 24, borderRadius: 12,
+    backgroundColor: 'rgba(255,213,74,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  howStepText: {
+    fontSize: 11,
+    fontWeight: fontWeight.black,
+    color: brand.gold,
+  },
+  howText: {
+    flex: 1,
+    fontSize: fontSize.xs,
+    color: colors.textOnDarkMuted,
+    lineHeight: 18,
+  },
 
   // Section
-  sectionTitle: { fontSize: 15, fontWeight: '800', marginHorizontal: 18, marginTop: 20, marginBottom: 10 },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnDark,
+    letterSpacing: -0.2,
+  },
+  sectionCount: {
+    fontSize: 11,
+    color: brand.gold,
+    fontWeight: fontWeight.black,
+    backgroundColor: 'rgba(255,213,74,0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
 
   // Device row
-  deviceRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginHorizontal: 14, marginBottom: 8, padding: 16, borderRadius: 16, elevation: 1 },
-  deviceIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  deviceNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  deviceName: { fontSize: 15, fontWeight: '700' },
-  currentBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  currentText: { fontSize: 9, fontWeight: '800', color: '#22c55e', textTransform: 'uppercase' },
-  deviceMeta: { fontSize: 12, marginTop: 3 },
-  deviceTime: { fontSize: 11, marginTop: 2 },
-  revokeBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  deviceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginHorizontal: spacing.lg,
+    marginBottom: 8,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  deviceIcon: {
+    width: 42, height: 42, borderRadius: 13,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  deviceNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  deviceName: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnDark,
+  },
+  currentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+    backgroundColor: 'rgba(34,197,94,0.15)',
+  },
+  currentDot: {
+    width: 6, height: 6, borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  currentText: {
+    fontSize: 9,
+    fontWeight: fontWeight.black,
+    color: '#22c55e',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  deviceMeta: {
+    fontSize: 11,
+    color: colors.textOnDarkMuted,
+    marginTop: 3,
+  },
+  deviceTime: {
+    fontSize: 10,
+    color: colors.textOnDarkSubtle,
+    marginTop: 2,
+  },
+  revokeBtn: {
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   // Empty
-  empty: { alignItems: 'center', paddingTop: 40, gap: 8 },
-  emptyText: { fontSize: 14 },
+  empty: { alignItems: 'center', paddingTop: 50, gap: 10 },
+  emptyText: { fontSize: fontSize.sm, color: colors.textOnDarkMuted },
 
   // Scanner
+  scanRoot: { flex: 1, backgroundColor: '#000' },
   camera: { flex: 1 },
-  noCam: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' },
-  noCamText: { color: '#fff', fontSize: 16 },
-  scanHeader: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, zIndex: 10 },
-  scanBackBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0,0,0,0.3)', alignItems: 'center', justifyContent: 'center' },
-  scanTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
-  scanOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  scanFrame: { width: FRAME, height: FRAME, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)', borderRadius: 20, position: 'relative' },
-  corner: { position: 'absolute', width: 30, height: 30, borderColor: '#3b82f6', borderWidth: 3 },
-  tl: { top: -1, left: -1, borderBottomWidth: 0, borderRightWidth: 0, borderTopLeftRadius: 20 },
-  tr: { top: -1, right: -1, borderBottomWidth: 0, borderLeftWidth: 0, borderTopRightRadius: 20 },
-  bl: { bottom: -1, left: -1, borderTopWidth: 0, borderRightWidth: 0, borderBottomLeftRadius: 20 },
-  br: { bottom: -1, right: -1, borderTopWidth: 0, borderLeftWidth: 0, borderBottomRightRadius: 20 },
-  scanHint: { color: 'rgba(255,255,255,0.8)', fontSize: 14, fontWeight: '600', marginTop: 24, textAlign: 'center', lineHeight: 20 },
-  rescanBtn: { position: 'absolute', bottom: 60, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#3b82f6', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 28 },
-  rescanText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  noCam: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#000', gap: 12,
+  },
+  noCamText: { color: 'rgba(255,255,255,0.6)', fontSize: fontSize.md },
+
+  dimTop: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    transform: [{ translateY: -FRAME / 2 }],
+    marginTop: '50%',
+  },
+  dimBottom: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    height: '50%',
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    transform: [{ translateY: FRAME / 2 }],
+    marginBottom: '50%',
+  },
+  dimLeft: {
+    position: 'absolute', top: '50%', left: 0,
+    width: '50%', height: FRAME,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    transform: [{ translateY: -FRAME / 2 }, { translateX: -FRAME / 2 }],
+  },
+  dimRight: {
+    position: 'absolute', top: '50%', right: 0,
+    width: '50%', height: FRAME,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    transform: [{ translateY: -FRAME / 2 }, { translateX: FRAME / 2 }],
+  },
+
+  scanHeader: {
+    position: 'absolute', top: 0, left: 0, right: 0,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    zIndex: 10,
+  },
+  scanBackBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  scanTitle: {
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.bold,
+    color: '#fff',
+    letterSpacing: -0.2,
+  },
+  scanOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  scanFrame: {
+    width: FRAME, height: FRAME,
+    position: 'relative',
+  },
+  corner: {
+    position: 'absolute', width: 32, height: 32,
+    borderColor: brand.gold, borderWidth: 3,
+  },
+  tl: { top: 0, left: 0, borderBottomWidth: 0, borderRightWidth: 0, borderTopLeftRadius: 16 },
+  tr: { top: 0, right: 0, borderBottomWidth: 0, borderLeftWidth: 0, borderTopRightRadius: 16 },
+  bl: { bottom: 0, left: 0, borderTopWidth: 0, borderRightWidth: 0, borderBottomLeftRadius: 16 },
+  br: { bottom: 0, right: 0, borderTopWidth: 0, borderLeftWidth: 0, borderBottomRightRadius: 16 },
+  scanLine: {
+    position: 'absolute', left: 6, right: 6, top: 0,
+  },
+  scanHint: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    marginTop: 28,
+    textAlign: 'center',
+    lineHeight: 20,
+    letterSpacing: 0.2,
+  },
+  rescanBtn: {
+    position: 'absolute',
+    bottom: 70,
+    alignSelf: 'center',
+    borderRadius: radius.full,
+    overflow: 'hidden',
+  },
+  rescanInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+  },
+  rescanText: {
+    color: brand.goldInk,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.black,
+  },
 });

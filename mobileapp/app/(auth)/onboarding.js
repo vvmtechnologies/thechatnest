@@ -1,13 +1,13 @@
-// ─── TheChatNest Mobile — Onboarding ───────────────────────────────
+// ─── TheChatNest Mobile — Onboarding Carousel ──────────────────────
 //
-// Distinctive welcome screen: navy gradient top with staggered feature
-// grid + cream card overlay with CTA. Different visual structure from
-// the login flow but same brand DNA.
+// Three-slide swipeable onboarding with animated illustrations,
+// page indicators, skip button. Fully responsive — uses % units and
+// safe-area insets so it works from tiny SE-class phones up to tablets.
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Dimensions,
-  Animated, Platform, ScrollView,
+  View, Text, TouchableOpacity, StyleSheet,
+  Animated, Platform, useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -17,389 +17,458 @@ import { StatusBar } from 'expo-status-bar';
 import * as Haptics from 'expo-haptics';
 import { brand, colors, spacing, radius, fontSize, fontWeight } from '../../src/theme/colors';
 
-const { width: W, height: H } = Dimensions.get('window');
-const isSmall = H < 700;
-
-const COLS = 3;
-const GAP = 10;
-const PAD = 20;
-const CARD_W = (W - PAD * 2 - GAP * (COLS - 1)) / COLS;
-
-const FEATURES = [
-  { icon: 'chatbubble-ellipses', label: 'Chat',    tint: '#ffd54a' },
-  { icon: 'people',              label: 'Groups',  tint: '#6d5dfc' },
-  { icon: 'videocam',            label: 'Meet',    tint: '#0ea5e9' },
-  { icon: 'document-text',       label: 'Files',   tint: '#f59e0b' },
-  { icon: 'mic',                 label: 'Voice',   tint: '#ec4899' },
-  { icon: 'shield-checkmark',    label: 'Secure',  tint: '#22c55e' },
+const SLIDES = [
+  {
+    key: 'chat',
+    kicker: '01 · MESSAGING',
+    title: 'Team chat that\nactually feels fast.',
+    titleAccent: 'actually feels fast.',
+    desc: 'Real-time messages, threads, voice notes & rich media — synced across web, iOS and Android in milliseconds.',
+    primary: { icon: 'chatbubbles', tint: '#ffd54a' },
+    orbits: [
+      { icon: 'mic',         tint: '#ec4899', angle: -40, dist: 0.62 },
+      { icon: 'image',       tint: '#0ea5e9', angle: 30,  dist: 0.55 },
+      { icon: 'happy',       tint: '#22c55e', angle: 110, dist: 0.6  },
+      { icon: 'document',    tint: '#a78bfa', angle: 200, dist: 0.58 },
+      { icon: 'paper-plane', tint: '#f59e0b', angle: 280, dist: 0.5  },
+    ],
+  },
+  {
+    key: 'meet',
+    kicker: '02 · MEETINGS',
+    title: 'Video meetings\nbuilt in.',
+    titleAccent: 'built in.',
+    desc: 'Spin up HD video calls with screen-share & recording — no separate Zoom tab, no per-seat add-on, no extra invoice.',
+    primary: { icon: 'videocam', tint: '#6d5dfc' },
+    orbits: [
+      { icon: 'desktop',          tint: '#ffd54a', angle: -20, dist: 0.62 },
+      { icon: 'recording',        tint: '#ef4444', angle: 60,  dist: 0.55 },
+      { icon: 'people',           tint: '#22c55e', angle: 140, dist: 0.6  },
+      { icon: 'volume-high',      tint: '#0ea5e9', angle: 220, dist: 0.55 },
+      { icon: 'expand',           tint: '#f59e0b', angle: 310, dist: 0.58 },
+    ],
+  },
+  {
+    key: 'secure',
+    kicker: '03 · PRIVACY',
+    title: 'Hosted in India.\nEncrypted by default.',
+    titleAccent: 'Encrypted by default.',
+    desc: 'End-to-end encryption, DPDP + GDPR ready, data stays in Indian regions. No model training, no ad profiling.',
+    primary: { icon: 'shield-checkmark', tint: '#22c55e' },
+    orbits: [
+      { icon: 'lock-closed',  tint: '#ffd54a', angle: -30, dist: 0.6  },
+      { icon: 'key',          tint: '#6d5dfc', angle: 50,  dist: 0.55 },
+      { icon: 'server',       tint: '#0ea5e9', angle: 130, dist: 0.62 },
+      { icon: 'flag',         tint: '#ff9933', angle: 210, dist: 0.55 },
+      { icon: 'eye-off',      tint: '#ec4899', angle: 295, dist: 0.58 },
+    ],
+  },
 ];
 
 export default function OnboardingScreen() {
-  const anims = useRef(FEATURES.map(() => new Animated.Value(0))).current;
-  const opacs = useRef(FEATURES.map(() => new Animated.Value(0))).current;
-  const cardFade = useRef(new Animated.Value(0)).current;
-  const cardSlide = useRef(new Animated.Value(40)).current;
-  const btnScale = useRef(new Animated.Value(0.85)).current;
-  const headerY = useRef(new Animated.Value(-20)).current;
-  const headerOp = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.parallel([
-        Animated.spring(headerY, { toValue: 0, tension: 50, friction: 8, useNativeDriver: true }),
-        Animated.timing(headerOp, { toValue: 1, duration: 400, useNativeDriver: true }),
-      ]),
-      Animated.stagger(70, anims.map((a, i) =>
-        Animated.parallel([
-          Animated.spring(a, { toValue: 1, tension: 60, friction: 7, useNativeDriver: true }),
-          Animated.timing(opacs[i], { toValue: 1, duration: 280, useNativeDriver: true }),
-        ])
-      )),
-      Animated.parallel([
-        Animated.spring(cardSlide, { toValue: 0, tension: 45, friction: 10, useNativeDriver: true }),
-        Animated.timing(cardFade, { toValue: 1, duration: 400, useNativeDriver: true }),
-      ]),
-      Animated.spring(btnScale, { toValue: 1, tension: 60, friction: 6, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
   const insets = useSafeAreaInsets();
+  const { width: W, height: H } = useWindowDimensions();
+  const isSmall = H < 700;
+  const isTablet = W >= 600;
+
+  const listRef = useRef(null);
+  const scrollX = useRef(new Animated.Value(0)).current;
+  const [index, setIndex] = useState(0);
+
+  // Compute responsive sizing
+  const visualSize = Math.min(W * 0.7, isSmall ? 240 : 320, H * 0.34);
+  const primaryTileSize = visualSize * 0.32;
+  const orbitIconSize = visualSize * 0.13;
 
   const handleStart = () => {
     try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); } catch {}
     router.push('/(auth)/register');
   };
+  const handleSignIn = () => router.push('/(auth)/login');
+  const handleSkip = () => {
+    try { Haptics.selectionAsync(); } catch {}
+    listRef.current?.scrollToIndex({ index: SLIDES.length - 1, animated: true });
+  };
+  const handleNext = () => {
+    try { Haptics.selectionAsync(); } catch {}
+    if (index < SLIDES.length - 1) {
+      listRef.current?.scrollToIndex({ index: index + 1, animated: true });
+    } else {
+      handleStart();
+    }
+  };
+
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems?.[0]) setIndex(viewableItems[0].index);
+  }).current;
+
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 60 }).current;
 
   return (
-    <View style={z.root}>
+    <View style={s.root}>
       <StatusBar style="light" />
-      <ScrollView
+      <LinearGradient
+        colors={brand.gradientHero}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Atmospheric glows */}
+      <View style={[s.glowGold, { width: W * 0.9, height: W * 0.9, top: -W * 0.3, right: -W * 0.25 }]} />
+      <View style={[s.glowViolet, { width: W * 0.85, height: W * 0.85, bottom: -W * 0.3, left: -W * 0.25 }]} />
+
+      {/* Top bar */}
+      <View style={[s.topBar, { paddingTop: insets.top + 8, paddingHorizontal: W * 0.05 }]}>
+        <View style={s.brandPill}>
+          <LinearGradient
+            colors={brand.gradientGold}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={s.brandTile}
+          >
+            <Ionicons name="chatbubbles" size={13} color={brand.goldInk} />
+          </LinearGradient>
+          <Text style={s.brandText}>TheChatNest</Text>
+        </View>
+
+        {index < SLIDES.length - 1 ? (
+          <TouchableOpacity onPress={handleSkip} hitSlop={10} style={s.skipBtn}>
+            <Text style={s.skipText}>Skip</Text>
+            <Ionicons name="chevron-forward" size={14} color={colors.textOnDarkMuted} />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 56 }} />
+        )}
+      </View>
+
+      {/* Slide carousel */}
+      <Animated.FlatList
+        ref={listRef}
+        data={SLIDES}
+        keyExtractor={(item) => item.key}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
         bounces={false}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ flexGrow: 1, minHeight: H }}
+        decelerationRate="fast"
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true }
+        )}
+        scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
+        renderItem={({ item, index: i }) => (
+          <Slide
+            slide={item}
+            width={W}
+            scrollX={scrollX}
+            slideIndex={i}
+            visualSize={visualSize}
+            primaryTileSize={primaryTileSize}
+            orbitIconSize={orbitIconSize}
+            isSmall={isSmall}
+            isTablet={isTablet}
+          />
+        )}
+      />
+
+      {/* Bottom panel — page dots + CTA */}
+      <View
+        style={[
+          s.bottom,
+          {
+            paddingBottom: Math.max(insets.bottom + 14, 24),
+            paddingHorizontal: W * 0.06,
+          },
+        ]}
       >
-        {/* ─── Dark Top Section ─── */}
-        <LinearGradient
-          colors={brand.gradientHero}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-          style={[z.top, { paddingTop: insets.top + 16 }]}
-        >
-          <View style={z.glowGold} />
-          <View style={z.glowViolet} />
-
-          {/* Header */}
-          <Animated.View
-            style={[
-              z.header,
-              { opacity: headerOp, transform: [{ translateY: headerY }] },
-            ]}
-          >
-            <LinearGradient
-              colors={brand.gradientGold}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-              style={z.logoBadge}
-            >
-              <Ionicons name="chatbubbles" size={14} color={brand.goldInk} />
-            </LinearGradient>
-            <Text style={z.logoText}>TheChatNest</Text>
-            <View style={z.indiaPill}>
-              <Text style={z.indiaPillText}>🇮🇳 IN</Text>
-            </View>
-          </Animated.View>
-
-          <Animated.View
-            style={{ opacity: headerOp, transform: [{ translateY: headerY }] }}
-          >
-            <Text style={z.kicker}>SECURE TEAM CHAT</Text>
-            <Text style={z.topTitle}>
-              Built for{'\n'}
-              <Text style={z.topTitleGold}>teams that ship.</Text>
-            </Text>
-            <Text style={z.topSub}>
-              One workspace for chat, meetings, files & voice notes —
-              hosted in India, encrypted end-to-end.
-            </Text>
-          </Animated.View>
-
-          {/* Feature grid */}
-          <View style={z.grid}>
-            {FEATURES.map((f, i) => (
+        {/* Page dots */}
+        <View style={s.dots}>
+          {SLIDES.map((_, i) => {
+            const inputRange = [(i - 1) * W, i * W, (i + 1) * W];
+            // scaleX is native-driver compatible (width is not)
+            const scaleX = scrollX.interpolate({
+              inputRange,
+              outputRange: [1, 3.5, 1],
+              extrapolate: 'clamp',
+            });
+            const opacity = scrollX.interpolate({
+              inputRange,
+              outputRange: [0.35, 1, 0.35],
+              extrapolate: 'clamp',
+            });
+            const active = index === i;
+            return (
               <Animated.View
-                key={f.label}
+                key={i}
                 style={[
-                  z.gridItem,
+                  s.dot,
                   {
-                    opacity: opacs[i],
-                    transform: [{ scale: anims[i] }],
+                    opacity,
+                    backgroundColor: active ? brand.gold : 'rgba(255,255,255,0.3)',
+                    transform: [{ scaleX }],
                   },
                 ]}
-              >
-                <View style={[z.gridIcon, { borderColor: f.tint + '40' }]}>
-                  <Ionicons name={f.icon} size={isSmall ? 18 : 20} color={f.tint} />
-                </View>
-                <Text style={z.gridLabel}>{f.label}</Text>
-              </Animated.View>
-            ))}
-          </View>
-        </LinearGradient>
+              />
+            );
+          })}
+        </View>
 
-        {/* ─── Bottom Cream Card ─── */}
-        <Animated.View
-          style={[
-            z.bottom,
-            { opacity: cardFade, transform: [{ translateY: cardSlide }] },
-          ]}
-        >
-          <View style={[z.bottomInner, { paddingBottom: Math.max(insets.bottom + 16, 28) }]}>
-            <View style={z.notch} />
-
-            <Text style={z.heading}>
-              Your team's{'\n'}
-              <Text style={z.headingItalic}>command center.</Text>
+        {/* Primary CTA */}
+        <TouchableOpacity activeOpacity={0.88} onPress={handleNext}>
+          <LinearGradient
+            colors={brand.gradientGold}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            style={[s.btn, { height: isSmall ? 52 : 58 }]}
+          >
+            <Text style={[s.btnText, { fontSize: isSmall ? 15 : 16 }]}>
+              {index === SLIDES.length - 1 ? "Get started — it's free" : 'Continue'}
             </Text>
-            <Text style={z.desc}>
-              Real-time messaging, file sharing, video meetings and voice
-              notes — secured by default, priced for India.
-            </Text>
-
-            {/* Trust badges */}
-            <View style={z.trustRow}>
-              {[
-                { icon: 'lock-closed', text: 'End-to-end encrypted' },
-                { icon: 'flag', text: 'Hosted in India' },
-                { icon: 'shield-checkmark', text: 'GDPR + DPDP' },
-              ].map(t => (
-                <View key={t.text} style={z.trustBadge}>
-                  <Ionicons name={t.icon} size={10} color="#0d9c5b" />
-                  <Text style={z.trustText}>{t.text}</Text>
-                </View>
-              ))}
+            <View style={s.btnArrow}>
+              <Ionicons name="arrow-forward" size={14} color={brand.gold} />
             </View>
+          </LinearGradient>
+        </TouchableOpacity>
 
-            {/* CTA */}
-            <Animated.View style={{ transform: [{ scale: btnScale }] }}>
-              <TouchableOpacity activeOpacity={0.88} onPress={handleStart}>
-                <LinearGradient
-                  colors={brand.gradientGold}
-                  start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={z.btn}
-                >
-                  <Text style={z.btnText}>Get started — it's free</Text>
-                  <View style={z.btnArrow}>
-                    <Ionicons name="arrow-forward" size={14} color={brand.gold} />
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
-
-            <View style={z.signinRow}>
-              <Text style={z.signinText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-                <Text style={z.signinLink}>Sign in</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Animated.View>
-      </ScrollView>
+        {/* Sign in row */}
+        <View style={s.signinRow}>
+          <Text style={s.signinText}>Already have an account? </Text>
+          <TouchableOpacity onPress={handleSignIn} hitSlop={8}>
+            <Text style={s.signinLink}>Sign in</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 }
 
-const z = StyleSheet.create({
-  root: { flex: 1, backgroundColor: brand.navy },
+// ─── Individual slide ──────────────────────────────────────────────
+function Slide({ slide, width, scrollX, slideIndex, visualSize, primaryTileSize, orbitIconSize, isSmall, isTablet }) {
+  const inputRange = [(slideIndex - 1) * width, slideIndex * width, (slideIndex + 1) * width];
 
-  // Top section
-  top: {
-    paddingHorizontal: PAD,
-    paddingBottom: 50,
-    overflow: 'hidden',
-  },
+  const visualScale = scrollX.interpolate({
+    inputRange,
+    outputRange: [0.7, 1, 0.7],
+    extrapolate: 'clamp',
+  });
+  const visualOp = scrollX.interpolate({
+    inputRange,
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
+  const textX = scrollX.interpolate({
+    inputRange,
+    outputRange: [width * 0.4, 0, -width * 0.4],
+    extrapolate: 'clamp',
+  });
+  const textOp = scrollX.interpolate({
+    inputRange,
+    outputRange: [0, 1, 0],
+    extrapolate: 'clamp',
+  });
+
+  const titleParts = slide.title.split(slide.titleAccent);
+  const maxContentWidth = isTablet ? 480 : width - 48;
+
+  return (
+    <View style={[ss.slide, { width }]}>
+      {/* Visual */}
+      <View style={[ss.visualWrap, { height: visualSize + 30 }]}>
+        <Animated.View
+          style={[
+            ss.visual,
+            {
+              width: visualSize,
+              height: visualSize,
+              opacity: visualOp,
+              transform: [{ scale: visualScale }],
+            },
+          ]}
+        >
+          {/* Soft outer halo */}
+          <View
+            style={[
+              ss.halo,
+              {
+                width: visualSize,
+                height: visualSize,
+                borderRadius: visualSize / 2,
+                backgroundColor: slide.primary.tint,
+                opacity: 0.08,
+              },
+            ]}
+          />
+          {/* Inner ring */}
+          <View
+            style={[
+              ss.ring,
+              {
+                width: visualSize * 0.78,
+                height: visualSize * 0.78,
+                borderRadius: (visualSize * 0.78) / 2,
+              },
+            ]}
+          />
+          {/* Dashed outer ring */}
+          <View
+            style={[
+              ss.ringDashed,
+              {
+                width: visualSize * 0.95,
+                height: visualSize * 0.95,
+                borderRadius: (visualSize * 0.95) / 2,
+              },
+            ]}
+          />
+
+          {/* Primary tile */}
+          <LinearGradient
+            colors={brand.gradientGold}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+            style={[
+              ss.primaryTile,
+              {
+                width: primaryTileSize,
+                height: primaryTileSize,
+                borderRadius: primaryTileSize * 0.28,
+              },
+            ]}
+          >
+            <Ionicons
+              name={slide.primary.icon}
+              size={primaryTileSize * 0.42}
+              color={brand.goldInk}
+            />
+          </LinearGradient>
+
+          {/* Orbit icons */}
+          {slide.orbits.map((o, i) => {
+            const rad = (o.angle * Math.PI) / 180;
+            const r = (visualSize / 2) * o.dist;
+            const cx = visualSize / 2 + Math.cos(rad) * r - orbitIconSize / 2;
+            const cy = visualSize / 2 + Math.sin(rad) * r - orbitIconSize / 2;
+            return (
+              <View
+                key={i}
+                style={[
+                  ss.orbit,
+                  {
+                    left: cx,
+                    top: cy,
+                    width: orbitIconSize,
+                    height: orbitIconSize,
+                    borderRadius: orbitIconSize * 0.3,
+                    borderColor: o.tint + '60',
+                  },
+                ]}
+              >
+                <Ionicons name={o.icon} size={orbitIconSize * 0.42} color={o.tint} />
+              </View>
+            );
+          })}
+        </Animated.View>
+      </View>
+
+      {/* Text block */}
+      <Animated.View
+        style={[
+          ss.text,
+          { maxWidth: maxContentWidth, opacity: textOp, transform: [{ translateX: textX }] },
+        ]}
+      >
+        <Text style={[ss.kicker, isSmall && { fontSize: 9 }]}>{slide.kicker}</Text>
+        <Text style={[ss.title, isSmall && { fontSize: 24, lineHeight: 30 }]}>
+          {titleParts[0]}
+          <Text style={ss.titleAccent}>{slide.titleAccent}</Text>
+          {titleParts[1] || ''}
+        </Text>
+        <Text style={[ss.desc, isSmall && { fontSize: 13, lineHeight: 19 }]}>
+          {slide.desc}
+        </Text>
+      </Animated.View>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: brand.navy },
 
   glowGold: {
     position: 'absolute',
-    width: 280, height: 280,
-    borderRadius: 140,
+    borderRadius: 999,
     backgroundColor: brand.gold,
-    opacity: 0.07,
-    top: -80, right: -60,
+    opacity: 0.08,
   },
   glowViolet: {
     position: 'absolute',
-    width: 200, height: 200,
-    borderRadius: 100,
+    borderRadius: 999,
     backgroundColor: brand.violet,
-    opacity: 0.1,
-    bottom: 40, left: -50,
+    opacity: 0.12,
   },
 
-  // Header
-  header: {
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginBottom: isSmall ? 24 : 30,
+    justifyContent: 'space-between',
+    paddingBottom: spacing.sm,
+    zIndex: 10,
   },
-  logoBadge: {
-    width: 28, height: 28, borderRadius: 9,
-    alignItems: 'center', justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: brand.gold,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-      },
-      android: { elevation: 6 },
-    }),
-  },
-  logoText: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.black,
-    color: colors.textOnDark,
-    letterSpacing: -0.3,
-    flex: 1,
-  },
-  indiaPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.full,
+  brandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 6,
     backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: radius.full,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  indiaPillText: {
-    fontSize: 10,
-    fontWeight: fontWeight.bold,
-    color: colors.textOnDarkMuted,
-    letterSpacing: 0.3,
+  brandTile: {
+    width: 22, height: 22, borderRadius: 7,
+    alignItems: 'center', justifyContent: 'center',
   },
-
-  // Hero copy
-  kicker: {
-    fontSize: 10,
-    fontWeight: fontWeight.black,
-    color: brand.gold,
-    letterSpacing: 2,
-    marginBottom: 10,
-  },
-  topTitle: {
-    fontSize: isSmall ? 26 : 32,
-    fontWeight: fontWeight.black,
+  brandText: {
     color: colors.textOnDark,
-    lineHeight: isSmall ? 34 : 40,
-    letterSpacing: -0.8,
-    marginBottom: 10,
-  },
-  topTitleGold: {
-    color: brand.gold,
-    fontStyle: 'italic',
-  },
-  topSub: {
     fontSize: fontSize.sm,
-    color: colors.textOnDarkMuted,
-    marginBottom: isSmall ? 20 : 26,
-    lineHeight: 20,
-  },
-
-  // Grid
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: GAP,
-  },
-  gridItem: {
-    width: CARD_W,
-    paddingVertical: isSmall ? 14 : 18,
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    borderRadius: radius.lg,
-  },
-  gridIcon: {
-    width: isSmall ? 40 : 44,
-    height: isSmall ? 40 : 44,
-    borderRadius: 12,
-    alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-  },
-  gridLabel: {
-    fontSize: 10,
-    fontWeight: fontWeight.black,
-    color: 'rgba(255,255,255,0.55)',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-
-  // Bottom cream card
-  bottom: {
-    backgroundColor: brand.paper,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -28,
-  },
-  bottomInner: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  notch: {
-    width: 40, height: 4, borderRadius: 2,
-    backgroundColor: 'rgba(15,23,42,0.12)',
-    alignSelf: 'center',
-    marginBottom: 18,
-  },
-
-  heading: {
-    fontSize: isSmall ? 26 : 30,
-    fontWeight: fontWeight.black,
-    color: colors.text,
-    lineHeight: isSmall ? 32 : 36,
-    letterSpacing: -0.6,
-    marginBottom: 10,
-  },
-  headingItalic: {
-    color: brand.violet,
-    fontStyle: 'italic',
-  },
-  desc: {
-    fontSize: fontSize.sm,
-    color: colors.textSecondary,
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-
-  // Trust badges
-  trustRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginBottom: 22,
-    flexWrap: 'wrap',
-  },
-  trustBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(13,156,91,0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(13,156,91,0.2)',
-  },
-  trustText: {
-    fontSize: 10,
     fontWeight: fontWeight.bold,
-    color: '#0d9c5b',
-    letterSpacing: 0.2,
+    letterSpacing: -0.2,
+  },
+  skipBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+  },
+  skipText: {
+    color: colors.textOnDarkMuted,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
   },
 
-  // CTA
-  btn: {
-    height: 56, borderRadius: radius.full,
+  bottom: {
+    paddingTop: spacing.md,
+  },
+  dots: {
     flexDirection: 'row',
-    alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: spacing.lg,
+  },
+  dot: {
+    height: 8,
+    borderRadius: 4,
+  },
+
+  btn: {
+    borderRadius: radius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 10,
     paddingHorizontal: 8,
     ...Platform.select({
@@ -414,7 +483,6 @@ const z = StyleSheet.create({
   },
   btnText: {
     color: brand.goldInk,
-    fontSize: fontSize.md,
     fontWeight: fontWeight.black,
     letterSpacing: -0.2,
   },
@@ -427,15 +495,112 @@ const z = StyleSheet.create({
   signinRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 18,
+    alignItems: 'center',
+    marginTop: spacing.md,
   },
   signinText: {
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
+    color: colors.textOnDarkMuted,
   },
   signinLink: {
     fontSize: fontSize.sm,
-    color: brand.violet,
+    color: brand.gold,
     fontWeight: fontWeight.black,
+  },
+});
+
+const ss = StyleSheet.create({
+  slide: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 24,
+    paddingTop: spacing.lg,
+  },
+  visualWrap: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.md,
+  },
+  visual: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  halo: {
+    position: 'absolute',
+  },
+  ring: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  ringDashed: {
+    position: 'absolute',
+    borderWidth: 1.2,
+    borderColor: 'rgba(255,213,74,0.22)',
+    borderStyle: 'dashed',
+  },
+  primaryTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 5,
+    ...Platform.select({
+      ios: {
+        shadowColor: brand.gold,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.5,
+        shadowRadius: 24,
+      },
+      android: { elevation: 14 },
+    }),
+  },
+  orbit: {
+    position: 'absolute',
+    backgroundColor: 'rgba(11,15,30,0.85)',
+    borderWidth: 1.3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+
+  text: {
+    width: '100%',
+    alignItems: 'flex-start',
+    marginTop: spacing.xl,
+  },
+  kicker: {
+    fontSize: 10,
+    fontWeight: fontWeight.black,
+    color: brand.gold,
+    letterSpacing: 2,
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: fontWeight.black,
+    color: colors.textOnDark,
+    lineHeight: 36,
+    letterSpacing: -0.8,
+    marginBottom: 12,
+  },
+  titleAccent: {
+    color: brand.gold,
+    fontStyle: 'italic',
+  },
+  desc: {
+    fontSize: 14,
+    color: colors.textOnDarkMuted,
+    lineHeight: 21,
+    fontWeight: fontWeight.medium,
   },
 });

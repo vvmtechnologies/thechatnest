@@ -3,8 +3,8 @@
 // Modes: light (on cream/white) or dark (on navy)
 // Supports label, hint, error, left/right icon, secure entry.
 
-import React, { useState, useRef } from "react";
-import { View, TextInput, Text, Pressable, StyleSheet, Animated } from "react-native";
+import React, { useState } from "react";
+import { View, TextInput, Text, Pressable, StyleSheet } from "react-native";
 import { colors, radius, spacing, fontSize, fontWeight } from "../../theme/colors";
 
 const Input = ({
@@ -33,7 +33,6 @@ const Input = ({
   style,
 }) => {
   const [focused, setFocused] = useState(false);
-  const animValue = useRef(new Animated.Value(0)).current;
 
   const isLight = mode === "light";
   const placeholderColor = isLight ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.4)";
@@ -44,14 +43,6 @@ const Input = ({
   const baseBorder = isLight ? "rgba(15,23,42,0.1)" : "rgba(255,255,255,0.12)";
   const focusedBorder = error ? colors.error : colors.primary;
 
-  React.useEffect(() => {
-    Animated.timing(animValue, {
-      toValue: focused ? 1 : 0,
-      duration: 180,
-      useNativeDriver: false,
-    }).start();
-  }, [focused, animValue]);
-
   return (
     <View style={[styles.wrap, style]}>
       {label && (
@@ -60,7 +51,7 @@ const Input = ({
         </Text>
       )}
 
-      <Animated.View
+      <View
         style={[
           styles.field,
           {
@@ -101,7 +92,10 @@ const Input = ({
               paddingLeft: Icon ? 0 : spacing.lg,
               paddingRight: (IconRight || secureTextEntry) ? 0 : spacing.lg,
               textAlignVertical: multiline ? "top" : "center",
-              minHeight: multiline ? 90 : 48,
+              paddingVertical: multiline ? spacing.sm : 0,
+              height: multiline ? undefined : 48,
+              minHeight: multiline ? 90 : undefined,
+              includeFontPadding: false,
             },
           ]}
         />
@@ -115,7 +109,7 @@ const Input = ({
             <IconRight size={18} color={isLight ? colors.textTertiary : colors.textOnDarkSubtle} />
           </Pressable>
         )}
-      </Animated.View>
+      </View>
 
       {error && <Text style={styles.error}>{error}</Text>}
       {!error && hint && (
@@ -142,7 +136,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radius.lg,
     borderWidth: 1.5,
-    minHeight: 50,
+    height: 50,
+    overflow: "hidden",
   },
   iconLeft: {
     paddingLeft: spacing.lg,
@@ -157,6 +152,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: fontSize.md,
     fontWeight: fontWeight.medium,
+    paddingTop: 0,
+    paddingBottom: 0,
+    margin: 0,
   },
   error: {
     fontSize: fontSize.xs,

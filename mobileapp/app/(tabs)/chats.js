@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useRef, memo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  TextInput, RefreshControl, Platform, ActivityIndicator, Vibration, Modal, Pressable,
+  TextInput, RefreshControl, Platform, ActivityIndicator, Vibration, Modal, Pressable, ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Avatar from '../../src/components/Avatar';
@@ -44,6 +44,9 @@ export default function ChatsScreen() {
   const { user } = useAuth();
   const { theme: t, isDark } = useTheme();
   const { on, connected } = useSocket();
+  const insets = useSafeAreaInsets();
+  // Floating tab bar (64px) + bottom gap + 16px margin = FAB clears the dock
+  const fabBottom = 64 + Math.max(insets.bottom - 4, 10) + 14;
   const [threads, setThreads] = useState([]);
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -424,7 +427,7 @@ export default function ChatsScreen() {
             </Text>
             {item.unread > 0 && (
               <View style={[s.unreadBadge, { backgroundColor: t.accent }]}>
-                <Text style={s.unreadText}>{item.unread > 99 ? '99+' : item.unread}</Text>
+                <Text style={[s.unreadText, { color: '#6e4f10' }]}>{item.unread > 99 ? '99+' : item.unread}</Text>
               </View>
             )}
           </View>
@@ -437,25 +440,35 @@ export default function ChatsScreen() {
     <SafeAreaView style={[s.root, { backgroundColor: t.bg }]} edges={['top', 'bottom']}>
       {/* Header */}
       {!showGlobalSearch ? (
-        <View style={[s.header, { backgroundColor: isDark ? '#111b21' : '#fff', borderBottomWidth: isDark ? 1 : 0, borderBottomColor: '#1e293b', ...Platform.select({ ios: { shadowColor: t.shadow }, android: { elevation: isDark ? 0 : 2 } }) }]}>
-          <Text style={[s.headerTitle, { color: t.text }]}>Chats</Text>
+        <View style={[s.header, { backgroundColor: t.bg, borderBottomWidth: 1, borderBottomColor: t.divider }]}>
+          <View style={s.headerLeft}>
+            <View style={s.brandTile}>
+              <Ionicons name="chatbubbles" size={14} color="#6e4f10" />
+            </View>
+            <View>
+              <Text style={[s.headerTitle, { color: t.text }]}>Chats</Text>
+              <Text style={[s.headerSub, { color: t.textTer }]}>
+                {threads.length > 0 ? `${threads.length} conversation${threads.length !== 1 ? 's' : ''}` : 'Stay in sync'}
+              </Text>
+            </View>
+          </View>
           <View style={s.headerRight}>
-            <TouchableOpacity style={s.headerBtn} onPress={() => { setShowGlobalSearch(true); setTimeout(() => searchInputRef.current?.focus(), 200); }}>
-              <Ionicons name="search-outline" size={22} color={t.icon} />
+            <TouchableOpacity style={[s.headerBtn, { backgroundColor: t.surface }]} onPress={() => { setShowGlobalSearch(true); setTimeout(() => searchInputRef.current?.focus(), 200); }}>
+              <Ionicons name="search" size={18} color={t.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={s.headerBtn} onPress={() => setShowHeaderMenu(true)}>
-              <Ionicons name="ellipsis-vertical" size={20} color={t.icon} />
+            <TouchableOpacity style={[s.headerBtn, { backgroundColor: t.surface }]} onPress={() => setShowHeaderMenu(true)}>
+              <Ionicons name="ellipsis-horizontal" size={18} color={t.text} />
             </TouchableOpacity>
           </View>
         </View>
       ) : (
         /* Global Search Header */
-        <View style={[s.header, { backgroundColor: t.card, ...Platform.select({ ios: { shadowColor: t.shadow }, android: { elevation: 2 } }) }]}>
-          <TouchableOpacity onPress={() => { setShowGlobalSearch(false); setGlobalSearch(''); setGlobalResults(null); }} hitSlop={8}>
-            <Ionicons name="arrow-back" size={22} color={t.text} />
+        <View style={[s.header, { backgroundColor: t.bg, borderBottomWidth: 1, borderBottomColor: t.divider }]}>
+          <TouchableOpacity onPress={() => { setShowGlobalSearch(false); setGlobalSearch(''); setGlobalResults(null); }} hitSlop={8} style={[s.headerBtn, { backgroundColor: t.surface }]}>
+            <Ionicons name="arrow-back" size={18} color={t.text} />
           </TouchableOpacity>
-          <View style={[s.globalSearchBox, { backgroundColor: t.surfaceAlt }]}>
-            <Ionicons name="search" size={16} color={t.textTer} />
+          <View style={[s.globalSearchBox, { backgroundColor: t.surface, borderColor: t.divider }]}>
+            <Ionicons name="search" size={15} color={t.textTer} />
             <TextInput ref={searchInputRef} style={[s.globalSearchInput, { color: t.text }]}
               placeholder="Search all messages..." placeholderTextColor={t.textTer}
               value={globalSearch} onChangeText={handleGlobalSearch} autoFocus />
@@ -471,13 +484,43 @@ export default function ChatsScreen() {
 
       {/* Thread filter search + chips (when not in global search) */}
       {!showGlobalSearch && (
-        <View style={[s.searchWrap, { backgroundColor: isDark ? '#0b141a' : '#fff', borderBottomWidth: 1, borderBottomColor: isDark ? '#1e293b' : '#f1f5f9' }]}>
-          <View style={[s.searchBox, { backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }]}>
-            <Ionicons name="search" size={16} color={t.textTer} />
-            <TextInput style={[s.searchInput, { color: t.text }]} placeholder="Search..."
+        <View style={[s.searchWrap, { backgroundColor: t.bg }]}>
+          <View style={[s.searchBox, { backgroundColor: t.surface, borderColor: t.divider }]}>
+            <Ionicons name="search" size={15} color={t.textTer} />
+            <TextInput style={[s.searchInput, { color: t.text }]} placeholder="Search chats..."
               placeholderTextColor={t.textTer} value={search} onChangeText={setSearch} />
             {search ? <TouchableOpacity onPress={() => setSearch('')} hitSlop={8}><Ionicons name="close-circle" size={16} color={t.textTer} /></TouchableOpacity> : null}
           </View>
+
+          {/* Quick actions strip — distinctive to Chats tab */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.quickStrip}
+            style={{ marginTop: 12 }}
+          >
+            {[
+              { icon: 'add-circle', label: 'New chat',  tint: '#ffd54a', route: '/(tabs)/contacts' },
+              { icon: 'people',     label: 'Group',     tint: '#6d5dfc', route: '/chat/create-group' },
+              { icon: 'videocam',   label: 'Meeting',   tint: '#22c55e', route: '/meetings' },
+              { icon: 'time',       label: 'Scheduled', tint: '#0ea5e9', route: '/chat/scheduled' },
+              { icon: 'star',       label: 'Starred',   tint: '#f59e0b', route: '/chat/starred' },
+              { icon: 'megaphone',  label: 'Broadcast', tint: '#ec4899', route: '/chat/broadcast' },
+            ].map((q, i) => (
+              <TouchableOpacity
+                key={q.label}
+                style={[s.quickCard, { backgroundColor: t.surface, borderColor: t.divider }]}
+                onPress={() => router.push(q.route)}
+                activeOpacity={0.7}
+              >
+                <View style={[s.quickIconWrap, { backgroundColor: q.tint + '22' }]}>
+                  <Ionicons name={q.icon} size={18} color={q.tint} />
+                </View>
+                <Text style={[s.quickLabel, { color: t.text }]}>{q.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
           {/* Filter chips */}
           <View style={s.filterRow}>
             {[
@@ -491,17 +534,17 @@ export default function ChatsScreen() {
               return (
                 <TouchableOpacity key={f.key}
                   style={[s.filterChip, {
-                    backgroundColor: active ? `${t.accent}15` : (isDark ? '#1e293b' : '#f1f5f9'),
-                    borderColor: active ? t.accent : (isDark ? '#334155' : '#e2e8f0'),
+                    backgroundColor: active ? t.accent : t.surface,
+                    borderColor: active ? t.accent : t.divider,
                   }]}
                   onPress={() => setChatFilter(chatFilter === f.key ? 'all' : f.key)}
                   activeOpacity={0.7}>
-                  <Ionicons name={active ? f.icon.replace('-outline', '') : f.icon} size={14}
-                    color={active ? t.accent : t.textTer} />
-                  <Text style={[s.filterChipText, { color: active ? t.accent : t.textTer }]}>{f.label}</Text>
+                  <Ionicons name={active ? f.icon.replace('-outline', '') : f.icon} size={13}
+                    color={active ? '#6e4f10' : t.textTer} />
+                  <Text style={[s.filterChipText, { color: active ? '#6e4f10' : t.textSec }]}>{f.label}</Text>
                   {count > 0 && f.key !== 'all' && (
-                    <View style={[s.filterCount, { backgroundColor: active ? t.accent : t.textTer }]}>
-                      <Text style={s.filterCountText}>{count}</Text>
+                    <View style={[s.filterCount, { backgroundColor: active ? '#6e4f10' : t.accent }]}>
+                      <Text style={[s.filterCountText, { color: active ? t.accent : '#fff' }]}>{count}</Text>
                     </View>
                   )}
                 </TouchableOpacity>
@@ -529,7 +572,7 @@ export default function ChatsScreen() {
           <FlatList
             data={globalResults}
             keyExtractor={(item, i) => item.id || String(i)}
-            contentContainerStyle={{ paddingBottom: 80 }}
+            contentContainerStyle={{ paddingBottom: fabBottom + 80 }}
             ListHeaderComponent={
               <Text style={[s.resultCount, { color: t.textTer }]}>{globalResults.length} result{globalResults.length !== 1 ? 's' : ''}</Text>
             }
@@ -582,7 +625,7 @@ export default function ChatsScreen() {
           keyExtractor={item => item.id}
           renderItem={renderThread}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[t.accent]} />}
-          contentContainerStyle={filtered.length === 0 ? s.emptyWrap : { paddingBottom: 80 }}
+          contentContainerStyle={filtered.length === 0 ? s.emptyWrap : { paddingBottom: fabBottom + 80 }}
           removeClippedSubviews={true}
           maxToRenderPerBatch={10}
           windowSize={10}
@@ -665,9 +708,9 @@ export default function ChatsScreen() {
       <ImageViewer visible={!!viewPhoto} uri={viewPhoto?.uri} caption={viewPhoto?.name} onClose={() => setViewPhoto(null)} />
 
       {/* AI Assistant FAB */}
-      <TouchableOpacity style={[s.fab, { backgroundColor: t.accent }]} activeOpacity={0.85}
+      <TouchableOpacity style={[s.fab, { bottom: fabBottom, backgroundColor: t.accent, shadowColor: t.accent }]} activeOpacity={0.85}
         onPress={() => router.push('/chat/assistant')}>
-        <Ionicons name="sparkles" size={22} color="#fff" />
+        <Ionicons name="sparkles" size={22} color="#6e4f10" />
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -677,26 +720,67 @@ const s = StyleSheet.create({
   root: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.06, shadowRadius: 10 }, android: { elevation: 3 } }),
+    paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12,
+    gap: 10,
   },
-  headerTitle: { fontSize: 26, fontWeight: '900', letterSpacing: -0.3 },
-  headerRight: { flexDirection: 'row', gap: 2 },
-  headerBtn: { padding: 8, borderRadius: 20 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  brandTile: {
+    width: 30, height: 30, borderRadius: 9,
+    backgroundColor: '#ffd54a',
+    alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 8 },
+      android: { elevation: 4 },
+    }),
+  },
+  headerTitle: { fontSize: 22, fontWeight: '900', letterSpacing: -0.4 },
+  headerSub: { fontSize: 11, fontWeight: '600', letterSpacing: 0.2, marginTop: 1 },
+  headerRight: { flexDirection: 'row', gap: 8 },
+  headerBtn: {
+    width: 36, height: 36, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
+  },
 
   // Global search header
-  globalSearchBox: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, height: 40, marginLeft: 10 },
+  globalSearchBox: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderRadius: 12, paddingHorizontal: 12, height: 40,
+    borderWidth: 1,
+  },
   globalSearchInput: { flex: 1, fontSize: 14, fontWeight: '500' },
 
   // Filter search + chips
-  searchWrap: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 8 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, paddingHorizontal: 14, height: 42 },
-  searchInput: { flex: 1, fontSize: 15, fontWeight: '400' },
-  filterRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
-  filterChipText: { fontSize: 13, fontWeight: '700' },
+  searchWrap: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10 },
+  searchBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderRadius: 14, paddingHorizontal: 14, height: 44,
+    borderWidth: 1,
+  },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: '500' },
+  // Quick actions strip
+  quickStrip: { gap: 10, paddingRight: 8 },
+  quickCard: {
+    width: 84,
+    paddingVertical: 12, paddingHorizontal: 10,
+    borderRadius: 14, borderWidth: 1,
+    alignItems: 'center', gap: 8,
+  },
+  quickIconWrap: {
+    width: 38, height: 38, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  quickLabel: { fontSize: 11, fontWeight: '700', letterSpacing: -0.1 },
+
+  filterRow: { flexDirection: 'row', gap: 8, marginTop: 14 },
+  filterChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 13, paddingVertical: 7,
+    borderRadius: 999, borderWidth: 1,
+  },
+  filterChipText: { fontSize: 12, fontWeight: '800', letterSpacing: 0.1 },
   filterCount: { minWidth: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  filterCountText: { fontSize: 10, fontWeight: '800', color: '#fff' },
+  filterCountText: { fontSize: 10, fontWeight: '900' },
 
   // Global search results
   resultCount: { fontSize: 12, fontWeight: '600', paddingHorizontal: 18, paddingVertical: 8 },
@@ -707,27 +791,48 @@ const s = StyleSheet.create({
   resultTime: { fontSize: 11, marginLeft: 'auto' },
   resultMsg: { fontSize: 13, lineHeight: 18 },
 
-  thread: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 14, gap: 14, position: 'relative', overflow: 'hidden' },
-  unreadStripe: { position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: 2 },
+  thread: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 12, gap: 13,
+    position: 'relative', overflow: 'hidden',
+    marginHorizontal: 8, marginVertical: 1,
+    borderRadius: 14,
+  },
+  unreadStripe: { position: 'absolute', left: 0, top: 14, bottom: 14, width: 3, borderRadius: 2 },
   avatarWrap: { position: 'relative' },
-  groupBadge: { position: 'absolute', bottom: -1, right: -1, width: 19, height: 19, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: '#fff' },
-  threadBody: { flex: 1 },
-  threadTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
-  threadName: { fontSize: 16, fontWeight: '500', flex: 1, marginRight: 10 },
+  groupBadge: {
+    position: 'absolute', bottom: -2, right: -2,
+    width: 19, height: 19, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2.5, borderColor: '#0b0f1e',
+  },
+  threadBody: { flex: 1, minWidth: 0 },
+  threadTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  threadName: { fontSize: 15.5, fontWeight: '600', flex: 1, marginRight: 10, letterSpacing: -0.2 },
   bold: { fontWeight: '800' },
-  threadTime: { fontSize: 11, fontWeight: '500' },
+  threadTime: { fontSize: 11, fontWeight: '600' },
   threadBottom: { flexDirection: 'row', alignItems: 'center' },
-  threadPreview: { fontSize: 13.5, flex: 1, marginRight: 8, lineHeight: 18 },
-  unreadBadge: { minWidth: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6 },
-  unreadText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  threadPreview: { fontSize: 13, flex: 1, marginRight: 8, lineHeight: 18 },
+  unreadBadge: {
+    minWidth: 22, height: 22, borderRadius: 11,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 7,
+    ...Platform.select({
+      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.5, shadowRadius: 6 },
+      android: { elevation: 3 },
+    }),
+  },
+  unreadText: { fontSize: 11, fontWeight: '900' },
   emptyWrap: { flex: 1 },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, paddingTop: 80 },
-  emptyTitle: { fontSize: 17, fontWeight: '700' },
-  emptySub: { fontSize: 13, lineHeight: 18 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingTop: 80, paddingHorizontal: 32 },
+  emptyTitle: { fontSize: 17, fontWeight: '800', letterSpacing: -0.2 },
+  emptySub: { fontSize: 13, lineHeight: 18, textAlign: 'center' },
   fab: {
-    position: 'absolute', bottom: 22, right: 18,
-    width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center',
-    ...Platform.select({ ios: { shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 14 }, android: { elevation: 10 } }),
+    position: 'absolute', bottom: 80, right: 18,
+    width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 16 },
+      android: { elevation: 12 },
+    }),
   },
   // Header 3-dot menu
   menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.15)' },

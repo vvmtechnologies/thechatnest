@@ -6,7 +6,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Platform,
-  ActivityIndicator, ScrollView, Keyboard, Dimensions, Animated, KeyboardAvoidingView,
+  ActivityIndicator, ScrollView, Keyboard, useWindowDimensions, Animated, KeyboardAvoidingView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,12 +23,23 @@ import { brand, colors } from '../../src/theme/colors';
 import Input from '../../src/components/ui/Input';
 import Button from '../../src/components/ui/Button';
 
-const { width: W, height: H } = Dimensions.get('window');
 const COOL = 30;
 
 export default function LoginScreen() {
   const { refreshUser } = useAuth();
   const toast = useToast();
+  const { width: W, height: H } = useWindowDimensions();
+
+  // Responsive sizing
+  const isSmall = H < 700;
+  const isTablet = W >= 600;
+  const padH = Math.max(W * 0.06, 18);
+  const padV = isSmall ? 16 : 24;
+  const cardMaxW = isTablet ? 460 : W - padH * 2;
+  const tileSize = isSmall ? 52 : 60;
+  const brandFontSize = isSmall ? 20 : isTablet ? 26 : 22;
+  const titleFontSize = isSmall ? 20 : isTablet ? 26 : 22;
+
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -186,30 +197,54 @@ export default function LoginScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={z.scroll}
+            contentContainerStyle={[
+              z.scroll,
+              { paddingHorizontal: padH, paddingTop: padV, paddingBottom: padV + 8 },
+            ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             bounces={false}
           >
             {/* Brand row */}
-            <Animated.View style={[z.brandSection, { opacity: fadeAnim, transform: [{ scale: logoScale }] }]}>
+            <Animated.View
+              style={[
+                z.brandSection,
+                { marginBottom: isSmall ? 18 : 28, opacity: fadeAnim, transform: [{ scale: logoScale }] },
+              ]}
+            >
               <LinearGradient
                 colors={brand.gradientGold}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={z.brandTile}
+                style={[
+                  z.brandTile,
+                  { width: tileSize, height: tileSize, borderRadius: tileSize * 0.3, marginBottom: isSmall ? 10 : 14 },
+                ]}
               >
-                <Ionicons name="chatbubbles" size={24} color={brand.goldInk} />
+                <Ionicons name="chatbubbles" size={tileSize * 0.4} color={brand.goldInk} />
               </LinearGradient>
-              <Text style={z.brandName}>TheChatNest</Text>
+              <Text style={[z.brandName, { fontSize: brandFontSize }]}>TheChatNest</Text>
               <Text style={z.brandTag}>Secure team workspace</Text>
             </Animated.View>
 
             {/* Card */}
-            <Animated.View style={[z.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+            <Animated.View
+              style={[
+                z.card,
+                {
+                  maxWidth: cardMaxW,
+                  alignSelf: 'center',
+                  width: '100%',
+                  paddingHorizontal: isSmall ? 18 : 22,
+                  paddingVertical: isSmall ? 20 : 24,
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }],
+                },
+              ]}
+            >
               {step === 1 ? (
                 <>
-                  <Text style={z.title}>Welcome back</Text>
+                  <Text style={[z.title, { fontSize: titleFontSize }]}>Welcome back</Text>
                   <Text style={z.sub}>Sign in to your workspace</Text>
 
                   {/* Biometric quick action */}
@@ -316,7 +351,7 @@ export default function LoginScreen() {
                     >
                       <Ionicons name="shield-checkmark" size={32} color={brand.goldInk} />
                     </LinearGradient>
-                    <Text style={[z.title, { textAlign: 'center', marginTop: 16 }]}>
+                    <Text style={[z.title, { fontSize: titleFontSize, textAlign: 'center', marginTop: 16 }]}>
                       Verification code
                     </Text>
                     <Text style={[z.sub, { textAlign: 'center' }]}>
@@ -393,30 +428,21 @@ const z = StyleSheet.create({
   },
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 32,
     justifyContent: 'center',
   },
 
   brandSection: {
     alignItems: 'center',
-    marginBottom: 28,
   },
   brandTile: {
-    width: 64,
-    height: 64,
-    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 14,
     ...Platform.select({
       ios: { shadowColor: brand.gold, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12 },
       android: { elevation: 8 },
     }),
   },
   brandName: {
-    fontSize: 24,
     fontWeight: '800',
     color: '#fff',
     letterSpacing: -0.5,
@@ -434,12 +460,8 @@ const z = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
     borderRadius: 24,
-    paddingHorizontal: 22,
-    paddingVertical: 24,
-    backdropFilter: 'blur(20px)',
   },
   title: {
-    fontSize: 24,
     fontWeight: '800',
     color: '#fff',
     marginBottom: 4,

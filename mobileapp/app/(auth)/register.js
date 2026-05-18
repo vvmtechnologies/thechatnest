@@ -6,7 +6,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Platform,
-  ScrollView, Keyboard, KeyboardAvoidingView, Animated,
+  ScrollView, Keyboard, KeyboardAvoidingView, Animated, useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,16 @@ const COOL = 30;
 
 export default function RegisterScreen() {
   const toast = useToast();
+  const { width: W, height: H } = useWindowDimensions();
+
+  // Responsive sizing
+  const isSmall = H < 700;
+  const isTablet = W >= 600;
+  const padH = Math.max(W * 0.055, 18);
+  const cardMaxW = isTablet ? 520 : W - padH * 2;
+  const titleFontSize = isSmall ? 24 : isTablet ? 34 : 28;
+  const titleLine = isSmall ? 30 : isTablet ? 40 : 34;
+
   const [step, setStep] = useState(1);
   const [company, setCompany] = useState('');
   const [name, setName] = useState('');
@@ -159,7 +169,10 @@ export default function RegisterScreen() {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 12}
         >
           <ScrollView
-            contentContainerStyle={s.scroll}
+            contentContainerStyle={[
+              s.scroll,
+              { paddingHorizontal: padH },
+            ]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -193,13 +206,13 @@ export default function RegisterScreen() {
               <View style={[s.stepDot, step >= 2 && s.stepDotActive]} />
             </View>
 
-            <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
+            <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }], alignSelf: 'center', width: '100%', maxWidth: cardMaxW }}>
               {step === 1 ? (
                 <>
                   {/* Header */}
                   <View style={s.headerWrap}>
                     <Text style={s.kicker}>STEP 1 OF 2</Text>
-                    <Text style={s.title}>Create your{'\n'}<Text style={s.titleGold}>workspace</Text></Text>
+                    <Text style={[s.title, { fontSize: titleFontSize, lineHeight: titleLine }]}>Create your{'\n'}<Text style={s.titleGold}>workspace</Text></Text>
                     <Text style={s.sub}>
                       Spin up a secure team workspace in under a minute.
                     </Text>
@@ -227,8 +240,8 @@ export default function RegisterScreen() {
                       error={err.name}
                     />
 
-                    <View style={s.row}>
-                      <View style={{ flex: 1 }}>
+                    <View style={[s.row, W < 360 && { flexDirection: 'column', gap: 0 }]}>
+                      <View style={{ flex: 1, minWidth: 0 }}>
                         <Input
                           mode="dark"
                           placeholder="Phone"
@@ -240,7 +253,7 @@ export default function RegisterScreen() {
                           error={err.phone}
                         />
                       </View>
-                      <View style={{ flex: 1.2 }}>
+                      <View style={{ flex: 1.2, minWidth: 0 }}>
                         <Input
                           mode="dark"
                           placeholder="Email"
@@ -371,7 +384,7 @@ export default function RegisterScreen() {
                       </LinearGradient>
                     </View>
                     <Text style={s.kicker}>STEP 2 OF 2</Text>
-                    <Text style={s.title}>Verify your email</Text>
+                    <Text style={[s.title, { fontSize: titleFontSize, lineHeight: titleLine }]}>Verify your email</Text>
                     <Text style={s.sub}>
                       We sent a 6-digit code to{'\n'}
                       <Text style={s.subEmail}>{email}</Text>
@@ -452,7 +465,6 @@ const s = StyleSheet.create({
 
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
   },

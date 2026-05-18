@@ -6,7 +6,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Platform,
-  ScrollView, Keyboard, KeyboardAvoidingView, Animated,
+  ScrollView, Keyboard, KeyboardAvoidingView, Animated, useWindowDimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -25,6 +25,16 @@ const COOL = 30;
 
 export default function ForgotPasswordScreen() {
   const toast = useToast();
+  const { width: W, height: H } = useWindowDimensions();
+
+  // Responsive
+  const isSmall = H < 700;
+  const isTablet = W >= 600;
+  const padH = Math.max(W * 0.055, 18);
+  const cardMaxW = isTablet ? 460 : W - padH * 2;
+  const titleFontSize = isSmall ? 24 : isTablet ? 34 : 28;
+  const titleLine = isSmall ? 30 : isTablet ? 40 : 34;
+
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -134,7 +144,7 @@ export default function ForgotPasswordScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
-            contentContainerStyle={s.scroll}
+            contentContainerStyle={[s.scroll, { paddingHorizontal: padH }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -177,11 +187,11 @@ export default function ForgotPasswordScreen() {
               ))}
             </View>
 
-            <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
+            <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }], alignSelf: 'center', width: '100%', maxWidth: cardMaxW }}>
               {/* Header */}
               <View style={s.headerWrap}>
                 <Text style={s.kicker}>{kickers[step - 1]}</Text>
-                <Text style={s.title}>{titles[step - 1]}</Text>
+                <Text style={[s.title, { fontSize: titleFontSize, lineHeight: titleLine }]}>{titles[step - 1]}</Text>
                 <Text style={s.sub}>
                   {subs[step - 1]}
                   {step === 2 && <Text style={s.subEmail}>{'\n'}{email}</Text>}
@@ -320,7 +330,6 @@ const s = StyleSheet.create({
 
   scroll: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.xxl,
   },

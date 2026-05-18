@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, SectionList, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl, SectionList, ScrollView, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Avatar from '../../src/components/Avatar';
@@ -15,6 +15,8 @@ export default function ContactsScreen() {
   const { user } = useAuth();
   const { theme: t, isDark } = useTheme();
   const { on } = useSocket();
+  const insets = useSafeAreaInsets();
+  const listBottomPad = 64 + Math.max(insets.bottom - 4, 10) + 24;
   const [contacts, setContacts] = useState([]);
   const [groups, setGroups] = useState([]);
   const [search, setSearch] = useState('');
@@ -159,34 +161,82 @@ export default function ContactsScreen() {
 
   const hasChat = (contactId) => existingThreads.has(`dm-${contactId}`);
 
+  const onlineCount = Object.values(userStatuses).filter(s => s && s !== 'offline').length;
+
   return (
     <SafeAreaView style={[s.container, { backgroundColor: t.bg }]} edges={['top', 'bottom']}>
-      <View style={s.header}>
-        <Text style={[s.title, { color: t.text }]}>Contacts</Text>
-        <View style={[s.count, { backgroundColor: t.accentBg }]}>
-          <Text style={{ fontSize: 12, fontWeight: '800', color: t.accent }}>{tab === 'people' ? contacts.length : groups.length}</Text>
+      <View style={[s.header, { borderBottomColor: t.divider }]}>
+        <View style={s.headerLeft}>
+          <View style={s.brandTile}>
+            <Ionicons name="people" size={14} color="#6e4f10" />
+          </View>
+          <View>
+            <Text style={[s.title, { color: t.text }]}>People</Text>
+            <Text style={[s.titleSub, { color: t.textTer }]}>
+              {tab === 'people' ? `${contacts.length} contact${contacts.length !== 1 ? 's' : ''}` : `${groups.length} group${groups.length !== 1 ? 's' : ''}`}
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* Tab switcher */}
-      <View style={[s.tabRow, { borderBottomColor: isDark ? '#1e293b' : '#f1f5f9' }]}>
-        <TouchableOpacity style={[s.tab, tab === 'people' && { borderBottomColor: t.accent }]}
-          onPress={() => setTab('people')} activeOpacity={0.7}>
-          <Ionicons name="person" size={16} color={tab === 'people' ? t.accent : t.textTer} />
-          <Text style={[s.tabLabel, { color: tab === 'people' ? t.accent : t.textTer }]}>People</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[s.tab, tab === 'groups' && { borderBottomColor: t.accent }]}
-          onPress={() => setTab('groups')} activeOpacity={0.7}>
-          <Ionicons name="people" size={16} color={tab === 'groups' ? t.accent : t.textTer} />
-          <Text style={[s.tabLabel, { color: tab === 'groups' ? t.accent : t.textTer }]}>Groups</Text>
-        </TouchableOpacity>
+      {/* Stats hero — 3 cards across */}
+      <View style={s.statsRow}>
+        <View style={[s.statCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          <View style={[s.statIconWrap, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
+            <View style={s.onlineDot} />
+          </View>
+          <Text style={[s.statValue, { color: t.text }]}>{onlineCount}</Text>
+          <Text style={[s.statLabel, { color: t.textTer }]}>Online now</Text>
+        </View>
+        <View style={[s.statCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          <View style={[s.statIconWrap, { backgroundColor: 'rgba(255,213,74,0.18)' }]}>
+            <Ionicons name="people" size={14} color={t.accent} />
+          </View>
+          <Text style={[s.statValue, { color: t.text }]}>{contacts.length}</Text>
+          <Text style={[s.statLabel, { color: t.textTer }]}>Teammates</Text>
+        </View>
+        <View style={[s.statCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          <View style={[s.statIconWrap, { backgroundColor: 'rgba(109,93,252,0.18)' }]}>
+            <Ionicons name="grid" size={13} color="#6d5dfc" />
+          </View>
+          <Text style={[s.statValue, { color: t.text }]}>{departments.length || '—'}</Text>
+          <Text style={[s.statLabel, { color: t.textTer }]}>Departments</Text>
+        </View>
+      </View>
+
+      {/* Pill tab switcher */}
+      <View style={s.pillTabWrap}>
+        <View style={[s.pillTabContainer, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          <TouchableOpacity
+            style={[s.pillTab, tab === 'people' && { backgroundColor: t.accent }]}
+            onPress={() => setTab('people')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name={tab === 'people' ? 'person' : 'person-outline'} size={14} color={tab === 'people' ? '#6e4f10' : t.textSec} />
+            <Text style={[s.pillTabLabel, { color: tab === 'people' ? '#6e4f10' : t.textSec }]}>People</Text>
+            <View style={[s.pillCount, { backgroundColor: tab === 'people' ? 'rgba(110,79,16,0.2)' : t.divider }]}>
+              <Text style={[s.pillCountText, { color: tab === 'people' ? '#6e4f10' : t.textSec }]}>{contacts.length}</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.pillTab, tab === 'groups' && { backgroundColor: t.accent }]}
+            onPress={() => setTab('groups')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name={tab === 'groups' ? 'people' : 'people-outline'} size={14} color={tab === 'groups' ? '#6e4f10' : t.textSec} />
+            <Text style={[s.pillTabLabel, { color: tab === 'groups' ? '#6e4f10' : t.textSec }]}>Groups</Text>
+            <View style={[s.pillCount, { backgroundColor: tab === 'groups' ? 'rgba(110,79,16,0.2)' : t.divider }]}>
+              <Text style={[s.pillCountText, { color: tab === 'groups' ? '#6e4f10' : t.textSec }]}>{groups.length}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={s.searchWrap}>
-        <View style={[s.searchBox, { backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }]}>
-          <Ionicons name="search" size={16} color={t.textTer} />
+        <View style={[s.searchBox, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          <Ionicons name="search" size={15} color={t.textTer} />
           <TextInput style={[s.searchInput, { color: t.text }]}
-            placeholder={tab === 'people' ? 'Search contacts...' : 'Search groups...'}
+            placeholder={tab === 'people' ? 'Search people…' : 'Search groups…'}
             placeholderTextColor={t.textTer}
             value={search} onChangeText={setSearch} />
           {search.length > 0 && (
@@ -221,17 +271,18 @@ export default function ContactsScreen() {
           sections={sections}
           keyExtractor={item => String(item.id)}
           stickySectionHeadersEnabled={false}
-          contentContainerStyle={{ paddingBottom: 50 }}
+          contentContainerStyle={{ paddingBottom: listBottomPad }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[t.accent]} />}
           ListHeaderComponent={
-            <TouchableOpacity style={[s.myselfRow, { borderBottomColor: t.border }]} onPress={openSelf} activeOpacity={0.65}>
-              <View style={[s.myselfAvatar, { backgroundColor: t.accentBg || '#eef2ff' }]}>
-                <Text style={s.myselfEmoji}>📌</Text>
+            <TouchableOpacity style={[s.myselfRow, { backgroundColor: t.surface, borderColor: t.divider }]} onPress={openSelf} activeOpacity={0.7}>
+              <View style={[s.myselfAvatar, { backgroundColor: t.accent }]}>
+                <Ionicons name="bookmark" size={20} color="#6e4f10" />
               </View>
               <View style={s.myselfBody}>
                 <Text style={[s.myselfName, { color: t.text }]}>Myself</Text>
-                <Text style={[s.myselfSub, { color: t.textSec }]}>Message yourself</Text>
+                <Text style={[s.myselfSub, { color: t.textSec }]}>Notes • drafts • reminders</Text>
               </View>
+              <Ionicons name="chevron-forward" size={16} color={t.textTer} />
             </TouchableOpacity>
           }
           renderSectionHeader={({ section }) => (
@@ -248,12 +299,12 @@ export default function ContactsScreen() {
                   <Text style={[s.contactSub, { color: t.textSec }]} numberOfLines={1}>{item.designation || item.department || item.email}</Text>
                 </View>
                 {chatExists ? (
-                  <View style={[s.chatBadge, { backgroundColor: '#22c55e15' }]}>
-                    <Ionicons name="chatbubble" size={14} color="#22c55e" />
+                  <View style={[s.chatBadge, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
+                    <Ionicons name="chatbubble" size={12} color="#22c55e" />
                   </View>
                 ) : null}
-                <TouchableOpacity style={[s.chatBtn, { backgroundColor: t.accentBg || '#eef2ff' }]} onPress={() => openChat(item)}>
-                  <Ionicons name="chatbubble-outline" size={18} color={t.accent} />
+                <TouchableOpacity style={[s.chatBtn, { backgroundColor: t.accent }]} onPress={() => openChat(item)} activeOpacity={0.85}>
+                  <Ionicons name="chatbubble" size={16} color="#6e4f10" />
                 </TouchableOpacity>
               </TouchableOpacity>
             );
@@ -270,18 +321,19 @@ export default function ContactsScreen() {
         <FlatList
           data={filteredGroups}
           keyExtractor={item => String(item.id)}
-          contentContainerStyle={{ paddingBottom: 50 }}
+          contentContainerStyle={{ paddingBottom: listBottomPad }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[t.accent]} />}
           ListHeaderComponent={
-            <TouchableOpacity style={[s.createGroupRow, { borderBottomColor: t.border }]}
-              onPress={() => router.push('/chat/create-group')} activeOpacity={0.65}>
+            <TouchableOpacity style={[s.myselfRow, { backgroundColor: t.surface, borderColor: t.divider }]}
+              onPress={() => router.push('/chat/create-group')} activeOpacity={0.7}>
               <View style={[s.createGroupIcon, { backgroundColor: t.accent }]}>
-                <Ionicons name="add" size={22} color="#fff" />
+                <Ionicons name="add" size={22} color="#6e4f10" />
               </View>
               <View style={s.myselfBody}>
-                <Text style={[s.myselfName, { color: t.accent }]}>New Group</Text>
-                <Text style={[s.myselfSub, { color: t.textSec }]}>Create a new group chat</Text>
+                <Text style={[s.myselfName, { color: t.text }]}>New group</Text>
+                <Text style={[s.myselfSub, { color: t.textSec }]}>Start a new team conversation</Text>
               </View>
+              <Ionicons name="chevron-forward" size={16} color={t.textTer} />
             </TouchableOpacity>
           }
           renderItem={({ item }) => {
@@ -310,8 +362,8 @@ export default function ContactsScreen() {
                     {isLeft ? 'You can only view old messages' : (item.description || `${item.memberCount || ''} members`)}
                   </Text>
                 </View>
-                <TouchableOpacity style={[s.chatBtn, { backgroundColor: t.accentBg || '#eef2ff' }]} onPress={() => openGroup(item)}>
-                  <Ionicons name={isLeft ? 'eye-outline' : 'chatbubble-outline'} size={18} color={isLeft ? '#94a3b8' : t.accent} />
+                <TouchableOpacity style={[s.chatBtn, { backgroundColor: isLeft ? t.surface : t.accent }]} onPress={() => openGroup(item)} activeOpacity={0.85}>
+                  <Ionicons name={isLeft ? 'eye-outline' : 'chatbubble'} size={16} color={isLeft ? '#94a3b8' : '#6e4f10'} />
                 </TouchableOpacity>
               </TouchableOpacity>
             );
@@ -333,55 +385,124 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
+    paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12,
+    borderBottomWidth: 1,
   },
-  title: { fontSize: 26, fontWeight: '900', letterSpacing: -0.3 },
-  count: { fontSize: 12, fontWeight: '800', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, overflow: 'hidden' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  brandTile: {
+    width: 30, height: 30, borderRadius: 9,
+    backgroundColor: '#ffd54a',
+    alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 8 },
+      android: { elevation: 4 },
+    }),
+  },
+  title: { fontSize: 22, fontWeight: '900', letterSpacing: -0.4 },
+  titleSub: { fontSize: 11, fontWeight: '600', marginTop: 1 },
 
-  // Tabs
-  tabRow: { flexDirection: 'row', paddingHorizontal: 16, borderBottomWidth: StyleSheet.hairlineWidth },
-  tab: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderBottomWidth: 2.5, borderBottomColor: 'transparent' },
-  tabLabel: { fontSize: 14, fontWeight: '700' },
+  // Stats row
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingHorizontal: 16, paddingTop: 14, paddingBottom: 4,
+  },
+  statCard: {
+    flex: 1,
+    paddingVertical: 12, paddingHorizontal: 12,
+    borderRadius: 14, borderWidth: 1,
+    gap: 8,
+  },
+  statIconWrap: {
+    width: 26, height: 26, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  onlineDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
+  statValue: { fontSize: 18, fontWeight: '900', letterSpacing: -0.4 },
+  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.2 },
 
-  searchWrap: { paddingHorizontal: 16, paddingVertical: 8 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 14, paddingHorizontal: 14, height: 42 },
-  searchInput: { flex: 1, fontSize: 15, fontWeight: '400' },
+  // Pill tabs
+  pillTabWrap: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
+  pillTabContainer: {
+    flexDirection: 'row', borderRadius: 14, padding: 4, gap: 4,
+    borderWidth: 1,
+  },
+  pillTab: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 10, borderRadius: 10,
+  },
+  pillTabLabel: { fontSize: 13, fontWeight: '800', letterSpacing: -0.1 },
+  pillCount: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8, minWidth: 22, alignItems: 'center' },
+  pillCountText: { fontSize: 10, fontWeight: '900' },
 
-  // Myself
-  myselfRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 16, gap: 14, borderBottomWidth: StyleSheet.hairlineWidth, marginHorizontal: 4, borderRadius: 14 },
-  myselfAvatar: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  myselfEmoji: { fontSize: 22 },
-  myselfBody: { flex: 1 },
-  myselfName: { fontSize: 16, fontWeight: '700' },
-  myselfSub: { fontSize: 13, marginTop: 2 },
+  searchWrap: { paddingHorizontal: 16, paddingVertical: 10 },
+  searchBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderRadius: 14, paddingHorizontal: 14, height: 44,
+    borderWidth: 1,
+  },
+  searchInput: { flex: 1, fontSize: 14, fontWeight: '500' },
 
-  // Create group
-  createGroupRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 16, gap: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  createGroupIcon: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  // Myself row + new group row
+  myselfRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, paddingVertical: 13, gap: 13,
+    marginHorizontal: 12, marginVertical: 6,
+    borderRadius: 16, borderWidth: 1,
+  },
+  myselfAvatar: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  myselfEmoji: { fontSize: 20 },
+  myselfBody: { flex: 1, minWidth: 0 },
+  myselfName: { fontSize: 15, fontWeight: '800', letterSpacing: -0.2 },
+  myselfSub: { fontSize: 12, marginTop: 2 },
+
+  // Create group icon
+  createGroupIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
 
   // Section header
-  sectionHeader: { fontSize: 12, fontWeight: '800', paddingHorizontal: 20, paddingVertical: 8, letterSpacing: 0.8, textTransform: 'uppercase' },
+  sectionHeader: {
+    fontSize: 11, fontWeight: '900',
+    paddingHorizontal: 20, paddingTop: 14, paddingBottom: 6,
+    letterSpacing: 1.2, textTransform: 'uppercase',
+  },
 
   // Contact row
-  contactRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 12, gap: 14, borderBottomWidth: StyleSheet.hairlineWidth },
-  contactBody: { flex: 1 },
-  contactName: { fontSize: 16, fontWeight: '600' },
-  contactSub: { fontSize: 13, marginTop: 2, lineHeight: 17 },
-  chatBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  chatBadge: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  contactRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 11, gap: 12,
+    marginHorizontal: 8, marginVertical: 1,
+    borderRadius: 12,
+    borderBottomWidth: 0,
+  },
+  contactBody: { flex: 1, minWidth: 0 },
+  contactName: { fontSize: 15, fontWeight: '700', letterSpacing: -0.2 },
+  contactSub: { fontSize: 12, marginTop: 2, lineHeight: 16 },
+  chatBtn: {
+    width: 36, height: 36, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6 },
+      android: { elevation: 3 },
+    }),
+  },
+  chatBadge: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 
   // Group avatar
-  groupAvatar: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center' },
+  groupAvatar: {
+    width: 44, height: 44, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,213,74,0.2)',
+  },
   groupNameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  airtimeBadge: { paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 },
-  leftBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  leftBadgeText: { fontSize: 9, fontWeight: '800', color: '#ef4444', textTransform: 'uppercase' },
+  airtimeBadge: { paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 },
+  leftBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  leftBadgeText: { fontSize: 9, fontWeight: '900', color: '#ef4444', textTransform: 'uppercase', letterSpacing: 0.3 },
 
   // Department filter
-  deptRow: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.06)' },
-  deptChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 18, borderWidth: 1.5, borderColor: 'transparent' },
-  deptChipText: { fontSize: 12, fontWeight: '700' },
+  deptRow: { },
+  deptChip: { paddingHorizontal: 13, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: 'transparent' },
+  deptChipText: { fontSize: 11, fontWeight: '800' },
 
-  empty: { alignItems: 'center', paddingTop: 80, gap: 10 },
-  emptyText: { fontSize: 15, fontWeight: '500' },
+  empty: { alignItems: 'center', paddingTop: 80, gap: 12, paddingHorizontal: 32 },
+  emptyText: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
 });

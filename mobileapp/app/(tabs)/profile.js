@@ -319,64 +319,129 @@ export default function ProfileScreen() {
     );
   };
 
+  // Pick a deterministic accent stripe per user (gold/violet/teal/coral)
+  const STRIPE_PALETTE = ['#ffd54a', '#6d5dfc', '#22c55e', '#ec4899', '#0ea5e9', '#f59e0b'];
+  const stripeIdx = ((p.user_id || p.id || 0) + (p.name || '').length) % STRIPE_PALETTE.length;
+  const userStripe = STRIPE_PALETTE[stripeIdx];
+
+  // Join date + initials for "member since"
+  const joinDate = p.created_at || profile?.joined_at || profile?.created_at;
+  const joinLabel = joinDate ? new Date(joinDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '—';
+  const initials = (p.name || 'U').split(' ').map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+
   return (
     <SafeAreaView style={[z.root, { backgroundColor: t.bg }]} edges={['top', 'bottom']}>
-      {/* ─── Top brand row ─── */}
-      <View style={[z.topBar, { borderBottomColor: t.divider }]}>
-        <View style={z.topBarLeft}>
-          <View style={z.brandTile}>
-            <Ionicons name="person" size={14} color="#6e4f10" />
-          </View>
-          <Text style={[z.topBarTitle, { color: t.text }]}>Profile</Text>
-        </View>
-        <TouchableOpacity style={[z.logoutBtn, { backgroundColor: 'rgba(239,68,68,0.1)' }]} onPress={handleLogout} activeOpacity={0.7}>
-          <Ionicons name="log-out-outline" size={18} color="#ef4444" />
+      {/* ─── Minimalist top bar — just title + logout, no brand pill ─── */}
+      <View style={z.topBar}>
+        <Text style={[z.topBarKicker, { color: t.textTer }]}>YOUR · ACCOUNT</Text>
+        <TouchableOpacity style={[z.logoutBtnInline, { backgroundColor: t.surface, borderColor: t.divider }]} onPress={handleLogout} activeOpacity={0.7}>
+          <Ionicons name="log-out-outline" size={14} color="#ef4444" />
+          <Text style={z.logoutBtnText}>Sign out</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ─── Profile Hero Card (centered, big avatar) ─── */}
-      <View style={[z.profileCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
-        <View style={z.heroAccent} />
-        <View style={z.heroAccentViolet} />
-
-        <View style={z.profileTopCenter}>
-          <TouchableOpacity activeOpacity={0.7} onPress={async () => {
-            try {
-              const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [1, 1] });
-              if (result.canceled || !result.assets?.[0]) return;
-              const asset = result.assets[0];
-              const formData = new FormData();
-              formData.append('avatar', { uri: asset.uri, name: 'avatar.jpg', type: asset.mimeType || 'image/jpeg' });
-              toast('Uploading...', 'info');
-              const { data } = await api.post('/upload/profile-picture', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-              const newUrl = data?.data?.profile_url || data?.data?.url || data?.profile_url;
-              if (newUrl) {
-                setProfile(prev => ({ ...prev, profile_url: newUrl }));
-                toast('Photo updated!', 'success');
-                refreshUser();
-              } else { toast('Updated', 'success'); }
-            } catch (e) { toast(e?.response?.data?.message || 'Upload failed', 'error'); }
-          }} style={z.avatarWrap}>
-            <View style={z.avatarRingBig}>
-              <Avatar uri={p.profile_url || p.avatar} name={p.name} size={86} />
-            </View>
-            <View style={z.cameraBadge}>
-              <Ionicons name="camera" size={12} color="#6e4f10" />
-            </View>
-          </TouchableOpacity>
-          <Text style={[z.profileNameCenter, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
-          <Text style={[z.profileEmailCenter, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
-          <View style={[z.rolePill, { backgroundColor: 'rgba(255,213,74,0.15)', borderColor: 'rgba(255,213,74,0.4)', marginTop: 10 }]}>
-            <View style={z.rolePillDot} />
-            <Text style={[z.roleText, { color: t.accent }]}>{role}</Text>
-          </View>
+      {/* ─── ID CARD — boarding-pass style, two halves ─── */}
+      <View style={z.idCardWrap}>
+        {/* Left vertical stripe — user's deterministic color */}
+        <View style={[z.idStripe, { backgroundColor: userStripe }]}>
+          <Text style={z.idStripeText} numberOfLines={1}>{initials} · {role.toUpperCase()}</Text>
         </View>
 
-        {/* Status bar */}
-        <TouchableOpacity style={[z.statusBar, { backgroundColor: t.bg, borderColor: t.divider }]}
-          onPress={() => setShowStatusPicker(true)} activeOpacity={0.7}>
+        {/* Main body */}
+        <View style={[z.idCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
+          {/* Decorative grid pattern in background */}
+          <View style={z.gridPattern} pointerEvents="none">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <View key={i} style={[z.gridLine, { top: 16 + i * 22, backgroundColor: t.divider }]} />
+            ))}
+          </View>
+
+          <View style={z.idCardTop}>
+            <TouchableOpacity activeOpacity={0.7} onPress={async () => {
+              try {
+                const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [1, 1] });
+                if (result.canceled || !result.assets?.[0]) return;
+                const asset = result.assets[0];
+                const formData = new FormData();
+                formData.append('avatar', { uri: asset.uri, name: 'avatar.jpg', type: asset.mimeType || 'image/jpeg' });
+                toast('Uploading...', 'info');
+                const { data } = await api.post('/upload/profile-picture', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+                const newUrl = data?.data?.profile_url || data?.data?.url || data?.profile_url;
+                if (newUrl) {
+                  setProfile(prev => ({ ...prev, profile_url: newUrl }));
+                  toast('Photo updated!', 'success');
+                  refreshUser();
+                } else { toast('Updated', 'success'); }
+              } catch (e) { toast(e?.response?.data?.message || 'Upload failed', 'error'); }
+            }} style={z.avatarWrap}>
+              <View style={[z.avatarFrame, { borderColor: userStripe + '80' }]}>
+                <Avatar uri={p.profile_url || p.avatar} name={p.name} size={70} />
+              </View>
+              <View style={[z.cameraBadge, { backgroundColor: userStripe, borderColor: t.surface }]}>
+                <Ionicons name="camera" size={11} color={t.bg} />
+              </View>
+            </TouchableOpacity>
+
+            <View style={z.idCardInfo}>
+              <Text style={[z.idLabel, { color: t.textTer }]}>NAME</Text>
+              <Text style={[z.idName, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
+              <Text style={[z.idEmail, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
+            </View>
+          </View>
+
+          {/* Perforated divider (boarding-pass tear-off) */}
+          <View style={z.perforation}>
+            <View style={[z.perfNotchLeft, { backgroundColor: t.bg }]} />
+            <View style={z.perfDots}>
+              {Array.from({ length: 14 }).map((_, i) => (
+                <View key={i} style={[z.perfDot, { backgroundColor: t.divider }]} />
+              ))}
+            </View>
+            <View style={[z.perfNotchRight, { backgroundColor: t.bg }]} />
+          </View>
+
+          {/* Bottom row — 3 stat fields like a passport */}
+          <View style={z.idStats}>
+            <View style={z.idStatItem}>
+              <Text style={[z.idLabel, { color: t.textTer }]}>ROLE</Text>
+              <Text style={[z.idStatValue, { color: t.text }]} numberOfLines={1}>{role}</Text>
+            </View>
+            <View style={[z.idStatDivider, { backgroundColor: t.divider }]} />
+            <View style={z.idStatItem}>
+              <Text style={[z.idLabel, { color: t.textTer }]}>MEMBER SINCE</Text>
+              <Text style={[z.idStatValue, { color: t.text }]} numberOfLines={1}>{joinLabel}</Text>
+            </View>
+            <View style={[z.idStatDivider, { backgroundColor: t.divider }]} />
+            <View style={z.idStatItem}>
+              <Text style={[z.idLabel, { color: t.textTer }]}>ID</Text>
+              <Text style={[z.idStatValue, { color: t.text, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }) }]} numberOfLines={1}>
+                #{String(p.user_id || p.id || '—').padStart(4, '0')}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* ─── Status pill — sits below the ID card as a separate floating element ─── */}
+      <TouchableOpacity
+        style={[z.statusFloater, { backgroundColor: t.surface, borderColor: t.divider }]}
+        onPress={() => setShowStatusPicker(true)}
+        activeOpacity={0.7}
+      >
+        <View style={z.statusFloaterLeft}>
           <View style={[z.statusDot, { backgroundColor: STATUS_OPTIONS.find(s => s.key === myStatus)?.color || '#22c55e' }]} />
           <Text style={[z.statusLabel, { color: t.text }]}>{myStatus}</Text>
+          {statusText ? <Text style={[z.statusCustom, { color: t.textSec }]} numberOfLines={1}> · {statusText}</Text> : null}
+        </View>
+        <View style={[z.statusFloaterEdit, { backgroundColor: t.bg }]}>
+          <Ionicons name="pencil" size={11} color={t.textSec} />
+        </View>
+      </TouchableOpacity>
+
+      {/* Hidden — original status row replaced above */}
+      <View style={{ display: 'none' }}>
+        <TouchableOpacity onPress={() => setShowStatusPicker(true)}>
+          <Text>{myStatus}</Text>
           {statusText ? <Text style={[z.statusCustom, { color: t.textSec }]} numberOfLines={1}> — {statusText}</Text> : null}
           <Ionicons name="pencil" size={12} color={t.textTer} style={{ marginLeft: 'auto' }} />
         </TouchableOpacity>
@@ -921,24 +986,133 @@ const z = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingBottom: 120 },
 
-  // Top bar
+  // Minimalist top bar
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12,
-    borderBottomWidth: 1,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14,
   },
-  topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  brandTile: {
-    width: 30, height: 30, borderRadius: 9,
-    backgroundColor: '#ffd54a',
-    alignItems: 'center', justifyContent: 'center',
+  topBarKicker: { fontSize: 11, fontWeight: '900', letterSpacing: 2.4 },
+  logoutBtnInline: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: 999, borderWidth: 1,
+  },
+  logoutBtnText: { fontSize: 11, fontWeight: '800', color: '#ef4444', letterSpacing: 0.2 },
+
+  // ─── ID CARD (boarding-pass style) ────────────
+  idCardWrap: {
+    flexDirection: 'row',
+    marginHorizontal: 14,
+    borderRadius: 18,
+    overflow: 'hidden',
     ...Platform.select({
-      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.4, shadowRadius: 8 },
-      android: { elevation: 4 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 18 },
+      android: { elevation: 6 },
     }),
   },
-  topBarTitle: { fontSize: 22, fontWeight: '900', letterSpacing: -0.4 },
-  logoutBtn: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  idStripe: {
+    width: 32,
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 14,
+  },
+  idStripeText: {
+    color: '#11162a',
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2.2,
+    transform: [{ rotate: '-90deg' }],
+    width: 220,
+    textAlign: 'center',
+  },
+  idCard: {
+    flex: 1,
+    paddingHorizontal: 16, paddingVertical: 16,
+    borderWidth: 1, borderLeftWidth: 0,
+    borderTopRightRadius: 18, borderBottomRightRadius: 18,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  gridPattern: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    opacity: 0.35,
+  },
+  gridLine: {
+    position: 'absolute',
+    left: 0, right: 0,
+    height: StyleSheet.hairlineWidth,
+  },
+  idCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  avatarFrame: {
+    padding: 3, borderRadius: 16,
+    borderWidth: 2,
+  },
+  idCardInfo: { flex: 1, minWidth: 0 },
+  idLabel: {
+    fontSize: 9, fontWeight: '900',
+    letterSpacing: 1.8,
+    marginBottom: 2,
+  },
+  idName: {
+    fontSize: 18, fontWeight: '900',
+    letterSpacing: -0.4,
+    marginBottom: 3,
+  },
+  idEmail: { fontSize: 12, fontWeight: '500' },
+
+  // Perforated divider
+  perforation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 14,
+    marginHorizontal: -16,
+    height: 1,
+    position: 'relative',
+  },
+  perfNotchLeft: {
+    position: 'absolute',
+    left: -8, top: -8,
+    width: 16, height: 16, borderRadius: 8,
+  },
+  perfNotchRight: {
+    position: 'absolute',
+    right: -8, top: -8,
+    width: 16, height: 16, borderRadius: 8,
+  },
+  perfDots: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    paddingHorizontal: 14,
+  },
+  perfDot: { width: 4, height: 1.5, borderRadius: 1 },
+
+  // ID stats (bottom row of card)
+  idStats: { flexDirection: 'row', alignItems: 'stretch', gap: 0 },
+  idStatItem: { flex: 1, paddingHorizontal: 4 },
+  idStatDivider: { width: 1, marginHorizontal: 8 },
+  idStatValue: {
+    fontSize: 13, fontWeight: '800',
+    letterSpacing: -0.2,
+  },
+
+  // Status floater (sits below ID card)
+  statusFloater: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginHorizontal: 14, marginTop: 10,
+    paddingHorizontal: 14, paddingVertical: 11,
+    borderRadius: 14, borderWidth: 1,
+  },
+  statusFloaterLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
+  statusFloaterEdit: {
+    width: 28, height: 28, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
 
   // Profile card
   profileCard: {
@@ -992,7 +1166,7 @@ const z = StyleSheet.create({
   // Quick action grid
   quickGrid: {
     flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: 12, paddingTop: 8, gap: 8,
+    paddingHorizontal: 14, paddingTop: 18, gap: 8,
   },
   quickGridCard: {
     width: '48.5%',

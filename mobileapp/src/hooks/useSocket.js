@@ -22,12 +22,37 @@ const reattachHandlers = (socket) => {
   });
 };
 
+// Base64 decoder safe for React Native (Hermes' `atob` is unreliable
+// pre-72; use a manual decoder to avoid silent token-refresh storms).
+const b64decode = (str) => {
+  if (typeof atob === 'function') {
+    try { return atob(str); } catch { /* fall through */ }
+  }
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let s = String(str).replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  let output = '';
+  for (let i = 0; i < s.length;) {
+    const e1 = chars.indexOf(s.charAt(i++));
+    const e2 = chars.indexOf(s.charAt(i++));
+    const e3 = chars.indexOf(s.charAt(i++));
+    const e4 = chars.indexOf(s.charAt(i++));
+    const c1 = (e1 << 2) | (e2 >> 4);
+    const c2 = ((e2 & 15) << 4) | (e3 >> 2);
+    const c3 = ((e3 & 3) << 6) | e4;
+    output += String.fromCharCode(c1);
+    if (e3 !== 64) output += String.fromCharCode(c2);
+    if (e4 !== 64) output += String.fromCharCode(c3);
+  }
+  return output;
+};
+
 // Decode JWT payload without verification (just to check expiry)
 const isTokenExpired = (token) => {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return true;
-    const payload = JSON.parse(atob(parts[1]));
+    const payload = JSON.parse(b64decode(parts[1]));
     if (!payload.exp) return false;
     // Expired if less than 60s remaining
     return payload.exp * 1000 < Date.now() + 60000;

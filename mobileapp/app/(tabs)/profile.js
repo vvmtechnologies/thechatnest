@@ -280,13 +280,15 @@ export default function ProfileScreen() {
   }, [oldPass, newPass, confirmPass]);
 
   const handleLogout = useCallback(async () => {
-    await doLogout(); toast('Logged out', 'info');
-    setTimeout(() => router.replace('/(auth)/login'), 300);
+    await doLogout();
+    toast('Logged out', 'info');
+    router.replace('/(auth)/login');
   }, [doLogout]);
 
   const handleLogoutAll = useCallback(async () => {
-    await logoutAll(); toast('All devices logged out', 'info');
-    setTimeout(() => router.replace('/(auth)/login'), 300);
+    await logoutAll();
+    toast('All devices logged out', 'info');
+    router.replace('/(auth)/login');
   }, []);
 
   const handleRevokeDevice = useCallback(async (id) => {
@@ -437,15 +439,6 @@ export default function ProfileScreen() {
           <Ionicons name="pencil" size={11} color={t.textSec} />
         </View>
       </TouchableOpacity>
-
-      {/* Hidden — original status row replaced above */}
-      <View style={{ display: 'none' }}>
-        <TouchableOpacity onPress={() => setShowStatusPicker(true)}>
-          <Text>{myStatus}</Text>
-          {statusText ? <Text style={[z.statusCustom, { color: t.textSec }]} numberOfLines={1}> — {statusText}</Text> : null}
-          <Ionicons name="pencil" size={12} color={t.textTer} style={{ marginLeft: 'auto' }} />
-        </TouchableOpacity>
-      </View>
 
       <ScrollView showsVerticalScrollIndicator={false}
         contentContainerStyle={z.scroll}

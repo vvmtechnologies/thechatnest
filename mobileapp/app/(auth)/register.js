@@ -1,19 +1,26 @@
-import { useState, useCallback } from 'react';
+// ─── TheChatNest Mobile — Sign Up ──────────────────────────────────
+//
+// Navy + gold aesthetic matching splash/login. Two-step form: details
+// then email OTP. All registration/verify/resend API logic preserved.
+
+import { useState, useCallback, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Platform,
-  ActivityIndicator, ScrollView, Keyboard, Dimensions, KeyboardAvoidingView,
+  View, Text, TouchableOpacity, StyleSheet, Platform,
+  ScrollView, Keyboard, KeyboardAvoidingView, Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import * as Haptics from 'expo-haptics';
 import OtpInput from '../../src/components/OtpInput';
 import { useToast } from '../../src/components/Toast';
 import { register, verifyOtp, resendOtp } from '../../src/api/auth';
+import { brand, colors, spacing, radius, fontSize, fontWeight } from '../../src/theme/colors';
+import Button from '../../src/components/ui/Button';
+import Input from '../../src/components/ui/Input';
 
-const { height: H } = Dimensions.get('window');
-const P = '#ea4c89';
-const PD = '#c13584';
 const COOL = 30;
 
 export default function RegisterScreen() {
@@ -26,10 +33,31 @@ export default function RegisterScreen() {
   const [pass, setPass] = useState('');
   const [confirm, setConfirm] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [show, setShow] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [cool, setCool] = useState(0);
+  const [err, setErr] = useState({});
+
+  const fade = useState(new Animated.Value(0))[0];
+  const slide = useState(new Animated.Value(20))[0];
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 480, useNativeDriver: true }),
+      Animated.spring(slide, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
+    ]).start();
+  }, [step]);
+
+  useEffect(() => {
+    if (cool <= 0) return;
+    const t = setTimeout(() => setCool(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cool]);
 
   // Password strength
   const getPasswordStrength = (p) => {
-    if (!p) return { level: 0, label: '', color: '#e2e8f0' };
+    if (!p) return { level: 0, label: '', color: 'rgba(255,255,255,0.15)' };
     let score = 0;
     if (p.length >= 8) score++;
     if (p.length >= 12) score++;
@@ -39,16 +67,9 @@ export default function RegisterScreen() {
     if (score <= 1) return { level: 1, label: 'Weak', color: '#ef4444' };
     if (score <= 2) return { level: 2, label: 'Fair', color: '#f59e0b' };
     if (score <= 3) return { level: 3, label: 'Good', color: '#22c55e' };
-    return { level: 4, label: 'Strong', color: '#3b82f6' };
+    return { level: 4, label: 'Strong', color: brand.gold };
   };
   const passStrength = getPasswordStrength(pass);
-  const [show, setShow] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [cool, setCool] = useState(0);
-  const [err, setErr] = useState({});
-
-  if (cool > 0) setTimeout(() => setCool(c => c > 0 ? c - 1 : 0), 1000);
 
   const validate = useCallback(() => {
     const e = {};
@@ -61,252 +82,623 @@ export default function RegisterScreen() {
     if (!pass) e.pass = 'Required';
     else if (pass.length < 8) e.pass = 'Min 8 chars';
     if (!confirm) e.confirm = 'Required';
-    else if (pass !== confirm) e.confirm = 'Don\'t match';
+    else if (pass !== confirm) e.confirm = "Don't match";
     setErr(e);
     return !Object.keys(e).length;
   }, [company, name, email, phone, pass, confirm]);
 
   const handleRegister = useCallback(async () => {
     Keyboard.dismiss();
-    if (!validate()) return;
+    if (!validate()) {
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      return;
+    }
     if (!termsAccepted) { toast('Please accept Terms & Privacy Policy', 'error'); return; }
     setLoading(true);
     try {
-      await register({ companyName: company.trim(), ownerName: name.trim(), email: email.trim().toLowerCase(), phone: phone.replace(/\D/g, ''), password: pass });
+      await register({
+        companyName: company.trim(),
+        ownerName: name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.replace(/\D/g, ''),
+        password: pass,
+      });
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
+      fade.setValue(0); slide.setValue(20);
       setStep(2); setCool(COOL); setOtp('');
       toast('OTP sent to your email', 'success');
-    } catch (e) { toast(e?.response?.data?.message || 'Failed', 'error'); }
+    } catch (e) {
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      toast(e?.response?.data?.message || 'Failed', 'error');
+    }
     finally { setLoading(false); }
-  }, [company, name, email, phone, pass, validate, toast]);
+  }, [company, name, email, phone, pass, validate, termsAccepted, toast]);
 
   const handleVerify = useCallback(async () => {
     if (otp.length < 6) return toast('Enter 6-digit code', 'warning');
     Keyboard.dismiss(); setLoading(true);
     try {
       await verifyOtp(email.trim().toLowerCase(), otp);
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       toast('Account created! Please sign in.', 'success');
       setTimeout(() => router.replace('/(auth)/login'), 800);
-    } catch (e) { toast(e?.response?.data?.message || 'Invalid OTP', 'error'); }
+    } catch (e) {
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      toast(e?.response?.data?.message || 'Invalid OTP', 'error');
+    }
     finally { setLoading(false); }
   }, [email, otp, toast]);
 
   const handleResend = useCallback(async () => {
     if (cool > 0) return;
-    try { await resendOtp(email.trim().toLowerCase()); setCool(COOL); setOtp(''); toast('New code sent', 'success'); }
-    catch { toast('Resend failed', 'error'); }
+    try {
+      await resendOtp(email.trim().toLowerCase());
+      setCool(COOL); setOtp('');
+      toast('New code sent', 'success');
+    } catch { toast('Resend failed', 'error'); }
   }, [email, cool, toast]);
 
   return (
-    <SafeAreaView style={z.root} edges={['top', 'bottom']}>
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={z.scroll} keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false} bounces={false}>
+    <View style={s.root}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={brand.gradientHero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
 
-        {/* Header */}
-        <View style={z.headerRow}>
-          <LinearGradient colors={[P, PD]} style={z.logoGrad}>
-            <Ionicons name="people" size={16} color="#fff" />
-          </LinearGradient>
-          <Text style={z.brand}>TheChatNest</Text>
-        </View>
+      {/* Atmospheric glow blobs */}
+      <View style={s.glowGold} />
+      <View style={s.glowViolet} />
 
-        {/* Card */}
-        <View style={z.card}>
-          {step === 1 ? (
-            <>
-              <Text style={z.title}>Create Account</Text>
-              <Text style={z.sub}>Set up your team workspace in seconds</Text>
-
-              {/* Company */}
-              <View style={[z.field, err.company && z.fieldErr]}>
-                <Ionicons name="business-outline" size={16} color={err.company ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={z.input} placeholder="Company Name *" placeholderTextColor="#c2c9d6"
-                  autoCapitalize="words" value={company} onChangeText={setCompany} />
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 12}
+        >
+          <ScrollView
+            contentContainerStyle={s.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Top bar */}
+            <View style={s.topBar}>
+              <TouchableOpacity
+                onPress={() => step === 2 ? setStep(1) : router.back()}
+                hitSlop={12}
+                style={s.backBtn}
+              >
+                <Ionicons name="chevron-back" size={20} color={colors.textOnDark} />
+              </TouchableOpacity>
+              <View style={s.brandPill}>
+                <LinearGradient
+                  colors={brand.gradientGold}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={s.brandTile}
+                >
+                  <Ionicons name="chatbubbles" size={14} color={brand.goldInk} />
+                </LinearGradient>
+                <Text style={s.brandText}>TheChatNest</Text>
               </View>
-              {err.company ? <Text style={z.errText}>{err.company}</Text> : null}
+              <View style={{ width: 36 }} />
+            </View>
 
-              {/* Name */}
-              <View style={[z.field, err.name && z.fieldErr]}>
-                <Ionicons name="person-outline" size={16} color={err.name ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={z.input} placeholder="Your Full Name *" placeholderTextColor="#c2c9d6"
-                  autoCapitalize="words" value={name} onChangeText={setName} />
-              </View>
-              {err.name ? <Text style={z.errText}>{err.name}</Text> : null}
+            {/* Step indicator */}
+            <View style={s.steps}>
+              <View style={[s.stepDot, step >= 1 && s.stepDotActive]} />
+              <View style={[s.stepLine, step >= 2 && s.stepLineActive]} />
+              <View style={[s.stepDot, step >= 2 && s.stepDotActive]} />
+            </View>
 
-              {/* Phone + Email row */}
-              <View style={z.row}>
-                <View style={{ flex: 1 }}>
-                  <View style={[z.field, err.phone && z.fieldErr]}>
-                    <Ionicons name="call-outline" size={16} color={err.phone ? '#ef4444' : '#94a3b8'} />
-                    <TextInput style={z.input} placeholder="Phone *" placeholderTextColor="#c2c9d6"
-                      keyboardType="phone-pad" maxLength={10} value={phone} onChangeText={setPhone} />
+            <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
+              {step === 1 ? (
+                <>
+                  {/* Header */}
+                  <View style={s.headerWrap}>
+                    <Text style={s.kicker}>STEP 1 OF 2</Text>
+                    <Text style={s.title}>Create your{'\n'}<Text style={s.titleGold}>workspace</Text></Text>
+                    <Text style={s.sub}>
+                      Spin up a secure team workspace in under a minute.
+                    </Text>
                   </View>
-                  {err.phone ? <Text style={z.errText}>{err.phone}</Text> : null}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={[z.field, err.email && z.fieldErr]}>
-                    <Ionicons name="mail-outline" size={16} color={err.email ? '#ef4444' : '#94a3b8'} />
-                    <TextInput style={z.input} placeholder="Email *" placeholderTextColor="#c2c9d6"
-                      keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
-                  </View>
-                  {err.email ? <Text style={z.errText}>{err.email}</Text> : null}
-                </View>
-              </View>
 
-              {/* Password */}
-              <View style={[z.field, err.pass && z.fieldErr]}>
-                <Ionicons name="lock-closed-outline" size={16} color={err.pass ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={z.input} placeholder="Password (min 8 chars) *" placeholderTextColor="#c2c9d6"
-                  secureTextEntry={!show} value={pass} onChangeText={setPass} />
-                <TouchableOpacity onPress={() => setShow(!show)} hitSlop={10}>
-                  <Ionicons name={show ? 'eye-off' : 'eye'} size={16} color="#94a3b8" />
-                </TouchableOpacity>
-              </View>
-              {err.pass ? <Text style={z.errText}>{err.pass}</Text> : null}
-              {/* Password strength */}
-              {pass.length > 0 && (
-                <View style={z.strengthWrap}>
-                  <View style={z.strengthBar}>
-                    {[1,2,3,4].map(i => (
-                      <View key={i} style={[z.strengthSeg, { backgroundColor: i <= passStrength.level ? passStrength.color : '#e2e8f0' }]} />
-                    ))}
+                  {/* Glass card */}
+                  <View style={s.card}>
+                    <Input
+                      mode="dark"
+                      placeholder="Company name"
+                      value={company}
+                      onChangeText={setCompany}
+                      autoCapitalize="words"
+                      icon={(p) => <Ionicons name="business-outline" {...p} />}
+                      error={err.company}
+                    />
+
+                    <Input
+                      mode="dark"
+                      placeholder="Your full name"
+                      value={name}
+                      onChangeText={setName}
+                      autoCapitalize="words"
+                      icon={(p) => <Ionicons name="person-outline" {...p} />}
+                      error={err.name}
+                    />
+
+                    <View style={s.row}>
+                      <View style={{ flex: 1 }}>
+                        <Input
+                          mode="dark"
+                          placeholder="Phone"
+                          value={phone}
+                          onChangeText={setPhone}
+                          keyboardType="phone-pad"
+                          maxLength={10}
+                          icon={(p) => <Ionicons name="call-outline" {...p} />}
+                          error={err.phone}
+                        />
+                      </View>
+                      <View style={{ flex: 1.2 }}>
+                        <Input
+                          mode="dark"
+                          placeholder="Email"
+                          value={email}
+                          onChangeText={setEmail}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          icon={(p) => <Ionicons name="mail-outline" {...p} />}
+                          error={err.email}
+                        />
+                      </View>
+                    </View>
+
+                    <Input
+                      mode="dark"
+                      placeholder="Password (min 8 chars)"
+                      value={pass}
+                      onChangeText={setPass}
+                      secureTextEntry={!show}
+                      icon={(p) => <Ionicons name="lock-closed-outline" {...p} />}
+                      iconRight={(p) => <Ionicons name={show ? 'eye-off' : 'eye'} {...p} />}
+                      onIconRightPress={() => setShow(!show)}
+                      error={err.pass}
+                    />
+
+                    {/* Strength meter */}
+                    {pass.length > 0 && (
+                      <View style={s.strengthWrap}>
+                        <View style={s.strengthBar}>
+                          {[1, 2, 3, 4].map(i => (
+                            <View
+                              key={i}
+                              style={[
+                                s.strengthSeg,
+                                {
+                                  backgroundColor: i <= passStrength.level
+                                    ? passStrength.color
+                                    : 'rgba(255,255,255,0.08)',
+                                },
+                              ]}
+                            />
+                          ))}
+                        </View>
+                        <Text style={[s.strengthLabel, { color: passStrength.color }]}>
+                          {passStrength.label}
+                        </Text>
+                      </View>
+                    )}
+
+                    <Input
+                      mode="dark"
+                      placeholder="Confirm password"
+                      value={confirm}
+                      onChangeText={setConfirm}
+                      secureTextEntry={!show}
+                      icon={(p) => <Ionicons name="shield-checkmark-outline" {...p} />}
+                      error={err.confirm}
+                    />
+
+                    {/* Terms */}
+                    <TouchableOpacity
+                      style={s.termsRow}
+                      onPress={() => setTermsAccepted(!termsAccepted)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[s.checkbox, termsAccepted && s.checkboxOn]}>
+                        {termsAccepted && (
+                          <Ionicons name="checkmark" size={14} color={brand.goldInk} />
+                        )}
+                      </View>
+                      <Text style={s.termsText}>
+                        I agree to the{' '}
+                        <Text
+                          style={s.termsLink}
+                          onPress={() => router.push('/chat/legal?type=terms')}
+                        >
+                          Terms
+                        </Text>
+                        {' '}and{' '}
+                        <Text
+                          style={s.termsLink}
+                          onPress={() => router.push('/chat/legal?type=privacy')}
+                        >
+                          Privacy Policy
+                        </Text>
+                      </Text>
+                    </TouchableOpacity>
+
+                    <Button
+                      label="Create account"
+                      onPress={handleRegister}
+                      loading={loading}
+                      disabled={!termsAccepted}
+                      variant="gold"
+                      size="lg"
+                      fullWidth
+                      iconRight={(p) => <Ionicons name="arrow-forward" {...p} />}
+                      style={{ marginTop: spacing.md }}
+                    />
+
+                    <View style={s.footerRow}>
+                      <Text style={s.footerText}>Already have an account? </Text>
+                      <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
+                        <Text style={s.footerLink}>Sign in</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <Text style={[z.strengthLabel, { color: passStrength.color }]}>{passStrength.label}</Text>
-                </View>
+
+                  {/* Trust strip */}
+                  <View style={s.trustRow}>
+                    <Trust icon="shield-checkmark" text="End-to-end encrypted" />
+                    <Trust icon="server" text="Made in India" />
+                    <Trust icon="lock-closed" text="No data sold" />
+                  </View>
+                </>
+              ) : (
+                /* ─── OTP STEP ─── */
+                <>
+                  <View style={s.headerWrap}>
+                    <View style={s.otpBadgeWrap}>
+                      <LinearGradient
+                        colors={brand.gradientGold}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={s.otpBadge}
+                      >
+                        <Ionicons name="mail-open" size={28} color={brand.goldInk} />
+                      </LinearGradient>
+                    </View>
+                    <Text style={s.kicker}>STEP 2 OF 2</Text>
+                    <Text style={s.title}>Verify your email</Text>
+                    <Text style={s.sub}>
+                      We sent a 6-digit code to{'\n'}
+                      <Text style={s.subEmail}>{email}</Text>
+                    </Text>
+                  </View>
+
+                  <View style={s.card}>
+                    <View style={s.otpInputWrap}>
+                      <OtpInput value={otp} onChange={setOtp} />
+                    </View>
+
+                    <Button
+                      label="Verify & continue"
+                      onPress={handleVerify}
+                      loading={loading}
+                      disabled={otp.length < 6}
+                      variant="gold"
+                      size="lg"
+                      fullWidth
+                      iconRight={(p) => <Ionicons name="arrow-forward" {...p} />}
+                      style={{ marginTop: spacing.md }}
+                    />
+
+                    <View style={s.resendRow}>
+                      <Text style={s.footerText}>Didn't get it? </Text>
+                      {cool > 0 ? (
+                        <Text style={s.coolText}>Resend in {cool}s</Text>
+                      ) : (
+                        <TouchableOpacity onPress={handleResend}>
+                          <Text style={s.footerLink}>Resend code</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <TouchableOpacity onPress={() => setStep(1)} style={s.editRow}>
+                      <Ionicons name="pencil-outline" size={14} color={colors.textOnDarkMuted} />
+                      <Text style={s.editText}>Edit details</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
               )}
-
-              {/* Confirm */}
-              <View style={[z.field, err.confirm && z.fieldErr]}>
-                <Ionicons name="shield-checkmark-outline" size={16} color={err.confirm ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={z.input} placeholder="Confirm Password *" placeholderTextColor="#c2c9d6"
-                  secureTextEntry={!show} value={confirm} onChangeText={setConfirm} />
-              </View>
-              {err.confirm ? <Text style={z.errText}>{err.confirm}</Text> : null}
-
-              {/* Terms */}
-              <TouchableOpacity style={z.termsRow} onPress={() => setTermsAccepted(!termsAccepted)} activeOpacity={0.7}>
-                <Ionicons name={termsAccepted ? 'checkbox' : 'square-outline'} size={22} color={termsAccepted ? P : '#94a3b8'} />
-                <Text style={z.termsText}>I agree to the <Text style={{ color: P, fontWeight: '700' }} onPress={() => router.push('/chat/legal?type=terms')}>Terms</Text> and <Text style={{ color: P, fontWeight: '700' }} onPress={() => router.push('/chat/legal?type=privacy')}>Privacy Policy</Text></Text>
-              </TouchableOpacity>
-
-              {/* Button */}
-              <TouchableOpacity activeOpacity={0.85} onPress={handleRegister} disabled={loading || !termsAccepted}>
-                <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={[z.btn, loading && z.btnOff]}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <Text style={z.btnText}>Create Account</Text>}
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <View style={z.footerRow}>
-                <Text style={z.footerText}>Already have an account? </Text>
-                <TouchableOpacity onPress={() => router.back()}><Text style={z.footerLink}>Sign In</Text></TouchableOpacity>
-              </View>
-            </>
-          ) : (
-            /* ─── OTP Step ─── */
-            <>
-              <View style={z.otpHeader}>
-                <View style={z.otpBadge}><Ionicons name="mail-open" size={26} color={P} /></View>
-                <Text style={z.title}>Verify Email</Text>
-                <Text style={z.otpSub}>Code sent to <Text style={{ fontWeight: '700', color: '#0f172a' }}>{email}</Text></Text>
-              </View>
-              <View style={{ marginVertical: 20 }}><OtpInput value={otp} onChange={setOtp} /></View>
-              <TouchableOpacity activeOpacity={0.85} onPress={handleVerify} disabled={loading || otp.length < 6}>
-                <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                  style={[z.btn, (loading || otp.length < 6) && z.btnOff]}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <Text style={z.btnText}>Verify & Continue</Text>}
-                </LinearGradient>
-              </TouchableOpacity>
-              <View style={z.resendRow}>
-                <Text style={z.footerText}>Didn't receive? </Text>
-                {cool > 0 ? <Text style={z.coolText}>{cool}s</Text> : <TouchableOpacity onPress={handleResend}><Text style={z.footerLink}>Resend</Text></TouchableOpacity>}
-              </View>
-              <TouchableOpacity onPress={() => setStep(1)} style={z.backRow}>
-                <Ionicons name="arrow-back-circle-outline" size={16} color="#94a3b8" />
-                <Text style={z.backText}> Edit details</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-
-        {/* Secure footer */}
-        <View style={z.secureRow}>
-          <Ionicons name="lock-closed" size={10} color="#cbd5e1" />
-          <Text style={z.secureText}>Secured with end-to-end encryption</Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-    </SafeAreaView>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
-const z = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f8f9fb' },
-  scroll: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 20, justifyContent: 'center' },
+function Trust({ icon, text }) {
+  return (
+    <View style={s.trustItem}>
+      <Ionicons name={icon} size={11} color={brand.gold} />
+      <Text style={s.trustText}>{text}</Text>
+    </View>
+  );
+}
 
-  // Header
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 18 },
-  logoGrad: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', shadowColor: P, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-  brand: { fontSize: 18, fontWeight: '900', color: '#0f172a', letterSpacing: -0.3 },
+const s = StyleSheet.create({
+  root: { flex: 1, backgroundColor: brand.navy },
+
+  glowGold: {
+    position: 'absolute',
+    top: -120, right: -90,
+    width: 380, height: 380,
+    borderRadius: 190,
+    backgroundColor: brand.gold,
+    opacity: 0.06,
+  },
+  glowViolet: {
+    position: 'absolute',
+    bottom: -140, left: -100,
+    width: 360, height: 360,
+    borderRadius: 180,
+    backgroundColor: brand.violet,
+    opacity: 0.08,
+  },
+
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  brandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  brandTile: {
+    width: 22, height: 22, borderRadius: 7,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  brandText: {
+    color: colors.textOnDark,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    letterSpacing: -0.2,
+  },
+
+  steps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginBottom: spacing.xl,
+  },
+  stepDot: {
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  stepDotActive: { backgroundColor: brand.gold },
+  stepLine: {
+    width: 40, height: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 1,
+  },
+  stepLineActive: { backgroundColor: brand.gold },
+
+  headerWrap: {
+    marginBottom: spacing.xl,
+    alignItems: 'flex-start',
+  },
+  kicker: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: brand.gold,
+    letterSpacing: 1.5,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: fontWeight.black,
+    color: colors.textOnDark,
+    letterSpacing: -0.8,
+    lineHeight: 36,
+    marginBottom: 10,
+  },
+  titleGold: {
+    color: brand.gold,
+    fontStyle: 'italic',
+  },
+  sub: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkMuted,
+    lineHeight: 20,
+  },
+  subEmail: {
+    color: brand.gold,
+    fontWeight: fontWeight.bold,
+  },
 
   // Card
   card: {
-    backgroundColor: '#fff', borderRadius: 22, paddingHorizontal: 20, paddingVertical: 22,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: spacing.lg,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.07, shadowRadius: 24 },
-      android: { elevation: 6 },
-    }),
-    borderWidth: 1, borderColor: '#f1f5f9',
-  },
-  title: { fontSize: 22, fontWeight: '900', color: '#0f172a', marginBottom: 2 },
-  sub: { fontSize: 13, color: '#64748b', marginBottom: 14, lineHeight: 18 },
-
-  // Fields
-  field: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1.5, borderColor: '#e8ecf4', borderRadius: 14,
-    paddingHorizontal: 12, height: 48, backgroundColor: '#fafbfe',
-    marginTop: 8,
-  },
-  fieldErr: { borderColor: '#fca5a5', backgroundColor: '#fef2f2' },
-  input: { flex: 1, fontSize: 14, color: '#0f172a', fontWeight: '500' },
-  errText: { fontSize: 10, color: '#ef4444', marginTop: 2, marginLeft: 4 },
-  strengthWrap: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
-  strengthBar: { flex: 1, flexDirection: 'row', gap: 3 },
-  strengthSeg: { flex: 1, height: 4, borderRadius: 2 },
-  strengthLabel: { fontSize: 11, fontWeight: '700', width: 50 },
-  termsRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8, marginBottom: 4 },
-  termsText: { flex: 1, fontSize: 12, color: '#64748b', lineHeight: 18 },
-
-  // Two-column row
-  row: { flexDirection: 'row', gap: 8 },
-
-  // Button
-  btn: {
-    height: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 18,
-    ...Platform.select({
-      ios: { shadowColor: P, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12 },
-      android: { elevation: 6 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.4,
+        shadowRadius: 32,
+      },
+      android: { elevation: 8 },
     }),
   },
-  btnOff: { opacity: 0.4 },
-  btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+
+  row: { flexDirection: 'row', gap: 10 },
+
+  // Strength
+  strengthWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: -10,
+    marginBottom: spacing.md,
+    paddingHorizontal: 4,
+  },
+  strengthBar: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  strengthSeg: {
+    flex: 1, height: 3, borderRadius: 2,
+  },
+  strengthLabel: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    width: 52,
+    textAlign: 'right',
+  },
+
+  // Terms
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    paddingRight: 4,
+  },
+  checkbox: {
+    width: 20, height: 20, borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center', justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxOn: {
+    backgroundColor: brand.gold,
+    borderColor: brand.gold,
+  },
+  termsText: {
+    flex: 1,
+    fontSize: fontSize.xs,
+    color: colors.textOnDarkMuted,
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: brand.gold,
+    fontWeight: fontWeight.bold,
+  },
 
   // Footer
-  footerRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 14 },
-  footerText: { fontSize: 13, color: '#64748b' },
-  footerLink: { fontSize: 13, color: P, fontWeight: '800' },
+  footerRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+  },
+  footerText: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkMuted,
+  },
+  footerLink: {
+    fontSize: fontSize.sm,
+    color: brand.gold,
+    fontWeight: fontWeight.black,
+  },
+
+  // Trust strip
+  trustRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: 16,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.md,
+  },
+  trustItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  trustText: {
+    fontSize: 10,
+    color: colors.textOnDarkSubtle,
+    fontWeight: fontWeight.semibold,
+    letterSpacing: 0.3,
+  },
 
   // OTP
-  otpHeader: { alignItems: 'center', marginBottom: 4 },
-  otpBadge: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#fdf2f8', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  otpSub: { fontSize: 12, color: '#64748b', textAlign: 'center', marginTop: 4, lineHeight: 18 },
-  resendRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 16 },
-  coolText: { fontSize: 13, color: '#94a3b8', fontWeight: '700' },
-  backRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 10 },
-  backText: { fontSize: 12, color: '#94a3b8' },
-
-  // Secure
-  secureRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 18 },
-  secureText: { fontSize: 10, color: '#cbd5e1', fontWeight: '500' },
+  otpBadgeWrap: {
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  otpBadge: {
+    width: 64, height: 64, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: brand.gold,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.5,
+        shadowRadius: 16,
+      },
+      android: { elevation: 12 },
+    }),
+  },
+  otpInputWrap: {
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  resendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+  },
+  coolText: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkSubtle,
+    fontWeight: fontWeight.semibold,
+  },
+  editRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: spacing.md,
+    paddingVertical: 6,
+  },
+  editText: {
+    fontSize: fontSize.xs,
+    color: colors.textOnDarkMuted,
+    fontWeight: fontWeight.semibold,
+  },
 });

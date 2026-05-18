@@ -73,7 +73,7 @@ export const setupNotificationChannel = async () => {
       importance: Notifications.AndroidImportance.MAX,
       vibrationPattern: [0, 200, 100, 200],
       sound: 'default',
-      lightColor: '#ea4c89',
+      lightColor: '#ffd54a',
       enableVibrate: true,
       showBadge: true,
     });
@@ -140,7 +140,7 @@ export const showMessageNotification = async ({ senderName, message, threadId, t
         categoryIdentifier: CHAT_NOTIF_CATEGORY,
         ...(Platform.OS === 'android' ? {
           channelId,
-          color: '#ea4c89',
+          color: '#ffd54a',
           sticky: false,
         } : {}),
       },

@@ -69,7 +69,7 @@ const getTimeAgo = (d) => {
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 };
 
-const PRESET_COLORS = ['#ea4c89', '#2065D1', '#8b5cf6', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#0f172a'];
+const PRESET_COLORS = ['#ffd54a', '#6d5dfc', '#ffb74d', '#22c55e', '#0ea5e9', '#ec4899', '#f59e0b', '#11162a'];
 const FONTS_LIST = ['SF Display', 'Poppins', 'Noto Sans', 'Inter', 'Roboto'];
 const FONT_SIZES_LIST = ['Small', 'Normal', 'Large'];
 
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   const [loadingDevices, setLoadingDevices] = useState(false);
 
   // Customize
-  const [hexInput, setHexInput] = useState(currentBrand || '#ea4c89');
+  const [hexInput, setHexInput] = useState(currentBrand || '#ffd54a');
   useEffect(() => { setHexInput(currentBrand); }, [currentBrand]);
 
   // Notification tone
@@ -577,7 +577,7 @@ export default function ProfileScreen() {
             <View style={[z.hexWrap, { borderColor: t.border, backgroundColor: t.inputBg }]}>
               <Text style={[z.hexLabel, { color: t.textTer }]}>HEX</Text>
               <TextInput style={[z.hexInput, { color: t.text }]} value={hexInput} onChangeText={setHexInput}
-                placeholder="#ea4c89" placeholderTextColor={t.textTer} maxLength={7} autoCapitalize="characters" />
+                placeholder="#ffd54a" placeholderTextColor={t.textTer} maxLength={7} autoCapitalize="characters" />
             </View>
             <TouchableOpacity style={[z.hexApply, { backgroundColor: currentBrand }]}
               onPress={() => { setBrand(hexInput); toast('Applied!', 'success'); }} activeOpacity={0.85}>

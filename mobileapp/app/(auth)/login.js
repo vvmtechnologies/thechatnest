@@ -1,22 +1,29 @@
+// ─── TheChatNest Mobile — Login Screen ──────────────────────────────
+//
+// Distinctive navy + gold aesthetic. All login logic preserved
+// (biometric, OTP, validation, cooldown) — only UI is new.
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Platform,
+  View, Text, TouchableOpacity, StyleSheet, Platform,
   ActivityIndicator, ScrollView, Keyboard, Dimensions, Animated, KeyboardAvoidingView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import OtpInput from '../../src/components/OtpInput';
 import { useToast } from '../../src/components/Toast';
 import { login, loginWithOtp, loginBiometric } from '../../src/api/auth';
 import { useAuth } from '../../src/store/AuthContext';
+import { brand, colors } from '../../src/theme/colors';
+import Input from '../../src/components/ui/Input';
+import Button from '../../src/components/ui/Button';
 
 const { width: W, height: H } = Dimensions.get('window');
-const P = '#ea4c89';
-const PD = '#c13584';
 const COOL = 30;
 
 export default function LoginScreen() {
@@ -51,7 +58,6 @@ export default function LoginScreen() {
     ]).start();
   }, []);
 
-  // Check biometric availability + saved credentials
   useEffect(() => {
     (async () => {
       try {
@@ -62,8 +68,6 @@ export default function LoginScreen() {
           const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
           setHasFingerprint(types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT));
           setHasFaceId(types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION) || types.includes(LocalAuthentication.AuthenticationType.IRIS));
-
-          // Check if we have saved credentials
           const savedE = await SecureStore.getItemAsync('biometric_email');
           const savedP = await SecureStore.getItemAsync('biometric_password');
           if (savedE && savedP) {
@@ -75,7 +79,6 @@ export default function LoginScreen() {
     })();
   }, []);
 
-  // Biometric login — skip OTP since biometric already verified identity
   const handleBiometricLogin = useCallback(async () => {
     try {
       const result = await LocalAuthentication.authenticateAsync({
@@ -85,17 +88,12 @@ export default function LoginScreen() {
         fallbackLabel: 'Use password',
       });
       if (!result.success) return;
-
       setLoading(true);
       const savedE = await SecureStore.getItemAsync('biometric_email');
       const savedP = await SecureStore.getItemAsync('biometric_password');
       if (!savedE || !savedP) { toast('No saved credentials', 'error'); setLoading(false); return; }
-
-      // Login with biometric flag — backend skips OTP for biometric-verified devices
       const loginResult = await loginBiometric(savedE, savedP);
-
       if (loginResult?.otp_required) {
-        // Backend still requires OTP — auto-fill saved OTP or show OTP screen
         setEmail(savedE); setPassword(savedP);
         setStep(2); setCooldown(loginResult?.resend_available_in_seconds || COOL); setOtp('');
         toast('OTP verification needed', 'info');
@@ -109,7 +107,6 @@ export default function LoginScreen() {
     } finally { setLoading(false); }
   }, [refreshUser, toast]);
 
-  // Save credentials after successful login for biometric next time
   const saveCredentialsForBiometric = useCallback(async (e, p) => {
     if (biometricAvailable) {
       try {
@@ -174,244 +171,431 @@ export default function LoginScreen() {
 
   return (
     <View style={z.root}>
-      {/* Background decoration */}
-      <View style={z.bgCircle1} />
-      <View style={z.bgCircle2} />
-      <View style={z.bgCircle3} />
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={[brand.navy, brand.navyMid, brand.navySoft]}
+        style={StyleSheet.absoluteFill}
+      />
+      {/* Glow blobs */}
+      <View style={z.glowTopRight} />
+      <View style={z.glowBottomLeft} />
 
       <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={z.scroll} keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false} bounces={false}>
-
-          {/* Logo — compact */}
-          <Animated.View style={[z.logoSection, { opacity: fadeAnim, transform: [{ scale: logoScale }] }]}>
-            <View style={z.logoRow}>
-              <LinearGradient colors={[P, PD]} style={z.logoGrad}>
-                <Ionicons name="chatbubbles" size={22} color="#fff" />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={z.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            {/* Brand row */}
+            <Animated.View style={[z.brandSection, { opacity: fadeAnim, transform: [{ scale: logoScale }] }]}>
+              <LinearGradient
+                colors={brand.gradientGold}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={z.brandTile}
+              >
+                <Ionicons name="chatbubbles" size={24} color={brand.goldInk} />
               </LinearGradient>
-              <Text style={z.brand}>TheChatNest</Text>
-            </View>
-          </Animated.View>
+              <Text style={z.brandName}>TheChatNest</Text>
+              <Text style={z.brandTag}>Secure team workspace</Text>
+            </Animated.View>
 
-          {/* Card */}
-          <Animated.View style={[z.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-            {step === 1 ? (
-              <>
-                <Text style={z.title}>Welcome back</Text>
-                <Text style={z.sub}>Sign in to your workspace</Text>
+            {/* Card */}
+            <Animated.View style={[z.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+              {step === 1 ? (
+                <>
+                  <Text style={z.title}>Welcome back</Text>
+                  <Text style={z.sub}>Sign in to your workspace</Text>
 
-                {/* Biometric — compact inline */}
-                {biometricAvailable && hasSavedCreds && (
-                  <View style={z.biometricSection}>
-                    <TouchableOpacity style={z.bioBtn} onPress={handleBiometricLogin} activeOpacity={0.7} disabled={loading}>
-                      <View style={[z.bioIconCircle, { backgroundColor: Platform.OS === 'ios' && hasFaceId ? '#dbeafe' : '#dcfce7' }]}>
-                        <MaterialCommunityIcons
-                          name={Platform.OS === 'ios' && hasFaceId ? 'face-recognition' : 'fingerprint'}
-                          size={24}
-                          color={Platform.OS === 'ios' && hasFaceId ? '#3b82f6' : '#22c55e'} />
+                  {/* Biometric quick action */}
+                  {biometricAvailable && hasSavedCreds && (
+                    <>
+                      <TouchableOpacity
+                        style={z.bioBtn}
+                        onPress={handleBiometricLogin}
+                        activeOpacity={0.85}
+                        disabled={loading}
+                      >
+                        <View style={z.bioIconCircle}>
+                          <MaterialCommunityIcons
+                            name={Platform.OS === 'ios' && hasFaceId ? 'face-recognition' : 'fingerprint'}
+                            size={22}
+                            color={brand.gold}
+                          />
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={z.bioLabel}>
+                            {Platform.OS === 'ios' && hasFaceId ? 'Sign in with Face ID' : 'Sign in with Fingerprint'}
+                          </Text>
+                          <Text style={z.bioEmail}>{savedEmail}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color={colors.textOnDarkSubtle} />
+                      </TouchableOpacity>
+
+                      <View style={z.divider}>
+                        <View style={z.divLine} />
+                        <Text style={z.divText}>OR USE PASSWORD</Text>
+                        <View style={z.divLine} />
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={z.bioLabel}>
-                          {Platform.OS === 'ios' && hasFaceId ? 'Sign in with Face ID' : 'Sign in with Fingerprint'}
-                        </Text>
-                        <Text style={z.bioEmail}>{savedEmail}</Text>
-                      </View>
-                      <Ionicons name="chevron-forward" size={16} color="#94a3b8" />
+                    </>
+                  )}
+
+                  <Input
+                    label="Email"
+                    placeholder="your@work.email"
+                    value={email}
+                    onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: '' })); }}
+                    error={errors.email}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    textContentType="emailAddress"
+                    mode="dark"
+                    icon={(props) => <Ionicons name="mail-outline" {...props} />}
+                  />
+                  <Input
+                    label="Password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: '' })); }}
+                    error={errors.password}
+                    secureTextEntry={!showPass}
+                    mode="dark"
+                    icon={(props) => <Ionicons name="lock-closed-outline" {...props} />}
+                    iconRight={(props) => <Ionicons name={showPass ? 'eye-off' : 'eye'} {...props} />}
+                    onIconRightPress={() => setShowPass(!showPass)}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => router.push('/(auth)/forgot-password')}
+                    hitSlop={8}
+                    style={z.forgotRow}
+                  >
+                    <Text style={z.forgot}>Forgot password?</Text>
+                  </TouchableOpacity>
+
+                  <Button
+                    label="Sign In"
+                    onPress={handleLogin}
+                    loading={loading}
+                    fullWidth
+                    size="lg"
+                    style={{ marginTop: 6 }}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() => router.push('/(auth)/qr-login')}
+                    style={z.qrBtn}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="qr-code" size={18} color={colors.textOnDark} />
+                    <Text style={z.qrText}>Sign in with QR code</Text>
+                  </TouchableOpacity>
+
+                  <View style={z.regRow}>
+                    <Text style={z.regText}>Don't have an account? </Text>
+                    <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+                      <Text style={z.regLink}>Sign up</Text>
                     </TouchableOpacity>
-
-                    <View style={z.divider}>
-                      <View style={z.divLineSolid} />
-                      <Text style={z.divText}>or use password</Text>
-                      <View style={z.divLineSolid} />
-                    </View>
                   </View>
-                )}
-
-                {/* Email */}
-                <View style={[z.field, errors.email && z.fieldErr]}>
-                  <Ionicons name="mail-outline" size={16} color={errors.email ? '#ef4444' : '#94a3b8'} />
-                  <TextInput style={z.input} placeholder="Email address" placeholderTextColor="#c2c9d6"
-                    keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
-                    value={email} onChangeText={v => { setEmail(v); setErrors(e => ({ ...e, email: '' })); }} />
-                  {email.length > 0 && /\S+@\S+\.\S+/.test(email) && (
-                    <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
-                  )}
-                </View>
-                {errors.email ? <Text style={z.errText}>{errors.email}</Text> : null}
-
-                {/* Password */}
-                <View style={[z.field, errors.password && z.fieldErr, { marginTop: 8 }]}>
-                  <Ionicons name="lock-closed-outline" size={16} color={errors.password ? '#ef4444' : '#94a3b8'} />
-                  <TextInput style={z.input} placeholder="Password" placeholderTextColor="#c2c9d6"
-                    secureTextEntry={!showPass} value={password}
-                    onChangeText={v => { setPassword(v); setErrors(e => ({ ...e, password: '' })); }} />
-                  <TouchableOpacity onPress={() => setShowPass(!showPass)} hitSlop={10}>
-                    <Ionicons name={showPass ? 'eye-off' : 'eye'} size={16} color="#94a3b8" />
-                  </TouchableOpacity>
-                </View>
-                {errors.password ? <Text style={z.errText}>{errors.password}</Text> : null}
-
-                <TouchableOpacity onPress={() => router.push('/(auth)/forgot-password')} hitSlop={8} style={z.forgotRow}>
-                  <Text style={z.forgot}>Forgot password?</Text>
-                </TouchableOpacity>
-
-                {/* Sign In Button */}
-                <TouchableOpacity activeOpacity={0.85} onPress={handleLogin} disabled={loading}>
-                  <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={[z.btn, loading && z.btnOff]}>
-                    {loading ? <ActivityIndicator color="#fff" /> : (
-                      <Text style={z.btnText}>Sign In</Text>
-                    )}
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                {/* Register link */}
-                <View style={z.regRow}>
-                  <Text style={z.regText}>Don't have an account? </Text>
-                  <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-                    <Text style={z.regLink}>Sign Up</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              /* ─── OTP Step ─── */
-              <>
-                <View style={z.otpHeader}>
-                  <View style={z.otpBadge}>
-                    <LinearGradient colors={[`${P}20`, `${PD}10`]} style={z.otpBadgeGrad}>
-                      <Ionicons name="shield-checkmark" size={30} color={P} />
+                </>
+              ) : (
+                /* ─── OTP Step ─── */
+                <>
+                  <View style={z.otpHeader}>
+                    <LinearGradient
+                      colors={brand.gradientGold}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={z.otpBadgeGrad}
+                    >
+                      <Ionicons name="shield-checkmark" size={32} color={brand.goldInk} />
                     </LinearGradient>
+                    <Text style={[z.title, { textAlign: 'center', marginTop: 16 }]}>
+                      Verification code
+                    </Text>
+                    <Text style={[z.sub, { textAlign: 'center' }]}>
+                      We sent a 6-digit code to{'\n'}
+                      <Text style={z.emailHighlight}>{email}</Text>
+                    </Text>
                   </View>
-                  <Text style={z.title}>Verification Code</Text>
-                  <Text style={[z.sub, { textAlign: 'center' }]}>
-                    Code sent to{'\n'}<Text style={{ fontWeight: '800', color: '#0f172a' }}>{email}</Text>
-                  </Text>
-                </View>
 
-                <View style={{ marginVertical: 24 }}><OtpInput value={otp} onChange={setOtp} /></View>
+                  <View style={{ marginVertical: 28 }}>
+                    <OtpInput value={otp} onChange={setOtp} />
+                  </View>
 
-                <TouchableOpacity activeOpacity={0.85} onPress={handleVerifyOtp} disabled={loading || otp.length < 6}>
-                  <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-                    style={[z.btn, (loading || otp.length < 6) && z.btnOff]}>
-                    {loading ? <ActivityIndicator color="#fff" /> : (
-                      <View style={z.btnInner}>
-                        <Text style={z.btnText}>Verify & Sign In</Text>
-                        <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                  <Button
+                    label="Verify & Sign In"
+                    onPress={handleVerifyOtp}
+                    loading={loading}
+                    disabled={otp.length < 6}
+                    fullWidth
+                    size="lg"
+                  />
+
+                  <View style={z.resendRow}>
+                    <Text style={z.subText}>Didn't receive it? </Text>
+                    {cooldown > 0 ? (
+                      <View style={z.coolBadge}>
+                        <Text style={z.coolText}>{cooldown}s</Text>
                       </View>
+                    ) : (
+                      <TouchableOpacity onPress={handleResend}>
+                        <Text style={z.linkText}>Resend code</Text>
+                      </TouchableOpacity>
                     )}
-                  </LinearGradient>
-                </TouchableOpacity>
+                  </View>
 
-                <View style={z.resendRow}>
-                  <Text style={z.subText}>Didn't receive? </Text>
-                  {cooldown > 0 ? (
-                    <View style={z.coolBadge}><Text style={z.coolText}>{cooldown}s</Text></View>
-                  ) : (
-                    <TouchableOpacity onPress={handleResend}><Text style={z.linkText}>Resend Code</Text></TouchableOpacity>
-                  )}
-                </View>
-                <TouchableOpacity onPress={() => { setStep(1); setOtp(''); }} style={z.backBtn}>
-                  <Ionicons name="arrow-back-circle" size={20} color="#94a3b8" />
-                  <Text style={z.backText}>Back to login</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </Animated.View>
+                  <TouchableOpacity
+                    onPress={() => { setStep(1); setOtp(''); }}
+                    style={z.backBtn}
+                  >
+                    <Ionicons name="arrow-back" size={16} color={colors.textOnDarkSubtle} />
+                    <Text style={z.backText}>Back to login</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </Animated.View>
 
-          {/* Footer */}
-          <View style={z.footer}>
-            <Ionicons name="lock-closed" size={11} color="#cbd5e1" />
-            <Text style={z.footerText}>Secured with end-to-end encryption</Text>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            <View style={z.footer}>
+              <Ionicons name="lock-closed" size={11} color={colors.textOnDarkSubtle} />
+              <Text style={z.footerText}>End-to-end encrypted. GDPR aligned.</Text>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
 }
 
 const z = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#f8f9fb' },
+  root: { flex: 1, backgroundColor: brand.navy },
+  glowTopRight: {
+    position: 'absolute',
+    top: -100, right: -80,
+    width: 380, height: 380,
+    borderRadius: 190,
+    backgroundColor: brand.gold,
+    opacity: 0.05,
+  },
+  glowBottomLeft: {
+    position: 'absolute',
+    bottom: -120, left: -80,
+    width: 360, height: 360,
+    borderRadius: 180,
+    backgroundColor: brand.violet,
+    opacity: 0.08,
+  },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 32,
+    justifyContent: 'center',
+  },
 
-  bgCircle1: { position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: `${P}06`, top: -40, right: -30 },
-  bgCircle2: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: `${P}04`, bottom: 60, left: -40 },
-  bgCircle3: { position: 'absolute', width: 60, height: 60, borderRadius: 30, backgroundColor: `${P}05`, top: H * 0.4, right: -10 },
-
-  scroll: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 20, paddingBottom: 16, justifyContent: 'center' },
-
-  // Logo — horizontal compact
-  logoSection: { alignItems: 'center', marginBottom: 16 },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoGrad: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  brand: { fontSize: 22, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 },
-
-  // Card — tighter padding
-  card: {
-    backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 20, paddingVertical: 20,
+  brandSection: {
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+  brandTile: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 20 },
-      android: { elevation: 6 },
+      ios: { shadowColor: brand.gold, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12 },
+      android: { elevation: 8 },
     }),
-    borderWidth: 1, borderColor: '#f1f5f9',
   },
-  title: { fontSize: 22, fontWeight: '900', color: '#0f172a', marginBottom: 2 },
-  sub: { fontSize: 13, color: '#64748b', marginBottom: 12 },
-
-  // Fields — compact
-  field: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1.5, borderColor: '#e8ecf4', borderRadius: 14,
-    paddingHorizontal: 14, height: 48, backgroundColor: '#fafbfe',
+  brandName: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
+    letterSpacing: -0.5,
   },
-  fieldErr: { borderColor: '#fca5a5', backgroundColor: '#fef2f2' },
-  input: { flex: 1, fontSize: 14, color: '#0f172a', fontWeight: '500' },
-  errText: { fontSize: 10, color: '#ef4444', marginTop: 3, marginLeft: 4, fontWeight: '500' },
-  forgotRow: { alignSelf: 'flex-end', marginTop: 6, marginBottom: -4 },
-  forgot: { fontSize: 12, color: P, fontWeight: '700' },
+  brandTag: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textOnDarkSubtle,
+    marginTop: 3,
+    letterSpacing: 0.3,
+  },
 
-  // Button
-  btn: { height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 14 },
-  btnOff: { opacity: 0.4 },
-  btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    backdropFilter: 'blur(20px)',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
+    marginBottom: 4,
+    letterSpacing: -0.4,
+  },
+  sub: {
+    fontSize: 14,
+    color: colors.textOnDarkMuted,
+    marginBottom: 18,
+    lineHeight: 20,
+  },
+  emailHighlight: {
+    color: brand.gold,
+    fontWeight: '700',
+  },
 
-  // Biometric — single button
-  biometricSection: { marginBottom: 10 },
+  // Biometric quick login
   bioBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 12, paddingHorizontal: 14, borderRadius: 14,
-    borderWidth: 1.5, borderColor: '#e8ecf4', backgroundColor: '#fafbfe',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,213,74,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,213,74,0.25)',
+    marginBottom: 14,
   },
-  bioIconCircle: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  bioLabel: { fontSize: 14, fontWeight: '700', color: '#0f172a' },
-  bioEmail: { fontSize: 11, color: '#94a3b8', marginTop: 1 },
+  bioIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,213,74,0.15)',
+  },
+  bioLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  bioEmail: {
+    fontSize: 12,
+    color: colors.textOnDarkSubtle,
+    marginTop: 2,
+  },
 
-  // Divider
-  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: 12, gap: 10 },
-  divLineSolid: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: '#e2e8f0' },
-  divText: { fontSize: 11, color: '#94a3b8', fontWeight: '600' },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginVertical: 14,
+  },
+  divLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  divText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
+    color: colors.textOnDarkSubtle,
+  },
 
-  // Register link
-  qrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20, paddingVertical: 12, borderRadius: 14, borderWidth: 1.5, borderColor: '#e2e8f0' },
-  qrText: { fontSize: 14, fontWeight: '700' },
-  regRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 14 },
-  regText: { fontSize: 13, color: '#64748b' },
-  regLink: { fontSize: 13, color: P, fontWeight: '800' },
+  forgotRow: {
+    alignSelf: 'flex-end',
+    marginTop: -4,
+    marginBottom: 14,
+  },
+  forgot: {
+    fontSize: 13,
+    color: brand.gold,
+    fontWeight: '700',
+  },
 
-  // OTP
-  otpHeader: { alignItems: 'center', marginBottom: 8 },
-  otpBadge: { marginBottom: 12 },
-  otpBadgeGrad: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  qrBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 999,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  qrText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#fff',
+  },
 
-  resendRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 16 },
-  subText: { fontSize: 13, color: '#64748b' },
-  linkText: { fontSize: 13, color: P, fontWeight: '700' },
-  coolBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  coolText: { fontSize: 12, color: '#94a3b8', fontWeight: '800' },
-  backBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 12 },
-  backText: { fontSize: 12, color: '#94a3b8', fontWeight: '500' },
+  regRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 18,
+  },
+  regText: { fontSize: 13, color: colors.textOnDarkMuted },
+  regLink: { fontSize: 13, color: brand.gold, fontWeight: '800' },
 
-  // Footer
-  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, marginTop: 16 },
-  footerText: { fontSize: 10, color: '#cbd5e1', fontWeight: '500' },
+  otpHeader: { alignItems: 'center' },
+  otpBadgeGrad: {
+    width: 64, height: 64,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: { shadowColor: brand.gold, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12 },
+      android: { elevation: 8 },
+    }),
+  },
+  resendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 18,
+  },
+  subText: { fontSize: 13, color: colors.textOnDarkMuted },
+  linkText: { fontSize: 13, color: brand.gold, fontWeight: '700' },
+  coolBadge: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  coolText: {
+    fontSize: 12,
+    color: colors.textOnDarkMuted,
+    fontWeight: '800',
+  },
+  backBtn: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 14,
+  },
+  backText: {
+    fontSize: 12,
+    color: colors.textOnDarkSubtle,
+    fontWeight: '600',
+  },
+
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 22,
+  },
+  footerText: {
+    fontSize: 11,
+    color: colors.textOnDarkSubtle,
+    fontWeight: '500',
+  },
 });

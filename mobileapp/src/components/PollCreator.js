@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Switch, ScrollView
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../store/ThemeContext';
 
-export default function PollCreator({ onSubmit, onClose, accentColor = '#ea4c89' }) {
+export default function PollCreator({ onSubmit, onClose, accentColor = '#ffd54a' }) {
   const { isDark } = useTheme();
   const [question, setQuestion] = useState('');
   const [options, setOptions] = useState(['', '']);

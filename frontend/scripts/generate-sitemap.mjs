@@ -33,6 +33,8 @@ const ROUTES = [
   { path: "/blog/slack-alternatives-2026", priority: 0.7, changefreq: "monthly" },
   { path: "/blog/self-hosted-team-messaging-guide", priority: 0.7, changefreq: "monthly" },
   { path: "/blog/team-chat-security-2026", priority: 0.7, changefreq: "monthly" },
+  { path: "/about", priority: 0.85, changefreq: "monthly" },
+  { path: "/terms", priority: 0.5, changefreq: "yearly" },
   { path: "/auth/register", priority: 0.9, changefreq: "monthly" },
   { path: "/auth/login", priority: 0.7, changefreq: "monthly" },
   { path: "/saas-privacy", priority: 0.4, changefreq: "yearly" },

@@ -1,18 +1,26 @@
-import { useState, useCallback } from 'react';
+// ─── TheChatNest Mobile — Forgot Password ──────────────────────────
+//
+// Navy + gold aesthetic. Three-step flow: email → OTP → new password.
+// All forgotPassword/forgotVerify/resetPassword API logic preserved.
+
+import { useState, useCallback, useEffect } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, Platform,
-  ActivityIndicator, ScrollView, Keyboard, KeyboardAvoidingView,
+  View, Text, TouchableOpacity, StyleSheet, Platform,
+  ScrollView, Keyboard, KeyboardAvoidingView, Animated,
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import * as Haptics from 'expo-haptics';
 import OtpInput from '../../src/components/OtpInput';
 import { useToast } from '../../src/components/Toast';
 import { forgotPassword, forgotVerify, resetPassword } from '../../src/api/auth';
+import { brand, colors, spacing, radius, fontSize, fontWeight } from '../../src/theme/colors';
+import Button from '../../src/components/ui/Button';
+import Input from '../../src/components/ui/Input';
 
-const P = '#ea4c89';
-const PD = '#c13584';
 const COOL = 30;
 
 export default function ForgotPasswordScreen() {
@@ -28,7 +36,22 @@ export default function ForgotPasswordScreen() {
   const [cool, setCool] = useState(0);
   const [errors, setErrors] = useState({});
 
-  if (cool > 0) setTimeout(() => setCool(c => c > 0 ? c - 1 : 0), 1000);
+  const fade = useState(new Animated.Value(0))[0];
+  const slide = useState(new Animated.Value(20))[0];
+
+  useEffect(() => {
+    fade.setValue(0); slide.setValue(20);
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 420, useNativeDriver: true }),
+      Animated.spring(slide, { toValue: 0, tension: 60, friction: 9, useNativeDriver: true }),
+    ]).start();
+  }, [step]);
+
+  useEffect(() => {
+    if (cool <= 0) return;
+    const t = setTimeout(() => setCool(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cool]);
 
   const handleSendOtp = useCallback(async () => {
     if (!email.trim()) { setErrors({ email: 'Email required' }); return; }
@@ -36,10 +59,13 @@ export default function ForgotPasswordScreen() {
     Keyboard.dismiss(); setLoading(true);
     try {
       await forgotPassword(email.trim().toLowerCase());
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       setStep(2); setCool(COOL); setOtp('');
       toast('OTP sent', 'success');
-    } catch (e) { toast(e?.response?.data?.message || 'Failed', 'error'); }
-    finally { setLoading(false); }
+    } catch (e) {
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      toast(e?.response?.data?.message || 'Failed', 'error');
+    } finally { setLoading(false); }
   }, [email, toast]);
 
   const handleVerifyOtp = useCallback(async () => {
@@ -48,164 +74,407 @@ export default function ForgotPasswordScreen() {
     try {
       const r = await forgotVerify(email.trim().toLowerCase(), otp);
       setResetToken(r?.reset_token || r?.token || '');
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       setStep(3); toast('OTP verified', 'success');
-    } catch (e) { toast(e?.response?.data?.message || 'Invalid OTP', 'error'); }
-    finally { setLoading(false); }
+    } catch (e) {
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      toast(e?.response?.data?.message || 'Invalid OTP', 'error');
+    } finally { setLoading(false); }
   }, [email, otp, toast]);
 
   const handleReset = useCallback(async () => {
     const e = {};
     if (newPass.length < 8) e.pass = 'Min 8 characters';
-    if (newPass !== confirm) e.confirm = 'Don\'t match';
+    if (newPass !== confirm) e.confirm = "Don't match";
     if (Object.keys(e).length) { setErrors(e); return; }
     Keyboard.dismiss(); setLoading(true);
     try {
       await resetPassword(resetToken, newPass);
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success); } catch {}
       toast('Password reset!', 'success');
       setTimeout(() => router.replace('/(auth)/login'), 800);
-    } catch (e) { toast(e?.response?.data?.message || 'Failed', 'error'); }
-    finally { setLoading(false); }
+    } catch (e) {
+      try { Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error); } catch {}
+      toast(e?.response?.data?.message || 'Failed', 'error');
+    } finally { setLoading(false); }
   }, [newPass, confirm, resetToken, toast]);
 
   const handleResend = useCallback(async () => {
     if (cool > 0) return;
-    try { await forgotPassword(email.trim().toLowerCase()); setCool(COOL); setOtp(''); toast('New code sent', 'success'); }
-    catch { toast('Failed', 'error'); }
+    try {
+      await forgotPassword(email.trim().toLowerCase());
+      setCool(COOL); setOtp('');
+      toast('New code sent', 'success');
+    } catch { toast('Failed', 'error'); }
   }, [email, cool, toast]);
 
-  const titles = ['Enter Email', 'Verify Code', 'New Password'];
-  const subs = ['We\'ll send a verification code', `Code sent to ${email}`, 'Create a strong password'];
+  const titles = ['Forgot password?', 'Verify your email', 'Set new password'];
+  const kickers = ['STEP 1 OF 3', 'STEP 2 OF 3', 'STEP 3 OF 3'];
+  const subs = [
+    "Enter the email tied to your account — we'll send a 6-digit code.",
+    `We sent a 6-digit code to`,
+    'Pick something strong — at least 8 characters.',
+  ];
 
   return (
-    <SafeAreaView style={s.root} edges={['top', 'bottom']}>
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        {/* Logo */}
-        <View style={s.logoSection}>
-          <LinearGradient colors={[P, PD]} style={s.logoGrad}><Ionicons name="chatbubbles" size={24} color="#fff" /></LinearGradient>
-          <Text style={s.brandText}>TheChatNest</Text>
-        </View>
+    <View style={s.root}>
+      <StatusBar style="light" />
+      <LinearGradient
+        colors={brand.gradientHero}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <View style={s.glowGold} />
+      <View style={s.glowViolet} />
 
-        {/* Steps */}
-        <View style={s.stepRow}>
-          {[1, 2, 3].map(i => (
-            <View key={i} style={s.stepItem}>
-              <View style={[s.stepCircle, step >= i && s.stepActive]}>
-                <Text style={[s.stepNum, step >= i && s.stepNumActive]}>{i}</Text>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={s.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Top bar */}
+            <View style={s.topBar}>
+              <TouchableOpacity
+                onPress={() => step === 1 ? router.back() : setStep(step - 1)}
+                hitSlop={12}
+                style={s.backBtn}
+              >
+                <Ionicons name="chevron-back" size={20} color={colors.textOnDark} />
+              </TouchableOpacity>
+              <View style={s.brandPill}>
+                <LinearGradient
+                  colors={brand.gradientGold}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={s.brandTile}
+                >
+                  <Ionicons name="key" size={13} color={brand.goldInk} />
+                </LinearGradient>
+                <Text style={s.brandText}>Reset</Text>
               </View>
-              {i < 3 && <View style={[s.stepLine, step > i && s.stepLineActive]} />}
+              <View style={{ width: 36 }} />
             </View>
-          ))}
-        </View>
 
-        {/* Card */}
-        <View style={s.card}>
-          <View style={s.cardHeader}>
-            <Text style={s.title}>{titles[step - 1]}</Text>
-            <Text style={s.sub}>{subs[step - 1]}</Text>
-          </View>
+            {/* Step indicator */}
+            <View style={s.steps}>
+              {[1, 2, 3].map(i => (
+                <View key={i} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <View style={[s.stepCircle, step >= i && s.stepCircleActive]}>
+                    {step > i ? (
+                      <Ionicons name="checkmark" size={12} color={brand.goldInk} />
+                    ) : (
+                      <Text style={[s.stepNum, step >= i && s.stepNumActive]}>{i}</Text>
+                    )}
+                  </View>
+                  {i < 3 && <View style={[s.stepLine, step > i && s.stepLineActive]} />}
+                </View>
+              ))}
+            </View>
 
-          {step === 1 && (
-            <>
-              <Text style={s.label}>EMAIL ADDRESS</Text>
-              <View style={[s.field, errors.email && s.fieldErr]}>
-                <Ionicons name="mail-outline" size={17} color={errors.email ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={s.input} placeholder="you@company.com" placeholderTextColor="#c2c9d6"
-                  keyboardType="email-address" autoCapitalize="none" value={email}
-                  onChangeText={t => { setEmail(t); setErrors({}); }} />
+            <Animated.View style={{ opacity: fade, transform: [{ translateY: slide }] }}>
+              {/* Header */}
+              <View style={s.headerWrap}>
+                <Text style={s.kicker}>{kickers[step - 1]}</Text>
+                <Text style={s.title}>{titles[step - 1]}</Text>
+                <Text style={s.sub}>
+                  {subs[step - 1]}
+                  {step === 2 && <Text style={s.subEmail}>{'\n'}{email}</Text>}
+                </Text>
               </View>
-              {errors.email ? <Text style={s.errText}>{errors.email}</Text> : null}
-              <TouchableOpacity activeOpacity={0.85} onPress={handleSendOtp} disabled={loading}>
-                <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.btn, loading && s.btnOff]}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <View style={s.btnInner}><Text style={s.btnText}>Send Code</Text><Ionicons name="paper-plane" size={16} color="#fff" /></View>}
-                </LinearGradient>
+
+              {/* Card */}
+              <View style={s.card}>
+                {step === 1 && (
+                  <>
+                    <Input
+                      mode="dark"
+                      label="Email address"
+                      placeholder="you@company.com"
+                      value={email}
+                      onChangeText={(t) => { setEmail(t); setErrors({}); }}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      icon={(p) => <Ionicons name="mail-outline" {...p} />}
+                      error={errors.email}
+                    />
+                    <Button
+                      label="Send code"
+                      onPress={handleSendOtp}
+                      loading={loading}
+                      variant="gold"
+                      size="lg"
+                      fullWidth
+                      iconRight={(p) => <Ionicons name="paper-plane" {...p} />}
+                      style={{ marginTop: spacing.xs }}
+                    />
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <View style={s.otpInputWrap}>
+                      <OtpInput value={otp} onChange={setOtp} />
+                    </View>
+                    <Button
+                      label="Verify code"
+                      onPress={handleVerifyOtp}
+                      loading={loading}
+                      disabled={otp.length < 6}
+                      variant="gold"
+                      size="lg"
+                      fullWidth
+                      iconRight={(p) => <Ionicons name="checkmark-circle" {...p} />}
+                    />
+                    <View style={s.resendRow}>
+                      <Text style={s.muted}>Didn't get it? </Text>
+                      {cool > 0 ? (
+                        <Text style={s.coolText}>Resend in {cool}s</Text>
+                      ) : (
+                        <TouchableOpacity onPress={handleResend}>
+                          <Text style={s.link}>Resend code</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </>
+                )}
+
+                {step === 3 && (
+                  <>
+                    <Input
+                      mode="dark"
+                      label="New password"
+                      placeholder="Min 8 characters"
+                      value={newPass}
+                      onChangeText={(t) => { setNewPass(t); setErrors(e => ({ ...e, pass: '' })); }}
+                      secureTextEntry={!show}
+                      icon={(p) => <Ionicons name="lock-closed-outline" {...p} />}
+                      iconRight={(p) => <Ionicons name={show ? 'eye-off' : 'eye'} {...p} />}
+                      onIconRightPress={() => setShow(!show)}
+                      error={errors.pass}
+                    />
+                    <Input
+                      mode="dark"
+                      label="Confirm password"
+                      placeholder="Re-enter password"
+                      value={confirm}
+                      onChangeText={(t) => { setConfirm(t); setErrors(e => ({ ...e, confirm: '' })); }}
+                      secureTextEntry={!show}
+                      icon={(p) => <Ionicons name="shield-checkmark-outline" {...p} />}
+                      error={errors.confirm}
+                    />
+                    <Button
+                      label="Reset password"
+                      onPress={handleReset}
+                      loading={loading}
+                      variant="gold"
+                      size="lg"
+                      fullWidth
+                      iconRight={(p) => <Ionicons name="lock-open" {...p} />}
+                      style={{ marginTop: spacing.xs }}
+                    />
+                  </>
+                )}
+              </View>
+
+              <TouchableOpacity
+                onPress={() => router.replace('/(auth)/login')}
+                style={s.signInRow}
+              >
+                <Ionicons name="arrow-back-outline" size={14} color={colors.textOnDarkMuted} />
+                <Text style={s.signInText}>Back to sign in</Text>
               </TouchableOpacity>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <View style={{ marginVertical: 20 }}><OtpInput value={otp} onChange={setOtp} /></View>
-              <TouchableOpacity activeOpacity={0.85} onPress={handleVerifyOtp} disabled={loading || otp.length < 6}>
-                <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.btn, (loading || otp.length < 6) && s.btnOff]}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <View style={s.btnInner}><Text style={s.btnText}>Verify</Text><Ionicons name="checkmark-circle" size={16} color="#fff" /></View>}
-                </LinearGradient>
-              </TouchableOpacity>
-              <View style={s.resendRow}>
-                <Text style={s.muted}>Didn't receive? </Text>
-                {cool > 0 ? <Text style={s.coolText}>{cool}s</Text> : <TouchableOpacity onPress={handleResend}><Text style={s.link}>Resend</Text></TouchableOpacity>}
-              </View>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <Text style={s.label}>NEW PASSWORD</Text>
-              <View style={[s.field, errors.pass && s.fieldErr]}>
-                <Ionicons name="lock-closed-outline" size={17} color={errors.pass ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={s.input} placeholder="Min 8 characters" placeholderTextColor="#c2c9d6"
-                  secureTextEntry={!show} value={newPass} onChangeText={t => { setNewPass(t); setErrors(e => ({ ...e, pass: '' })); }} />
-                <TouchableOpacity onPress={() => setShow(!show)} hitSlop={10}><Ionicons name={show ? 'eye-off' : 'eye'} size={17} color="#94a3b8" /></TouchableOpacity>
-              </View>
-              {errors.pass ? <Text style={s.errText}>{errors.pass}</Text> : null}
-
-              <Text style={[s.label, { marginTop: 14 }]}>CONFIRM PASSWORD</Text>
-              <View style={[s.field, errors.confirm && s.fieldErr]}>
-                <Ionicons name="shield-checkmark-outline" size={17} color={errors.confirm ? '#ef4444' : '#94a3b8'} />
-                <TextInput style={s.input} placeholder="Re-enter password" placeholderTextColor="#c2c9d6"
-                  secureTextEntry={!show} value={confirm} onChangeText={t => { setConfirm(t); setErrors(e => ({ ...e, confirm: '' })); }} />
-              </View>
-              {errors.confirm ? <Text style={s.errText}>{errors.confirm}</Text> : null}
-
-              <TouchableOpacity activeOpacity={0.85} onPress={handleReset} disabled={loading}>
-                <LinearGradient colors={[P, PD]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[s.btn, loading && s.btnOff]}>
-                  {loading ? <ActivityIndicator color="#fff" /> : <View style={s.btnInner}><Text style={s.btnText}>Reset Password</Text><Ionicons name="lock-open" size={16} color="#fff" /></View>}
-                </LinearGradient>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-
-        <TouchableOpacity onPress={() => step === 1 ? router.back() : setStep(step - 1)} style={s.backRow}>
-          <Ionicons name="arrow-back-circle-outline" size={18} color="#94a3b8" />
-          <Text style={{ fontSize: 13, color: '#94a3b8' }}> {step === 1 ? 'Back to Sign In' : 'Go Back'}</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
-    </SafeAreaView>
+            </Animated.View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#fafbfe' },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 30, paddingBottom: 40 },
-  logoSection: { alignItems: 'center', marginBottom: 20 },
-  logoGrad: { width: 50, height: 50, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  brandText: { fontSize: 20, fontWeight: '800', color: '#0f172a' },
-  stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20, paddingHorizontal: 40 },
-  stepItem: { flexDirection: 'row', alignItems: 'center' },
-  stepCircle: { width: 30, height: 30, borderRadius: 15, borderWidth: 2, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  stepActive: { borderColor: P, backgroundColor: '#fdf2f8' },
-  stepNum: { fontSize: 12, fontWeight: '800', color: '#cbd5e1' },
-  stepNumActive: { color: P },
-  stepLine: { width: 36, height: 2, backgroundColor: '#e2e8f0', marginHorizontal: 4 },
-  stepLineActive: { backgroundColor: P },
-  card: { backgroundColor: '#fff', borderRadius: 24, paddingHorizontal: 24, paddingVertical: 24, ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.06, shadowRadius: 24 }, android: { elevation: 5 } }), borderWidth: 1, borderColor: '#f1f5f9' },
-  cardHeader: { marginBottom: 12 },
-  title: { fontSize: 22, fontWeight: '800', color: '#0f172a', marginBottom: 4 },
-  sub: { fontSize: 13, color: '#64748b' },
-  label: { fontSize: 11, fontWeight: '800', color: '#94a3b8', letterSpacing: 1.2, marginBottom: 7, marginTop: 8 },
-  field: { flexDirection: 'row', alignItems: 'center', gap: 11, borderWidth: 1.5, borderColor: '#e8ecf4', borderRadius: 16, paddingHorizontal: 15, height: 52, backgroundColor: '#f8fafc' },
-  fieldErr: { borderColor: '#fca5a5', backgroundColor: '#fef2f2' },
-  input: { flex: 1, fontSize: 15, color: '#0f172a', fontWeight: '500' },
-  errText: { fontSize: 11, color: '#ef4444', marginTop: 4, marginLeft: 4 },
-  btn: { height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginTop: 20 },
-  btnOff: { opacity: 0.45 },
-  btnInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  resendRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 18 },
-  muted: { fontSize: 14, color: '#64748b' },
-  coolText: { fontSize: 14, color: '#94a3b8', fontWeight: '700' },
-  link: { fontSize: 14, color: P, fontWeight: '700' },
-  backRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 20 },
+  root: { flex: 1, backgroundColor: brand.navy },
+
+  glowGold: {
+    position: 'absolute',
+    top: -120, right: -90,
+    width: 380, height: 380,
+    borderRadius: 190,
+    backgroundColor: brand.gold,
+    opacity: 0.06,
+  },
+  glowViolet: {
+    position: 'absolute',
+    bottom: -140, left: -100,
+    width: 360, height: 360,
+    borderRadius: 180,
+    backgroundColor: brand.violet,
+    opacity: 0.08,
+  },
+
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+  },
+
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
+  },
+  backBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  brandPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  brandTile: {
+    width: 22, height: 22, borderRadius: 7,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  brandText: {
+    color: colors.textOnDark,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    letterSpacing: -0.2,
+  },
+
+  // Steps
+  steps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.xl,
+  },
+  stepCircle: {
+    width: 28, height: 28, borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  stepCircleActive: {
+    backgroundColor: brand.gold,
+    borderColor: brand.gold,
+  },
+  stepNum: {
+    fontSize: 11,
+    fontWeight: fontWeight.bold,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  stepNumActive: { color: brand.goldInk },
+  stepLine: {
+    width: 38, height: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginHorizontal: 4,
+    borderRadius: 1,
+  },
+  stepLineActive: { backgroundColor: brand.gold },
+
+  // Header
+  headerWrap: {
+    marginBottom: spacing.xl,
+    alignItems: 'flex-start',
+  },
+  kicker: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: brand.gold,
+    letterSpacing: 1.5,
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: fontWeight.black,
+    color: colors.textOnDark,
+    letterSpacing: -0.8,
+    lineHeight: 36,
+    marginBottom: 10,
+  },
+  sub: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkMuted,
+    lineHeight: 20,
+  },
+  subEmail: {
+    color: brand.gold,
+    fontWeight: fontWeight.bold,
+  },
+
+  // Card
+  card: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 16 },
+        shadowOpacity: 0.4,
+        shadowRadius: 32,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+
+  otpInputWrap: {
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+  },
+
+  resendRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.lg,
+  },
+  muted: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkMuted,
+  },
+  coolText: {
+    fontSize: fontSize.sm,
+    color: colors.textOnDarkSubtle,
+    fontWeight: fontWeight.semibold,
+  },
+  link: {
+    fontSize: fontSize.sm,
+    color: brand.gold,
+    fontWeight: fontWeight.black,
+  },
+
+  signInRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.xl,
+    paddingVertical: 8,
+  },
+  signInText: {
+    fontSize: fontSize.xs,
+    color: colors.textOnDarkMuted,
+    fontWeight: fontWeight.semibold,
+  },
 });

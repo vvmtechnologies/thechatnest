@@ -32,260 +32,275 @@ import {
   PiUserCirclePlusDuotone,
   PiMagnifyingGlassDuotone,
   PiXBold,
+  PiCheckBold,
+  PiCaretDownBold,
 } from "react-icons/pi";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 import Seo from "../../components/Seo.jsx";
 
 // ─── Features that set TheChatNest apart ──────────────────────────────
-// Each entry is either fully exclusive (none of Slack/Teams/Troop ship it)
-// or strongly differentiated (at most one competitor has a partial / paid
-// implementation). Sourced from the full 102-feature comparison matrix.
+// Curated to the 16 most differentiated features. Generic capabilities
+// (1:1 chat, file sharing, basic groups) are NOT here — they're table
+// stakes that every product ships. Each entry includes:
+//   - title:     short headline
+//   - desc:      single-line value prop
+//   - details:   4-6 specific bullets explaining the feature
+//   - vs:        head-to-head against Slack / Teams / Troop
+//   - category:  filter group
 const EXCLUSIVE = [
-  // Messaging (6)
-  {
-    title: "Broadcast to Groups",
-    desc: "Send one message to many groups simultaneously — one click, hundreds of teams informed.",
-    category: "Messaging",
-    Icon: PiMegaphoneDuotone,
-    tint: "#2065D1",
-  },
-  {
-    title: "Broadcast with File Attachments",
-    desc: "Broadcast announcements with PDFs, images, or any file attached. Slack & Teams cap you at text-only.",
-    category: "Messaging",
-    Icon: PiPaperPlaneTiltDuotone,
-    tint: "#2065D1",
-  },
-  {
-    title: "Disappearing Messages",
-    desc: "Auto-delete messages after a chosen timer. Built-in privacy without third-party add-ons.",
-    category: "Messaging",
-    Icon: PiClockCountdownDuotone,
-    tint: "#2065D1",
-  },
-  {
-    title: "Voice-to-Text Transcription",
-    desc: "Every voice message and recording transcribed automatically — searchable, scannable, accessible.",
-    category: "Messaging",
-    Icon: PiUserSoundDuotone,
-    tint: "#2065D1",
-  },
-  {
-    title: "Forward to Multiple Contacts",
-    desc: "Forward any message to multiple contacts in one action. Slack & Teams force you one-by-one.",
-    category: "Messaging",
-    Icon: PiPaperPlaneTiltDuotone,
-    tint: "#2065D1",
-  },
-  {
-    title: "Offline Message Queue",
-    desc: "Compose anywhere — flight mode, weak signal. Messages queue locally and auto-send the second you're back online, with retry.",
-    category: "Messaging",
-    Icon: PiBackspaceDuotone,
-    tint: "#2065D1",
-  },
-
-  // Audio & Video (2)
-  {
-    title: "Privacy-First Camera & Mic",
-    desc: "Camera and microphone only activate when you choose. No always-listening, no surprise hot-mic.",
-    category: "Audio & Video",
-    Icon: PiPhoneSlashDuotone,
-    tint: "#ef4444",
-  },
-  {
-    title: "Voice Playback Speed (1x / 1.5x / 2x)",
-    desc: "Play voice messages and recordings at adjustable speed. Read your inbox faster.",
-    category: "Audio & Video",
-    Icon: PiFastForwardDuotone,
-    tint: "#ef4444",
-  },
-
-  // AI (8 — TheChatNest's strongest moat)
-  {
-    title: "AI App Guide",
-    desc: "Built-in AI assistant answers how-to questions in English, Hindi or Hinglish — no separate chatbot tool needed.",
-    category: "AI & Smart Features",
-    Icon: PiRobotDuotone,
-    tint: "#a855f7",
-  },
-  {
-    title: "AI Grammar Check",
-    desc: "Automatic grammar correction before you hit send. Your team's writing, polished in real time.",
-    category: "AI & Smart Features",
-    Icon: PiBookOpenDuotone,
-    tint: "#a855f7",
-  },
+  // ─── AI & Smart Features (5 — strongest moat) ──────────────────────
   {
     title: "AI Tone Adjuster",
-    desc: "Rewrite any message in Formal, Friendly, or Diplomatic tone with a single tap.",
+    desc: "Rewrite any draft in Formal, Friendly, or Diplomatic tone with one tap — before you regret hitting send.",
+    details: [
+      "Three pre-built tones: Formal (for clients), Friendly (for teammates), Diplomatic (for disagreement).",
+      "Works on any message draft — even half-written ones. The AI preserves your intent, only changes the register.",
+      "Built into the composer toolbar — no separate window, no copy-paste between apps.",
+      "Costs nothing extra. Slack, Teams and Troop have NO equivalent (yet).",
+      "Privacy: tone-adjustment runs through our own AI proxy. Your drafts never leave our infrastructure.",
+    ],
+    vs: { slack: "No equivalent", teams: "No equivalent", troop: "No equivalent" },
     category: "AI & Smart Features",
     Icon: PiSparkleDuotone,
-    tint: "#a855f7",
-  },
-  {
-    title: "AI Live Assistant",
-    desc: "Built-in AI chatbot for instant in-app answers and troubleshooting — pinned to your sidebar.",
-    category: "AI & Smart Features",
-    Icon: PiChatTeardropDotsDuotone,
     tint: "#a855f7",
   },
   {
     title: "Smart Compose (Auto-Complete)",
-    desc: "Type the first few words, accept an AI suggestion. Tab → done. Teams ships a watered-down version; Slack and Troop don't ship it at all.",
+    desc: "Type the first few words, accept an AI suggestion. Tab → done. Cuts your message-writing time by ~40%.",
+    details: [
+      "AI suggests the next 3-10 words as you type, in light grey inline text.",
+      "Press Tab to accept, keep typing to ignore. Like Gmail's Smart Compose — but for chat.",
+      "Trained per workspace: learns your team's vocabulary, project names, common phrases.",
+      "Available on all paid plans, no add-on cost.",
+      "Teams ships a watered-down version; Slack and Troop don't ship it at all.",
+    ],
+    vs: { slack: "No equivalent", teams: "Partial (Copilot enterprise add-on)", troop: "No equivalent" },
     category: "AI & Smart Features",
     Icon: PiFastForwardDuotone,
     tint: "#a855f7",
   },
   {
-    title: "Smart Reply Suggestions",
-    desc: "Three contextual replies generated for every incoming message — matched to the sender's language.",
-    category: "AI & Smart Features",
-    Icon: PiSparkleDuotone,
-    tint: "#a855f7",
-  },
-  {
     title: "Auto-Translate (14 Languages)",
-    desc: "Translate any incoming message into your language with one tap. Slack only has it via paid add-ons.",
+    desc: "Translate any incoming message into your language with one tap. Your team writes in their native tongue.",
+    details: [
+      "Supported: English, Hindi, Spanish, French, German, Portuguese, Japanese, Korean, Mandarin, Arabic, Russian, Turkish, Italian, Dutch.",
+      "Inline translation — original message stays visible, translated version shown below.",
+      "Auto-detect mode: messages in languages you don't speak get translated automatically.",
+      "Built into the message context menu — no third-party browser extension needed.",
+      "Slack only offers translation via paid Workflow Builder add-ons. Teams has it on Enterprise only.",
+    ],
+    vs: { slack: "Paid add-on", teams: "Enterprise-only", troop: "No equivalent" },
     category: "AI & Smart Features",
     Icon: PiUserSoundDuotone,
     tint: "#a855f7",
   },
   {
     title: "AI Semantic Search",
-    desc: "Search by meaning, not exact keywords. \"That doc about Q4 budget\" finds it even if no message literally said that.",
+    desc: "Search by meaning, not exact keywords. \"That doc about Q4 budget\" finds it — even if no message literally said that.",
+    details: [
+      "Vector-based search across messages, files, threads, and meeting transcripts.",
+      "Understands intent: \"who's on call this weekend\" returns the rotation thread even without the exact phrase.",
+      "Filters by sender, channel, file type, date range — combined with semantic intent.",
+      "Slack & Teams use keyword search only. Troop has no real search past 30 days.",
+      "Available on all paid plans — no \"Enterprise tier\" lock-in.",
+    ],
+    vs: { slack: "Keyword only", teams: "Keyword only", troop: "30-day keyword only" },
     category: "AI & Smart Features",
     Icon: PiMagnifyingGlassDuotone,
     tint: "#a855f7",
   },
   {
     title: "AI Call Notes",
-    desc: "Auto-generated meeting summary, key points, and action items at the end of every call.",
+    desc: "Auto-generated meeting summary, key points, and action items at the end of every call. No Otter subscription needed.",
+    details: [
+      "Triggered automatically when a meeting ends — no \"start recording\" step.",
+      "Output: 5-bullet summary, decisions list, action items with assigned owners, full transcript.",
+      "Posts to the meeting's chat channel within 60 seconds of end-of-call.",
+      "Editable: meeting host can refine the AI draft before it's shared.",
+      "Replaces ~₹830/user/month of Otter.ai or Fireflies.",
+    ],
+    vs: { slack: "Partial (Huddles summary)", teams: "Yes (Premium add-on)", troop: "No equivalent" },
     category: "AI & Smart Features",
     Icon: PiBookOpenDuotone,
     tint: "#a855f7",
   },
 
-  // Privacy (3)
+  // ─── Privacy & Security (3 — enterprise hooks) ─────────────────────
   {
-    title: "Chat Lock (PIN)",
-    desc: "Lock individual chats behind a 4-digit PIN. Loan your laptop without leaking sensitive threads.",
+    title: "Chat Lock with PIN",
+    desc: "Lock individual chats behind a 4-digit PIN. Loan your laptop to a freelancer without leaking sensitive threads.",
+    details: [
+      "Per-chat 4-digit PIN — set independently from your account password.",
+      "PIN screen wraps the chat. Even if your laptop is unlocked, the locked chat stays hidden.",
+      "Works across web, desktop, iOS, Android — PIN syncs encrypted.",
+      "Optional auto-lock timer: re-locks after 5 / 15 / 60 minutes of inactivity.",
+      "Slack, Teams and Troop have no equivalent — admins must rely on org-wide MFA.",
+    ],
+    vs: { slack: "No equivalent", teams: "No equivalent", troop: "No equivalent" },
     category: "Privacy & Security",
     Icon: PiLockKeyDuotone,
     tint: "#16a34a",
   },
   {
-    title: "IP & Platform Restrictions",
-    desc: "Restrict workspace access by IP range and platform type. Lock the office down without paying for Slack Enterprise Grid.",
+    title: "Disappearing Messages",
+    desc: "Auto-delete messages after a chosen timer. Built-in privacy without third-party add-ons.",
+    details: [
+      "Set per-chat timer: 1 hour, 24 hours, 7 days, 30 days, or custom.",
+      "Messages auto-delete on every participant's device — server-side too.",
+      "Useful for: HR conversations, exit interviews, NDA'd customer chats, sensitive payroll discussions.",
+      "Audit log captures that the chat existed — but not the content. Compliance-friendly.",
+      "Slack, Teams and Troop ALL lack this. Signal/Telegram have it but aren't business-grade.",
+    ],
+    vs: { slack: "No equivalent", teams: "No equivalent", troop: "No equivalent" },
     category: "Privacy & Security",
-    Icon: PiShieldCheckDuotone,
+    Icon: PiClockCountdownDuotone,
     tint: "#16a34a",
   },
   {
     title: "Self-Hosted & Air-Gapped",
     desc: "Deploy on your own infra — private cloud or fully air-gapped. Slack and Teams require their cloud, period.",
+    details: [
+      "Docker-Compose installer for VPC / on-prem deployment (Q4 2026 GA).",
+      "Air-gapped mode: zero internet calls — every dependency bundled.",
+      "Customer manages encryption keys (BYOK) — even our engineers can't read your messages.",
+      "Available today as a managed contract (we run it on YOUR cloud); GA self-installer next.",
+      "Defense, government, healthcare, financial services — verticals Slack literally cannot serve.",
+    ],
+    vs: { slack: "No equivalent", teams: "No (cloud-only)", troop: "Self-hosted available" },
     category: "Privacy & Security",
     Icon: PiCloudDuotone,
     tint: "#16a34a",
   },
 
-  // Admin (3)
+  // ─── Messaging (3 — workflow exclusive) ────────────────────────────
+  {
+    title: "Broadcast to Groups",
+    desc: "Send one announcement to many groups simultaneously — one click, hundreds of teams informed.",
+    details: [
+      "Pick recipients: individual contacts, groups, or both at once.",
+      "Each recipient sees it as a private 1-on-1 — replies don't spam the others.",
+      "Attach files, images, or any document to a broadcast (Slack & Teams cap at text-only).",
+      "Use cases: company-wide updates, sales enablement to 50 reps, customer-segmented announcements.",
+      "Audit log captures every recipient and delivery status — compliance built-in.",
+    ],
+    vs: { slack: "Text-only, manual", teams: "Channels only", troop: "Yes, but no attachments" },
+    category: "Messaging",
+    Icon: PiMegaphoneDuotone,
+    tint: "#2065D1",
+  },
+  {
+    title: "Scheduled Messages with Recurring Rules",
+    desc: "Schedule any message to send later — including weekly recurring reminders, standup nudges, deadline alerts.",
+    details: [
+      "One-time schedule: \"send this on Friday at 9 AM\".",
+      "Recurring: \"every Monday morning, post our standup template\".",
+      "Conditional: \"only send if no message in #prod-alerts for 4 hours\" — heartbeat-style.",
+      "Editable before send — late changes don't require deleting and retyping.",
+      "Slack has basic scheduled messages but no recurring or conditional logic.",
+    ],
+    vs: { slack: "Basic one-time only", teams: "One-time only", troop: "No equivalent" },
+    category: "Messaging",
+    Icon: PiClockCountdownDuotone,
+    tint: "#2065D1",
+  },
+  {
+    title: "Offline Message Queue",
+    desc: "Compose anywhere — flight mode, weak signal. Messages queue locally and auto-send when you're back online.",
+    details: [
+      "Type in airplane mode, the train tunnel, the metro — messages queue locally.",
+      "Smart retry: exponential backoff on network failure, automatic re-send on reconnect.",
+      "Visual indicator: queued messages show a clock icon, sent ones show the green tick.",
+      "Edit or delete queued messages before they send — full control.",
+      "Slack and Teams have partial offline support; Troop has none at all.",
+    ],
+    vs: { slack: "Partial (recent only)", teams: "Partial (mobile only)", troop: "No equivalent" },
+    category: "Messaging",
+    Icon: PiBackspaceDuotone,
+    tint: "#2065D1",
+  },
+
+  // ─── Admin & Management (2 — enterprise differentiator) ────────────
   {
     title: "OTP Verification Logs",
-    desc: "Super-admins can audit every OTP — codes, attempts, IPs, devices. Forensics built-in.",
+    desc: "Super-admins can audit every OTP — codes, attempts, IPs, devices. Forensics built-in for compliance investigations.",
+    details: [
+      "Every OTP issued is logged: timestamp, recipient, channel (email/SMS), code (admin-only), attempts.",
+      "Failed attempts logged separately — see brute-force patterns at a glance.",
+      "IP geolocation + device fingerprint per attempt — incident response in minutes.",
+      "Export as CSV / JSON for SIEM ingestion. Slack and Teams require Enterprise Grid for this.",
+      "Required for HIPAA, SOC 2, ISO 27001 audits — and we ship it on the base Admin plan.",
+    ],
+    vs: { slack: "Enterprise Grid only", teams: "Enterprise add-on", troop: "No equivalent" },
     category: "Admin & Management",
     Icon: PiShieldCheckDuotone,
     tint: "#0891b2",
   },
   {
-    title: "Departments & Designations",
-    desc: "Organize users by department, designation, and location. Built-in HR-ready structure, not a paid add-on.",
-    category: "Admin & Management",
-    Icon: PiUsersThreeDuotone,
-    tint: "#0891b2",
-  },
-  {
-    title: "Built-in Payment History & Invoices",
-    desc: "Complete payment trail, downloadable invoices, billing addresses — all native. No external portal bouncing.",
+    title: "Built-in Stripe Billing & Invoices",
+    desc: "Subscriptions, invoices with GST, payment history — all native. No bouncing to an external billing portal.",
+    details: [
+      "Invoices with GST, company name, billing address, registered office — Indian compliance out-of-box.",
+      "INV-TCN auto-numbered invoices — clean accounting trail for your finance team.",
+      "UPI, NetBanking, cards, NEFT — Stripe + PayPal + manual options all native.",
+      "Customer can self-serve: upgrade, downgrade, cancel, refund-request from inside the app.",
+      "Slack and Teams force you to log into a separate billing dashboard — context switch hell.",
+    ],
+    vs: { slack: "External portal", teams: "External portal", troop: "Manual quote-only" },
     category: "Admin & Management",
     Icon: PiCreditCardDuotone,
     tint: "#0891b2",
   },
 
-  // Mobile (7)
+  // ─── Mobile (2 — quality-of-life that defines the product) ─────────
   {
-    title: "Mobile Admin Panel",
-    desc: "Full admin powers from your phone — users, groups, departments, billing, OTP logs. Slack & Teams admins need a laptop.",
+    title: "Full Mobile Admin Panel",
+    desc: "Run your entire workspace from your phone — users, groups, departments, billing, OTP audit. No laptop required.",
+    details: [
+      "Add / remove users, manage roles, set up departments — all from iOS / Android.",
+      "Read audit logs and OTP attempt history from anywhere.",
+      "Approve / deny pending invitations, manage billing — including downloading PDF invoices.",
+      "Push notifications for admin events: failed logins, payment issues, license over-limits.",
+      "Slack and Teams require a desktop browser for admin tasks. We don't.",
+    ],
+    vs: { slack: "Desktop-only", teams: "Desktop-only", troop: "Limited mobile admin" },
     category: "Mobile",
     Icon: PiDeviceMobileSpeakerDuotone,
     tint: "#f59e0b",
   },
   {
-    title: "Swipe to Reply",
-    desc: "Swipe right on any message to instantly reply with haptic feedback — like WhatsApp.",
-    category: "Mobile",
-    Icon: PiHandTapDuotone,
-    tint: "#f59e0b",
-  },
-  {
-    title: "Per-Chat Wallpaper",
-    desc: "Set a custom background image per conversation. Personal touch, distinct context.",
-    category: "Mobile",
-    Icon: PiPaletteDuotone,
-    tint: "#f59e0b",
-  },
-  {
-    title: "Biometric Login",
-    desc: "Fingerprint / Face ID login with OTP skip for trusted devices. Zero friction, zero compromises.",
+    title: "Biometric + QR Login",
+    desc: "Fingerprint or Face ID on mobile, QR-scan from your phone on web. Zero passwords, zero retyping.",
+    details: [
+      "After first login, biometric unlocks the app on iOS and Android — Touch / Face ID supported.",
+      "Web login: scan a QR with your phone, you're in. No password retyping. Like WhatsApp Web.",
+      "Trusted devices skip OTP. Untrusted ones still require it. Per-device revocation in settings.",
+      "Maximum 3 simultaneous active sessions per user — leaked credentials have a limited blast radius.",
+      "Slack and Teams support biometric, but no QR sign-in for web. Troop has no biometric.",
+    ],
+    vs: { slack: "Biometric only", teams: "Biometric only", troop: "No equivalent" },
     category: "Mobile",
     Icon: PiFingerprintDuotone,
     tint: "#f59e0b",
   },
-  {
-    title: "QR Code Login",
-    desc: "Scan the QR on web from your phone — WhatsApp-style linked devices, no password retyping.",
-    category: "Mobile",
-    Icon: PiQrCodeDuotone,
-    tint: "#f59e0b",
-  },
-  {
-    title: "Haptic Feedback",
-    desc: "Tactile vibrations on every meaningful action — reactions, sends, navigation. Feels alive.",
-    category: "Mobile",
-    Icon: PiHandTapDuotone,
-    tint: "#f59e0b",
-  },
-  {
-    title: "Contact Photo Viewer",
-    desc: "Tap any avatar to view full-size profile photo. Tiny detail, big delight.",
-    category: "Mobile",
-    Icon: PiUserCirclePlusDuotone,
-    tint: "#f59e0b",
-  },
 
-  // Web (3)
+  // ─── Web & Desktop (1 — infrastructure exclusive) ──────────────────
   {
-    title: "Built-in QR Code Generator",
-    desc: "Generate scannable login QR right on the web. No third-party authenticator needed.",
-    category: "Web & Desktop",
-    Icon: PiQrCodeDuotone,
-    tint: "#6d5dfc",
-  },
-  {
-    title: "S3 Cloud Storage Integration",
-    desc: "AWS S3 wired in for scalable, low-cost file storage. Bring your own bucket if you prefer.",
+    title: "Bring Your Own Storage (S3 / R2)",
+    desc: "Plug in your own AWS S3 or Cloudflare R2 bucket. Files never touch our infrastructure. Privacy + cost control.",
+    details: [
+      "Configure your bucket credentials in Admin → Storage. Files upload directly to YOUR bucket.",
+      "Cost: ₹0.85/GB/month on R2 vs Slack's ₹X-per-seat-storage tax.",
+      "Data residency: choose your region — Mumbai, Singapore, Frankfurt, Virginia.",
+      "Sovereign cloud: pair with self-host mode for fully air-gapped, BYO-everything compliance.",
+      "Slack and Teams force their managed storage — no opt-out, no per-customer keys.",
+    ],
+    vs: { slack: "No equivalent", teams: "No equivalent", troop: "No equivalent" },
     category: "Web & Desktop",
     Icon: PiCloudDuotone,
     tint: "#6d5dfc",
   },
-  {
-    title: "Stripe Billing, Built In",
-    desc: "Subscriptions, invoices, payment management — all native. No external billing portal to bounce through.",
-    category: "Web & Desktop",
-    Icon: PiCreditCardDuotone,
-    tint: "#6d5dfc",
-  },
 ];
+
 
 // Counts per category — drives the filter pill row
 const CATEGORY_META = [
@@ -309,6 +324,7 @@ const Compare = () => {
   const { brandName } = useSiteBranding();
   const [activeCategory, setActiveCategory] = useState("All");
   const [query, setQuery] = useState("");
+  const [expandedCard, setExpandedCard] = useState(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -763,6 +779,123 @@ const Compare = () => {
         }
         .tcn-cmp-card-foot .lose svg { color: #dc2626; }
 
+        /* Expandable details */
+        .tcn-cmp-card.expanded {
+          grid-column: span 2;
+        }
+        @media (max-width: 720px) {
+          .tcn-cmp-card.expanded { grid-column: span 1; }
+        }
+        .tcn-cmp-card-details {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .tcn-cmp-card-details.open {
+          max-height: 1000px;
+          margin-bottom: 0.85rem;
+        }
+        .tcn-cmp-card-details-inner {
+          padding-top: 0.5rem;
+          padding-bottom: 0.5rem;
+          border-top: 1px dashed rgba(15,23,42,0.1);
+        }
+        .tcn-cmp-card-detail-label {
+          font-family: "JetBrains Mono", monospace;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--tint);
+          margin-top: 0.85rem;
+          margin-bottom: 0.6rem;
+        }
+        .tcn-cmp-card-detail-list {
+          margin: 0;
+          padding-left: 1.1rem;
+          font-size: 0.88rem;
+          color: rgba(15,23,42,0.72);
+          line-height: 1.55;
+        }
+        .tcn-cmp-card-detail-list li {
+          margin-bottom: 0.5rem;
+        }
+        .tcn-cmp-card-detail-list li::marker {
+          color: var(--tint);
+        }
+        .tcn-cmp-card-vs {
+          display: grid;
+          gap: 0.45rem;
+          margin-top: 0.5rem;
+        }
+        .tcn-cmp-card-vs .vs-row {
+          display: grid;
+          grid-template-columns: 110px auto 1fr;
+          align-items: center;
+          gap: 10px;
+          padding: 0.55rem 0.7rem;
+          border-radius: 8px;
+          background: rgba(15,23,42,0.04);
+          font-size: 0.85rem;
+        }
+        .tcn-cmp-card-vs .vs-row.us {
+          background: var(--tint-soft);
+          border: 1px solid var(--tint);
+        }
+        .tcn-cmp-card-vs .vs-name {
+          font-weight: 700;
+          color: #0b0f1e;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 11px;
+          letter-spacing: 0.04em;
+        }
+        .tcn-cmp-card-vs .vs-value {
+          color: rgba(15,23,42,0.7);
+          font-size: 0.82rem;
+        }
+        .tcn-cmp-card-vs .vs-mark {
+          width: 18px;
+          height: 18px;
+          border-radius: 999px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-family: "JetBrains Mono", monospace;
+          font-size: 11px;
+          font-weight: 800;
+        }
+        .tcn-cmp-card-vs .vs-mark.yes { background: rgba(22,163,74,0.15); color: #16a34a; }
+        .tcn-cmp-card-vs .vs-mark.no { background: rgba(239,68,68,0.12); color: #dc2626; }
+        .tcn-cmp-card-vs .vs-mark.partial { background: rgba(245,158,11,0.16); color: #b45309; }
+
+        /* Show details toggle */
+        .tcn-cmp-card-toggle {
+          margin-left: auto;
+          background: transparent;
+          border: 0;
+          color: var(--tint);
+          font-weight: 700;
+          font-size: 11px;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 6px;
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-family: inherit;
+          transition: background 0.15s ease;
+        }
+        .tcn-cmp-card-toggle:hover {
+          background: var(--tint-soft);
+        }
+        .tcn-cmp-card-toggle .toggle-caret {
+          display: inline-flex;
+          transition: transform 0.2s ease;
+        }
+        .tcn-cmp-card-toggle .toggle-caret.open {
+          transform: rotate(180deg);
+        }
+
         /* Exclusive ribbon */
         .tcn-cmp-card-ribbon {
           position: absolute;
@@ -1009,10 +1142,11 @@ const Compare = () => {
             <div className="tcn-cmp-grid">
               {filtered.map((f, i) => {
                 const Icon = f.Icon;
+                const isExpanded = expandedCard === f.title;
                 return (
                   <article
                     key={f.title}
-                    className="tcn-cmp-card"
+                    className={`tcn-cmp-card ${isExpanded ? "expanded" : ""}`}
                     style={{
                       "--tint": f.tint,
                       "--tint-soft": `${f.tint}1a`,
@@ -1027,13 +1161,74 @@ const Compare = () => {
                     </div>
                     <h3>{f.title}</h3>
                     <p>{f.desc}</p>
+
+                    {/* Expandable details + competitor comparison */}
+                    {f.details && (
+                      <div className={`tcn-cmp-card-details ${isExpanded ? "open" : ""}`}>
+                        <div className="tcn-cmp-card-details-inner">
+                          <div className="tcn-cmp-card-detail-label">How it works</div>
+                          <ul className="tcn-cmp-card-detail-list">
+                            {f.details.map((d, di) => (
+                              <li key={di}>{d}</li>
+                            ))}
+                          </ul>
+
+                          {f.vs && (
+                            <>
+                              <div className="tcn-cmp-card-detail-label" style={{ marginTop: "1rem" }}>
+                                Head-to-head
+                              </div>
+                              <div className="tcn-cmp-card-vs">
+                                <div className="vs-row us">
+                                  <span className="vs-name">TheChatNest</span>
+                                  <span className="vs-mark yes"><PiCheckBold size={9} /></span>
+                                  <span className="vs-value">Native, free on all paid plans</span>
+                                </div>
+                                <div className="vs-row">
+                                  <span className="vs-name">Slack</span>
+                                  <span className={`vs-mark ${/no/i.test(f.vs.slack) ? "no" : "partial"}`}>
+                                    {/no/i.test(f.vs.slack) ? <PiXBold size={9} /> : "~"}
+                                  </span>
+                                  <span className="vs-value">{f.vs.slack}</span>
+                                </div>
+                                <div className="vs-row">
+                                  <span className="vs-name">MS Teams</span>
+                                  <span className={`vs-mark ${/no/i.test(f.vs.teams) ? "no" : "partial"}`}>
+                                    {/no/i.test(f.vs.teams) ? <PiXBold size={9} /> : "~"}
+                                  </span>
+                                  <span className="vs-value">{f.vs.teams}</span>
+                                </div>
+                                <div className="vs-row">
+                                  <span className="vs-name">Troop</span>
+                                  <span className={`vs-mark ${/no/i.test(f.vs.troop) ? "no" : "partial"}`}>
+                                    {/no/i.test(f.vs.troop) ? <PiXBold size={9} /> : "~"}
+                                  </span>
+                                  <span className="vs-value">{f.vs.troop}</span>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="tcn-cmp-card-foot">
                       <span className="tcn-tag">
                         <PiCheckCircleDuotone size={11} /> {f.category}
                       </span>
-                      <span className="lose">
-                        <PiXCircleDuotone size={11} /> Not in Slack / Teams / Troop
-                      </span>
+                      {f.details && (
+                        <button
+                          type="button"
+                          className="tcn-cmp-card-toggle"
+                          onClick={() => setExpandedCard(isExpanded ? null : f.title)}
+                          aria-expanded={isExpanded}
+                        >
+                          {isExpanded ? "Show less" : "Show details"}
+                          <span className={`toggle-caret ${isExpanded ? "open" : ""}`}>
+                            <PiCaretDownBold size={10} />
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </article>
                 );

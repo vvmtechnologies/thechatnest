@@ -300,9 +300,16 @@ export default function ChatsScreen() {
     }, 400);
   }, []);
 
+  // State must be declared before `filtered` reads pinnedChats/archivedChats
+  const [pinnedChats, setPinnedChats] = useState(() => new Set());
+  const [archivedChats, setArchivedChats] = useState(() => new Set());
+  const [longPressItem, setLongPressItem] = useState(null);
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const [viewPhoto, setViewPhoto] = useState(null);
+
   // Apply filter + search + pin sort + archive hide
   const filtered = threads.filter(th => {
-    if (archivedChats?.has?.(th.id)) return false; // hide archived
+    if (archivedChats?.has?.(th.id)) return false;
     if (chatFilter === 'groups' && th.type !== 'group') return false;
     if (chatFilter === 'unread' && !th.unread) return false;
     if (search.trim()) {
@@ -311,18 +318,11 @@ export default function ChatsScreen() {
     }
     return true;
   }).sort((a, b) => {
-    // Pinned chats first
     const ap = pinnedChats?.has?.(a.id) ? 1 : 0;
     const bp = pinnedChats?.has?.(b.id) ? 1 : 0;
     if (ap !== bp) return bp - ap;
-    return 0; // keep existing time sort
+    return 0;
   });
-
-  const [pinnedChats, setPinnedChats] = useState(() => new Set());
-  const [archivedChats, setArchivedChats] = useState(() => new Set());
-  const [longPressItem, setLongPressItem] = useState(null);
-  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
-  const [viewPhoto, setViewPhoto] = useState(null); // { uri, name }
 
   // Load pinned/archived from storage
   useEffect(() => {
@@ -338,25 +338,27 @@ export default function ChatsScreen() {
   }, []);
 
   const togglePin = async (id) => {
-    const next = new Set(pinnedChats);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setPinnedChats(next);
     setLongPressItem(null);
-    try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.setItem('pinned_chats', JSON.stringify([...next]));
-    } catch {}
+    let snapshot;
+    setPinnedChats(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      snapshot = next;
+      return next;
+    });
+    try { await AsyncStorage.setItem('pinned_chats', JSON.stringify([...snapshot])); } catch {}
   };
 
   const toggleArchive = async (id) => {
-    const next = new Set(archivedChats);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setArchivedChats(next);
     setLongPressItem(null);
-    try {
-      const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-      await AsyncStorage.setItem('archived_chats', JSON.stringify([...next]));
-    } catch {}
+    let snapshot;
+    setArchivedChats(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      snapshot = next;
+      return next;
+    });
+    try { await AsyncStorage.setItem('archived_chats', JSON.stringify([...snapshot])); } catch {}
   };
 
   const openChat = (thread) => {

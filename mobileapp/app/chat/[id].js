@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Image,
   Platform, ActivityIndicator, ImageBackground, Keyboard,
-  Animated, Dimensions, Pressable, KeyboardAvoidingView,
+  Animated, Dimensions, Pressable, KeyboardAvoidingView, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -188,6 +188,8 @@ export default function ChatScreen() {
   const [chatWallpaper, setChatWallpaper] = useState(null);
   const [mentionQuery, setMentionQuery] = useState(null); // string or null
   const [mentionList, setMentionList] = useState([]);
+  // isGroup must be declared BEFORE any const that reads it (TDZ fix)
+  const isGroup = threadId?.startsWith('group-');
   // Group state
   const [groupInfo, setGroupInfo] = useState(null); // { is_airtime, is_admin, memberStatus }
   const isAirtime = isGroup && groupInfo?.is_airtime;
@@ -199,12 +201,11 @@ export default function ChatScreen() {
   const [forwardMsg, setForwardMsg] = useState(null);
   const [forwardContacts, setForwardContacts] = useState([]);
   const [forwardSearch, setForwardSearch] = useState('');
-  const [forwardSelected, setForwardSelected] = useState([]); // multi-select
+  const [forwardSelected, setForwardSelected] = useState([]);
   const flatListRef = useRef(null);
   const inputRef = useRef(null);
   const searchRef = useRef(null);
   const searchTimer = useRef(null);
-  const isGroup = threadId?.startsWith('group-');
 
   // Track keyboard to remove insets.bottom padding when keyboard is open
   const [kbOpen, setKbOpen] = useState(false);

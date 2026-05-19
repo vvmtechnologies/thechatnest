@@ -211,6 +211,65 @@ const Pricing = () => {
           line-height: 1.6;
         }
 
+        /* Launch banner — urgency */
+        .tcn-launch-banner {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 0.55rem 1.1rem;
+          margin: 0 auto 1.6rem;
+          background: linear-gradient(
+            90deg,
+            rgba(34,197,94,0.14),
+            rgba(255,213,74,0.12)
+          );
+          border: 1px solid rgba(34,197,94,0.3);
+          border-radius: 999px;
+          color: rgba(255,255,255,0.92);
+          font-size: 0.82rem;
+          line-height: 1.4;
+          max-width: 36rem;
+          text-align: left;
+        }
+        .tcn-launch-banner strong { color: #4ade80; font-weight: 700; }
+        .tcn-launch-text { display: inline-block; }
+        .tcn-launch-dot {
+          width: 8px; height: 8px; border-radius: 999px;
+          background: #4ade80;
+          box-shadow: 0 0 0 0 rgba(74,222,128,0.7);
+          animation: tcnLaunchPulse 2s infinite;
+          flex-shrink: 0;
+        }
+        @keyframes tcnLaunchPulse {
+          0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.6); }
+          70% { box-shadow: 0 0 0 10px rgba(74,222,128,0); }
+          100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+        }
+
+        /* Risk-reversal row */
+        .tcn-risk-row {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 0.55rem;
+          margin: -0.5rem auto 2.5rem;
+          max-width: 44rem;
+        }
+        .tcn-risk-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0.45rem 0.9rem;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 999px;
+          color: rgba(255,255,255,0.82);
+          font-size: 0.78rem;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+        }
+        .tcn-risk-chip svg { color: #ffd54a; flex-shrink: 0; }
+
         .tcn-toggle-wrap {
           display: flex;
           justify-content: center;
@@ -716,6 +775,16 @@ const Pricing = () => {
       {/* ─── Hero + Plans (combined dark section) ─────────── */}
       <section className="tcn-pricing-hero">
         <div className="container" style={{ position: "relative", zIndex: 1 }}>
+          {/* Launch pricing banner — urgency without dishonesty */}
+          <div className="tcn-launch-banner" role="status">
+            <span className="tcn-launch-dot" aria-hidden />
+            <span className="tcn-launch-text">
+              <strong>Founding-member pricing</strong> — lock in
+              today's rate for 12 months. Prices rise when we hit
+              500 paid seats.
+            </span>
+          </div>
+
           <span
             className="eyebrow"
             style={{
@@ -737,6 +806,26 @@ const Pricing = () => {
             Start free for 14 days — no credit card required. Switch between monthly and yearly anytime.
             Per-user billing, no hidden fees, cancel whenever.
           </p>
+
+          {/* Risk-reversal row — kills the 3 most common objections */}
+          <div className="tcn-risk-row">
+            <span className="tcn-risk-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              No credit card to start
+            </span>
+            <span className="tcn-risk-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 109-9"/><path d="M3 12h6"/></svg>
+              Cancel any time
+            </span>
+            <span className="tcn-risk-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2v20M2 12h20"/></svg>
+              30-day money back
+            </span>
+            <span className="tcn-risk-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              GST invoice included
+            </span>
+          </div>
 
           <div className="tcn-toggle-wrap">
             <div className="tcn-toggle">

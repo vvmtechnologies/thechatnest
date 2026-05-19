@@ -332,7 +332,7 @@ const CookieConsent = () => {
             We use cookies to keep your session secure, understand how the site is used, and
             improve the experience over time. Necessary cookies are always on. You can accept
             everything, reject everything, or pick what you're comfortable with. See our{" "}
-            <Link to="/saas-privacy">privacy policy</Link> for details.
+            <Link to="/privacy">privacy policy</Link> for details.
           </p>
 
           <div className="tcn-cc-actions">

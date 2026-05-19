@@ -64,46 +64,144 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap"
     />
 
-    <!-- Structured data: Organization + Software -->
+    <!-- Structured data: Organization + Software + WebSite + Aggregate rating -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@graph": [
           {
             "@type": "Organization",
+            "@id": "https://www.thechatnest.com/#organization",
             "name": "TheChatNest",
+            "legalName": "VVM Technologies Private Limited",
             "url": "https://www.thechatnest.com",
-            "logo": "https://www.thechatnest.com/chat.png",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://www.thechatnest.com/chat.png",
+              "width": 512,
+              "height": 512
+            },
+            "foundingDate": "2026",
+            "founder": { "@type": "Person", "name": "Bhavesh Singh" },
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "IN",
+              "addressLocality": "Bengaluru",
+              "addressRegion": "Karnataka"
+            },
             "sameAs": [
               "https://twitter.com/thechatnest",
               "https://www.linkedin.com/company/thechatnest"
             ],
-            "contactPoint": {
-              "@type": "ContactPoint",
-              "email": "support@thechatnest.com",
-              "contactType": "customer support",
-              "areaServed": "Worldwide"
+            "contactPoint": [
+              {
+                "@type": "ContactPoint",
+                "email": "support@thechatnest.com",
+                "contactType": "customer support",
+                "availableLanguage": ["English", "Hindi"],
+                "areaServed": "Worldwide"
+              },
+              {
+                "@type": "ContactPoint",
+                "email": "sales@thechatnest.com",
+                "contactType": "sales",
+                "availableLanguage": ["English", "Hindi"],
+                "areaServed": "Worldwide"
+              }
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.thechatnest.com/#website",
+            "url": "https://www.thechatnest.com",
+            "name": "TheChatNest",
+            "publisher": { "@id": "https://www.thechatnest.com/#organization" },
+            "inLanguage": "en-IN",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://www.thechatnest.com/help?q={search_term_string}",
+              "query-input": "required name=search_term_string"
             }
           },
           {
             "@type": "SoftwareApplication",
+            "@id": "https://www.thechatnest.com/#software",
             "name": "TheChatNest",
             "applicationCategory": "BusinessApplication",
+            "applicationSubCategory": "Communication",
             "operatingSystem": "Web, Windows, macOS, Linux, iOS, Android",
             "description": "Secure team messaging, HD calls, file sharing, and AI assistance for modern businesses.",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "INR",
-              "description": "Free 14-day trial, no credit card required"
-            },
+            "url": "https://www.thechatnest.com",
+            "softwareVersion": "1.0",
+            "downloadUrl": "https://www.thechatnest.com/downloads",
+            "screenshot": "https://www.thechatnest.com/og-cover.svg",
+            "publisher": { "@id": "https://www.thechatnest.com/#organization" },
+            "offers": [
+              {
+                "@type": "Offer",
+                "name": "Free Trial",
+                "price": "0",
+                "priceCurrency": "INR",
+                "description": "14-day free trial — no credit card required"
+              },
+              {
+                "@type": "Offer",
+                "name": "Pro",
+                "price": "199",
+                "priceCurrency": "INR",
+                "billingDuration": "P1M",
+                "billingIncrement": 1,
+                "unitText": "per user per month"
+              }
+            ],
             "featureList": [
               "End-to-end encrypted messaging",
-              "HD voice & video calls",
+              "HD voice & video calls with screen share",
               "Encrypted file sharing",
               "AI-powered assistance",
               "Self-hosted or cloud deployment",
-              "Role-based access control"
+              "Role-based access control",
+              "Voice notes & transcription",
+              "Cross-platform: Web, iOS, Android, Desktop",
+              "Hosted in India · DPDP + GDPR compliant"
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://www.thechatnest.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Is TheChatNest secure?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. All messages are end-to-end encrypted in transit and at rest. We're DPDP (India) and GDPR (EU) aligned, and data is hosted in Indian regions by default."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How much does TheChatNest cost?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Plans start at ₹199 per user per month, billed monthly. Every paid plan includes a 14-day free trial — no credit card required to start."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Can I self-host TheChatNest?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. We offer on-premise and air-gapped deployments for teams that need full data sovereignty. Contact sales for details."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does TheChatNest replace Slack or Microsoft Teams?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes — TheChatNest replaces team chat, video meetings, file sharing, and AI assistance with one integrated tool. Most teams save 60-70% versus running Slack + Zoom + Otter + Notion AI separately."
+                }
+              }
             ]
           }
         ]

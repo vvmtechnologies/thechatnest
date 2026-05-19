@@ -1933,3 +1933,140 @@
   .v2-marquee { font-size: 1.2rem; }
   .v2-quote { padding: 4rem 0; }
 }
+
+/* ============================================================
+   V2 Trust Strip — between Hero and Field
+   ============================================================ */
+.v2-trust {
+  padding: 3.5rem 0 4rem;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 15, 30, 0) 0%,
+    rgba(255, 213, 74, 0.04) 50%,
+    rgba(11, 15, 30, 0) 100%
+  );
+}
+.v2-trust-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 213, 74, 0.4) 50%,
+    transparent 100%
+  );
+  margin-bottom: 1.8rem;
+}
+.v2-trust-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.v2-trust-eyebrow {
+  font-family: "Fraunces", "Times New Roman", serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: rgba(11, 15, 30, 0.72);
+  margin: 0;
+  letter-spacing: -0.01em;
+  max-width: 28rem;
+  text-align: right;
+}
+.v2-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+}
+.v2-trust-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  background: #ffffff;
+  border: 1px solid rgba(11, 15, 30, 0.08);
+  border-radius: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.v2-trust-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 213, 74, 0.55);
+  box-shadow: 0 12px 32px -8px rgba(11, 15, 30, 0.1);
+}
+.v2-trust-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.3rem;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 213, 74, 0.18),
+    rgba(255, 183, 77, 0.12)
+  );
+  color: #6e4f10;
+  font-weight: 800;
+  font-family: "JetBrains Mono", monospace;
+}
+.v2-trust-icon.icon-shield::before {
+  content: "🛡";
+}
+.v2-trust-icon.icon-cert::before {
+  content: "📜";
+}
+.v2-trust-icon.icon-india::before {
+  content: "🏛";
+}
+.v2-trust-icon.icon-uptime {
+  font-size: 0.85rem;
+  letter-spacing: -0.04em;
+}
+.v2-trust-body h3 {
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin: 0 0 0.18rem;
+  letter-spacing: -0.015em;
+  color: #0b0f1e;
+}
+.v2-trust-body p {
+  font-size: 0.76rem;
+  line-height: 1.45;
+  color: rgba(11, 15, 30, 0.62);
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .v2-trust-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .v2-trust-card:nth-child(4),
+  .v2-trust-card:nth-child(5) {
+    grid-column: span 1;
+  }
+}
+@media (max-width: 720px) {
+  .v2-trust { padding: 2.5rem 0 3rem; }
+  .v2-trust-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .v2-trust-card:last-child {
+    grid-column: 1 / -1;
+  }
+  .v2-trust-eyebrow {
+    text-align: left;
+    font-size: 1rem;
+  }
+}
+@media (max-width: 480px) {
+  .v2-trust-grid {
+    grid-template-columns: 1fr;
+  }
+  .v2-trust-card:last-child {
+    grid-column: auto;
+  }
+}

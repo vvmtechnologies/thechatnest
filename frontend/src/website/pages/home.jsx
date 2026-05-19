@@ -1,5 +1,6 @@
 import React from "react";
 import V2Hero from "../components/home-v2/V2Hero.jsx";
+import V2TrustStrip from "../components/home-v2/V2TrustStrip.jsx";
 import V2Field from "../components/home-v2/V2Field.jsx";
 import V2Marquee from "../components/home-v2/V2Marquee.jsx";
 import V2Stack from "../components/home-v2/V2Stack.jsx";
@@ -20,6 +21,7 @@ const Home = () => {
         keywords="team chat, business messaging, slack alternative, secure messaging, self-hosted chat, on-premise messaging, video calls, AI assistant, GDPR compliant"
       />
       <V2Hero />
+      <V2TrustStrip />
       <V2Field />
       <V2Marquee />
       <V2Stack />

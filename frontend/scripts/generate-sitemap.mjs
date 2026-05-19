@@ -37,8 +37,10 @@ const ROUTES = [
   { path: "/terms", priority: 0.5, changefreq: "yearly" },
   { path: "/auth/register", priority: 0.9, changefreq: "monthly" },
   { path: "/auth/login", priority: 0.7, changefreq: "monthly" },
+  { path: "/privacy", priority: 0.5, changefreq: "yearly" },
   { path: "/saas-privacy", priority: 0.4, changefreq: "yearly" },
   { path: "/gdpr", priority: 0.4, changefreq: "yearly" },
+  { path: "/dpdp", priority: 0.4, changefreq: "yearly" },
   { path: "/refund-policy", priority: 0.4, changefreq: "yearly" },
 ];
 

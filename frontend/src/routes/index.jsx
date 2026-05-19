@@ -134,12 +134,18 @@ export default function Router() {
           { path: "channel-partner", element: <Navigate to="/contact" replace /> },
           { path: "faqs", element: <Navigate to="/help" replace /> },
           { path: "support", element: <Navigate to="/help" replace /> },
-          // Privacy & Legal (deferred pages redirected to canonical privacy)
+          // Privacy & Legal — /privacy is the canonical short URL
+          // required by Play Store, Razorpay, Google Ads, etc.
+          { path: "privacy", element: <SaasPrivacy /> },
+          { path: "privacy-policy", element: <Navigate to="/privacy" replace /> },
           { path: "saas-privacy", element: <SaasPrivacy /> },
-          { path: "on-premise-privacy", element: <Navigate to="/saas-privacy" replace /> },
-          { path: "air-gapped-privacy", element: <Navigate to="/saas-privacy" replace /> },
+          { path: "on-premise-privacy", element: <Navigate to="/privacy" replace /> },
+          { path: "air-gapped-privacy", element: <Navigate to="/privacy" replace /> },
           { path: "gdpr", element: <Gdpr /> },
+          { path: "dpdp", element: <Gdpr /> },
           { path: "refund-policy", element: <RefundPolicy /> },
+          { path: "refunds", element: <Navigate to="/refund-policy" replace /> },
+          { path: "cancellation", element: <Navigate to="/refund-policy" replace /> },
           // Unknown public routes get the branded 404 page (still rendered
           // inside <WebsiteLayout /> so the navbar + footer remain visible)
           { path: "*", element: <Page404 /> },

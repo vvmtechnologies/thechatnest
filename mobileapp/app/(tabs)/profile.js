@@ -10,11 +10,11 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as Contacts from 'expo-contacts';
 import * as Notifications from 'expo-notifications';
-import { AudioModule } from 'expo-audio';
+import { AudioModule, createAudioPlayer } from 'expo-audio';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Audio } from 'expo-av';
+import { StorageKeys } from '../../src/constants/storageKeys';
 import Avatar from '../../src/components/Avatar';
 import { useToast } from '../../src/components/Toast';
 import { useAuth } from '../../src/store/AuthContext';
@@ -73,6 +73,14 @@ const PRESET_COLORS = ['#ffd54a', '#6d5dfc', '#ffb74d', '#22c55e', '#0ea5e9', '#
 const FONTS_LIST = ['SF Display', 'Poppins', 'Noto Sans', 'Inter', 'Roboto'];
 const FONT_SIZES_LIST = ['Small', 'Normal', 'Large'];
 
+const STATUS_OPTIONS = [
+  { key: 'Available', icon: 'ellipse',         color: '#22c55e', label: 'Available' },
+  { key: 'Busy',      icon: 'ellipse',         color: '#ef4444', label: 'Busy' },
+  { key: 'Away',      icon: 'ellipse',         color: '#f59e0b', label: 'Away' },
+  { key: 'DND',       icon: 'remove-circle',   color: '#ef4444', label: 'Do Not Disturb' },
+  { key: 'Offline',   icon: 'ellipse-outline', color: '#94a3b8', label: 'Appear Offline' },
+];
+
 export default function ProfileScreen() {
   const { user, refreshUser, logout: doLogout, organizations, orgsLoading, loadOrganizations, switchOrganization } = useAuth();
   const { theme: t, mode, setTheme, isDark, setBrand, setFont, setFontSize, brandColor: currentBrand, fontFamily: currentFont, fontSizeKey: currentFontSize } = useTheme();
@@ -104,23 +112,27 @@ export default function ProfileScreen() {
 
   // Load saved tone on mount
   useEffect(() => {
-    AsyncStorage.getItem('notificationTone').then(v => { if (v) setSelectedTone(v); });
+    AsyncStorage.getItem(StorageKeys.notificationTone).then(v => { if (v) setSelectedTone(v); });
   }, []);
 
   const previewTone = async (key) => {
     // Stop previous
-    if (playingTone) { try { await playingTone.unloadAsync(); } catch {} }
+    if (playingTone) { try { playingTone.pause(); playingTone.remove(); } catch {} }
     if (key === 'default') { setPlayingTone(null); return; }
     try {
-      const { sound } = await Audio.Sound.createAsync(TONE_FILES[key], { shouldPlay: true, volume: 1.0 });
-      setPlayingTone(sound);
-      sound.setOnPlaybackStatusUpdate((s) => { if (s.didJustFinish) { sound.unloadAsync(); setPlayingTone(null); } });
+      const player = createAudioPlayer(TONE_FILES[key]);
+      player.volume = 1.0;
+      player.play();
+      setPlayingTone(player);
+      const sub = player.addListener('playbackStatusUpdate', (s) => {
+        if (s?.didJustFinish) { try { player.remove(); } catch {} setPlayingTone(null); sub?.remove?.(); }
+      });
     } catch {}
   };
 
   const selectTone = async (key) => {
     setSelectedTone(key);
-    await AsyncStorage.setItem('notificationTone', key);
+    await AsyncStorage.setItem(StorageKeys.notificationTone, key);
     previewTone(key);
     setShowTonePicker(false);
     toast(`Tone set to ${NOTIFICATION_TONES.find(t => t.key === key)?.label}`, 'success');
@@ -140,13 +152,6 @@ export default function ProfileScreen() {
   }, []);
 
   // Custom status
-  const STATUS_OPTIONS = [
-    { key: 'Available', icon: 'ellipse', color: '#22c55e', label: 'Available' },
-    { key: 'Busy', icon: 'ellipse', color: '#ef4444', label: 'Busy' },
-    { key: 'Away', icon: 'ellipse', color: '#f59e0b', label: 'Away' },
-    { key: 'DND', icon: 'remove-circle', color: '#ef4444', label: 'Do Not Disturb' },
-    { key: 'Offline', icon: 'ellipse-outline', color: '#94a3b8', label: 'Appear Offline' },
-  ];
   const [myStatus, setMyStatus] = useState('Available');
   const [statusText, setStatusText] = useState('');
   const [showStatusPicker, setShowStatusPicker] = useState(false);
@@ -296,30 +301,12 @@ export default function ProfileScreen() {
     catch { toast('Failed', 'error'); }
   }, []);
 
-  const toggle = (key) => setExpanded(expanded === key ? null : key);
+  const toggle = useCallback((key) => setExpanded(prev => prev === key ? null : key), []);
   const p = profile || user || {};
   // Role — try every possible source
   const ROLE_LABELS = { 1: 'Owner', 2: 'Admin', 3: 'Super Admin', 4: 'User', owner: 'Owner', admin: 'Admin', super_admin: 'Super Admin', users: 'User' };
   const rawRole = p.role_name || p.role_key || profile?.role_name || profile?.role_key || user?.role_name || user?.role_key;
   const role = rawRole || ROLE_LABELS[p.role_id || user?.role_id] || 'Member';
-
-  // Section component
-  const Section = ({ id, icon, label, badge, children }) => {
-    const isOpen = expanded === id;
-    return (
-      <View style={[z.section, { backgroundColor: t.card }]}>
-        <TouchableOpacity style={z.sectionHeader} onPress={() => toggle(id)} activeOpacity={0.6}>
-          <View style={[z.sectionIcon, { backgroundColor: `${t.accent}10` }]}>
-            <Ionicons name={icon} size={17} color={t.accent} />
-          </View>
-          <Text style={[z.sectionLabel, { color: t.text }]}>{label}</Text>
-          {badge ? <View style={[z.sectionBadge, { backgroundColor: t.accentBg }]}><Text style={[z.sectionBadgeText, { color: t.accent }]}>{badge}</Text></View> : null}
-          <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={t.textTer} />
-        </TouchableOpacity>
-        {isOpen && <View style={[z.sectionBody, { borderTopColor: t.divider }]}>{children}</View>}
-      </View>
-    );
-  };
 
   // Pick a deterministic accent stripe per user (gold/violet/teal/coral)
   const STRIPE_PALETTE = ['#ffd54a', '#6d5dfc', '#22c55e', '#ec4899', '#0ea5e9', '#f59e0b'];
@@ -336,7 +323,8 @@ export default function ProfileScreen() {
       {/* ─── Minimalist top bar — just title + logout, no brand pill ─── */}
       <View style={z.topBar}>
         <Text style={[z.topBarKicker, { color: t.textTer }]}>YOUR · ACCOUNT</Text>
-        <TouchableOpacity style={[z.logoutBtnInline, { backgroundColor: t.surface, borderColor: t.divider }]} onPress={handleLogout} activeOpacity={0.7}>
+        <TouchableOpacity style={[z.logoutBtnInline, { backgroundColor: t.surface, borderColor: t.divider }]} onPress={handleLogout} activeOpacity={0.7}
+          accessibilityLabel="Sign out" accessibilityRole="button" hitSlop={6}>
           <Ionicons name="log-out-outline" size={14} color="#ef4444" />
           <Text style={z.logoutBtnText}>Sign out</Text>
         </TouchableOpacity>
@@ -529,7 +517,7 @@ export default function ProfileScreen() {
         {/* ═══════════ ACCOUNT ═══════════ */}
         <Text style={[z.groupLabel, { color: t.textTer }]}>ACCOUNT</Text>
 
-        <Section id="profile" icon="person-outline" label="Profile Info">
+        <Section id="profile" icon="person-outline" label="Profile Info" t={t} isOpen={expanded === 'profile'} onToggle={() => toggle('profile')}>
           <InfoRow icon="briefcase-outline" label="Department" value={p.department_name} t={t} />
           <InfoRow icon="ribbon-outline" label="Designation" value={p.designation_name} t={t} />
           <InfoRow icon="call-outline" label="Mobile" value={p.mobile || p.phone} t={t} />
@@ -539,7 +527,7 @@ export default function ProfileScreen() {
         </Section>
 
         {/* ─── Change Password ─── */}
-        <Section id="password" icon="key-outline" label="Change Password">
+        <Section id="password" icon="key-outline" label="Change Password" t={t} isOpen={expanded === 'password'} onToggle={() => toggle('password')}>
           <View style={z.formGroup}>
             <Text style={[z.fieldLabel, { color: t.textTer }]}>OLD PASSWORD</Text>
             <View style={[z.field, { borderColor: t.border, backgroundColor: t.inputBg }]}>
@@ -583,7 +571,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ─── Active Devices ─── */}
-        <Section id="devices" icon="phone-portrait-outline" label="Active Devices" badge={devices.length > 0 ? String(devices.length) : null}>
+        <Section id="devices" icon="phone-portrait-outline" label="Active Devices" badge={devices.length > 0 ? String(devices.length) : null} t={t} isOpen={expanded === 'devices'} onToggle={() => toggle('devices')}>
           {loadingDevices ? <ActivityIndicator color={t.accent} style={{ marginVertical: 20 }} /> : (
             <>
               {devices.length > 0 && (
@@ -661,7 +649,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* ─── Customize ─── */}
-        <Section id="customize" icon="color-palette-outline" label="Customize">
+        <Section id="customize" icon="color-palette-outline" label="Customize" t={t} isOpen={expanded === 'customize'} onToggle={() => toggle('customize')}>
           {/* Brand Color */}
           <Text style={[z.customLabel, { color: t.textSec }]}>Brand Color</Text>
           <View style={z.colorRow}>
@@ -712,7 +700,7 @@ export default function ProfileScreen() {
         <Text style={[z.groupLabel, { color: t.textTer }]}>PRIVACY & SECURITY</Text>
 
         {/* ─── Notifications ─── */}
-        <Section id="notifications" icon="notifications-outline" label="Notifications">
+        <Section id="notifications" icon="notifications-outline" label="Notifications" t={t} isOpen={expanded === 'notifications'} onToggle={() => toggle('notifications')}>
           <View style={z.appearRow}>
             <Text style={[z.appearLabel, { color: t.text }]}>Do Not Disturb</Text>
             <Switch value={false} onValueChange={() => toast('DND scheduling coming soon', 'info')}
@@ -729,12 +717,12 @@ export default function ProfileScreen() {
         </Section>
 
         {/* ─── Privacy ─── */}
-        <Section id="privacy" icon="eye-off-outline" label="Privacy">
+        <Section id="privacy" icon="eye-off-outline" label="Privacy" t={t} isOpen={expanded === 'privacy'} onToggle={() => toggle('privacy')}>
           <Text style={[z.permHint, { color: t.textTer }]}>Control who can see your information</Text>
         </Section>
 
         {/* ─── Permissions ─── */}
-        <Section id="permissions" icon="shield-outline" label="Permissions">
+        <Section id="permissions" icon="shield-outline" label="Permissions" t={t} isOpen={expanded === 'permissions'} onToggle={() => toggle('permissions')}>
           <Text style={[z.permHint, { color: t.textTer }]}>Toggle to allow/disallow. Opens system settings when needed.</Text>
           {[
             { key: 'camera', icon: 'camera-outline', label: 'Camera', desc: 'Take photos & videos' },
@@ -966,6 +954,22 @@ export default function ProfileScreen() {
 }
 
 // ─── Sub components ─────────────────────────────────────────────────────────
+function Section({ id, icon, label, badge, children, t, isOpen, onToggle }) {
+  return (
+    <View style={[z.section, { backgroundColor: t.card }]}>
+      <TouchableOpacity style={z.sectionHeader} onPress={onToggle} activeOpacity={0.6}>
+        <View style={[z.sectionIcon, { backgroundColor: `${t.accent}10` }]}>
+          <Ionicons name={icon} size={17} color={t.accent} />
+        </View>
+        <Text style={[z.sectionLabel, { color: t.text }]}>{label}</Text>
+        {badge ? <View style={[z.sectionBadge, { backgroundColor: t.accentBg }]}><Text style={[z.sectionBadgeText, { color: t.accent }]}>{badge}</Text></View> : null}
+        <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={t.textTer} />
+      </TouchableOpacity>
+      {isOpen && <View style={[z.sectionBody, { borderTopColor: t.divider }]}>{children}</View>}
+    </View>
+  );
+}
+
 function InfoRow({ icon, label, value, t, last }) {
   if (!value) return null;
   return (

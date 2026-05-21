@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import {
   View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, ScrollView, Modal, Image,
   Platform, ActivityIndicator, ImageBackground, Keyboard,
@@ -13,6 +13,11 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Location from 'expo-location';
 import * as Contacts from 'expo-contacts';
 import { useAudioRecorder, RecordingPresets, AudioModule } from 'expo-audio';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { StorageKeys } from '../../src/constants/storageKeys';
+import * as Clipboard from 'expo-clipboard';
+import * as Sharing from 'expo-sharing';
+import { File, Paths } from 'expo-file-system/next';
 import Avatar from '../../src/components/Avatar';
 import ChatBubble from '../../src/components/ChatBubble';
 import EmojiPicker from '../../src/components/EmojiPicker';
@@ -64,17 +69,19 @@ const addDateSeparators = (msgs) => {
 };
 
 // ─── Schedule modal: simple date+time entry → emits message:schedule ─────
+const pad2 = (n) => String(n).padStart(2, '0');
+function buildScheduleDefaults() {
+  const d = new Date(Date.now() + 60 * 60_000); // 1h from now
+  return {
+    date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+    time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+  };
+}
+
 function ScheduleMessageModal({ isDark, theme, initialText, onCancel, onSchedule }) {
-  const pad = (n) => String(n).padStart(2, '0');
-  const def = (() => {
-    const d = new Date(Date.now() + 60 * 60_000); // 1h from now
-    return {
-      date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
-      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
-    };
-  })();
-  const [date, setDate] = useState(def.date);
-  const [time, setTime] = useState(def.time);
+  // Lazy initializer — runs only on first render, not every parent re-render.
+  const [date, setDate] = useState(() => buildScheduleDefaults().date);
+  const [time, setTime] = useState(() => buildScheduleDefaults().time);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
@@ -227,8 +234,7 @@ export default function ChatScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        const wp = await AsyncStorage.getItem(`wallpaper-${threadId}`);
+        const wp = await AsyncStorage.getItem(StorageKeys.wallpaperFor(threadId));
         if (wp) setChatWallpaper(wp);
       } catch {}
     })();
@@ -502,8 +508,7 @@ export default function ChatScreen() {
   useEffect(() => {
     (async () => {
       try {
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        const draft = await AsyncStorage.getItem(`draft-${threadId}`);
+        const draft = await AsyncStorage.getItem(StorageKeys.draftFor(threadId));
         if (draft) setText(draft);
       } catch {}
     })();
@@ -512,9 +517,8 @@ export default function ChatScreen() {
   useEffect(() => {
     const saveDraft = async () => {
       try {
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        if (text.trim()) await AsyncStorage.setItem(`draft-${threadId}`, text);
-        else await AsyncStorage.removeItem(`draft-${threadId}`);
+        if (text.trim()) await AsyncStorage.setItem(StorageKeys.draftFor(threadId), text);
+        else await AsyncStorage.removeItem(StorageKeys.draftFor(threadId));
       } catch {}
     };
     const timer = setTimeout(saveDraft, 500);
@@ -608,7 +612,7 @@ export default function ChatScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSending(true); setText(''); setShowEmoji(false); setShowAttach(false);
     // Clear draft & stop typing
-    try { const AS = require('@react-native-async-storage/async-storage').default; AS.removeItem(`draft-${threadId}`); } catch {}
+    AsyncStorage.removeItem(StorageKeys.draftFor(threadId)).catch(() => {});
     if (connected) emit('typing:stop', { threadId });
 
     try {
@@ -996,6 +1000,33 @@ export default function ChatScreen() {
     setShowScrollBtn(offsetY > 300);
   }, []);
 
+  const handleVideoCapture = useCallback(async () => {
+    setShowAttach(false);
+    if (!(await ensurePermission('camera'))) return;
+    try {
+      const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['videos'], quality: 0.7, videoMaxDuration: 120 });
+      if (result.canceled || !result.assets?.[0]) return;
+      const a = result.assets[0];
+      setPendingFiles(prev => [...prev, { id: `${Date.now()}-vid`, uri: a.uri, name: `video-${Date.now()}.mp4`, mimeType: a.mimeType || 'video/mp4', size: a.fileSize || 0, type: 'video' }]);
+    } catch { toast('Video recording failed', 'error'); }
+  }, [ensurePermission, toast]);
+
+  const openGif = useCallback(() => { setShowAttach(false); setShowGif(true); }, []);
+  const openPoll = useCallback(() => { setShowAttach(false); setShowPoll(true); }, []);
+
+  // Built once per render; stable across re-renders since all handlers are useCallback'd.
+  const attachItems = useMemo(() => [
+    { icon: 'document',       label: 'Document', color: '#7c5cfc', bg: '#ede9fe', onPress: handleFilePick },
+    { icon: 'camera',         label: 'Camera',   color: '#e91e63', bg: '#fce7f3', onPress: handleCameraPick },
+    { icon: 'images',         label: 'Gallery',  color: '#8b5cf6', bg: '#ede9fe', onPress: handleImagePick },
+    { icon: 'musical-notes',  label: 'Audio',    color: '#f59e0b', bg: '#fef3c7', onPress: handleAudioPick },
+    { icon: 'location',       label: 'Location', color: '#22c55e', bg: '#dcfce7', onPress: handleLocationSend },
+    { icon: 'person',         label: 'Contact',  color: '#2563eb', bg: '#dbeafe', onPress: handleContactShare },
+    { icon: 'videocam',       label: 'Video',    color: '#f59e0b', bg: '#fef3c7', onPress: handleVideoCapture },
+    { icon: 'logo-youtube',   label: 'GIF',      color: '#ec4899', bg: '#fce7f3', onPress: openGif },
+    { icon: 'stats-chart',    label: 'Poll',     color: '#8b5cf6', bg: '#ede9fe', onPress: openPoll },
+  ], [handleFilePick, handleCameraPick, handleImagePick, handleAudioPick, handleLocationSend, handleContactShare, handleVideoCapture, openGif, openPoll]);
+
   // Message actions handler
   const handleMessageAction = useCallback(async (action, msg) => {
     const msgId = msg?.id;
@@ -1004,9 +1035,7 @@ export default function ChatScreen() {
     if (action === 'copy') {
       const copyText = msg?.content?.text || msg?.content?.url || msg?.content?.code || msg?.message || '';
       if (copyText) {
-        // React Native Clipboard
         try {
-          const Clipboard = require('expo-clipboard');
           await Clipboard.setStringAsync(copyText);
           toast('Copied', 'success');
         } catch { toast('Copy failed', 'error'); }
@@ -1399,27 +1428,8 @@ export default function ChatScreen() {
         {/* ─── Attachment Menu ─── */}
         {showAttach && (
           <View style={[z.attachMenu, { backgroundColor: isDark ? '#233138' : '#fff' }]}>
-            {[
-              { icon: 'document', label: 'Document', color: '#7c5cfc', bg: '#ede9fe', onPress: handleFilePick },
-              { icon: 'camera', label: 'Camera', color: '#e91e63', bg: '#fce7f3', onPress: handleCameraPick },
-              { icon: 'images', label: 'Gallery', color: '#8b5cf6', bg: '#ede9fe', onPress: handleImagePick },
-              { icon: 'musical-notes', label: 'Audio', color: '#f59e0b', bg: '#fef3c7', onPress: handleAudioPick },
-              { icon: 'location', label: 'Location', color: '#22c55e', bg: '#dcfce7', onPress: handleLocationSend },
-              { icon: 'person', label: 'Contact', color: '#2563eb', bg: '#dbeafe', onPress: handleContactShare },
-              { icon: 'videocam', label: 'Video', color: '#f59e0b', bg: '#fef3c7', onPress: async () => {
-                setShowAttach(false);
-                if (!(await ensurePermission('camera'))) return;
-                try {
-                  const result = await ImagePicker.launchCameraAsync({ mediaTypes: ['videos'], quality: 0.7, videoMaxDuration: 120 });
-                  if (result.canceled || !result.assets?.[0]) return;
-                  const a = result.assets[0];
-                  setPendingFiles(prev => [...prev, { id: `${Date.now()}-vid`, uri: a.uri, name: `video-${Date.now()}.mp4`, mimeType: a.mimeType || 'video/mp4', size: a.fileSize || 0, type: 'video' }]);
-                } catch { toast('Video recording failed', 'error'); }
-              }},
-              { icon: 'logo-youtube', label: 'GIF', color: '#ec4899', bg: '#fce7f3', onPress: () => { setShowAttach(false); setShowGif(true); } },
-              { icon: 'stats-chart', label: 'Poll', color: '#8b5cf6', bg: '#ede9fe', onPress: () => { setShowAttach(false); setShowPoll(true); } },
-            ].map(a => (
-              <TouchableOpacity key={a.label} style={z.attachItem} onPress={a.onPress} activeOpacity={0.7}>
+            {attachItems.map(a => (
+              <TouchableOpacity key={a.label} style={z.attachItem} onPress={a.onPress} activeOpacity={0.7} accessibilityLabel={a.label}>
                 <View style={[z.attachIcon, { backgroundColor: a.bg }]}>
                   <Ionicons name={a.icon} size={22} color={a.color} />
                 </View>
@@ -1576,7 +1586,7 @@ export default function ChatScreen() {
                 <View style={z.aiActions}>
                   <TouchableOpacity style={[z.aiBtn, { backgroundColor: isDark ? '#0f172a' : '#f1f5f9' }]}
                     onPress={async () => {
-                      try { const C = require('expo-clipboard'); await C.setStringAsync(aiResult.text); toast('Copied', 'success'); }
+                      try { await Clipboard.setStringAsync(aiResult.text); toast('Copied', 'success'); }
                       catch { toast('Copy failed', 'error'); }
                     }}>
                     <Ionicons name="copy-outline" size={16} color={isDark ? '#94a3b8' : '#64748b'} />
@@ -1870,8 +1880,7 @@ export default function ChatScreen() {
                     try {
                       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.6 });
                       if (!result.canceled && result.assets?.[0]) {
-                        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-                        await AsyncStorage.setItem(`wallpaper-${threadId}`, result.assets[0].uri);
+                        await AsyncStorage.setItem(StorageKeys.wallpaperFor(threadId), result.assets[0].uri);
                         setChatWallpaper(result.assets[0].uri);
                         toast('Wallpaper set', 'success');
                       }
@@ -1879,14 +1888,12 @@ export default function ChatScreen() {
                   }},
                   ...(chatWallpaper ? [{ icon: 'close-circle-outline', label: 'Remove Wallpaper', onPress: async () => {
                     setShowMenu(false);
-                    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-                    await AsyncStorage.removeItem(`wallpaper-${threadId}`);
+                    await AsyncStorage.removeItem(StorageKeys.wallpaperFor(threadId));
                     setChatWallpaper(null);
                     toast('Wallpaper removed', 'success');
                   }}] : []),
                   { icon: 'timer-outline', label: 'Disappearing Messages', onPress: () => {
                     setShowMenu(false);
-                    const { Alert } = require('react-native');
                     Alert.alert('Disappearing Messages', 'Auto-delete messages after:', [
                       { text: 'Off', onPress: () => { emit('thread:disappearing', { threadId, duration: 0 }); toast('Disappearing off', 'info'); } },
                       { text: '24 Hours', onPress: () => { emit('thread:disappearing', { threadId, duration: 86400 }); toast('Messages disappear after 24h', 'success'); } },
@@ -1903,8 +1910,6 @@ export default function ChatScreen() {
                         const content = m?.content?.text || m?.content?.fileName || m?.type || '';
                         return `[${t}] ${author}: ${content}`;
                       }).join('\n');
-                      const { File, Paths } = require('expo-file-system/next');
-                      const Sharing = require('expo-sharing');
                       const file = new File(Paths.cache, `chat-export-${Date.now()}.txt`);
                       file.text = txt;
                       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file.uri);

@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, Image as RNImage, TouchableOpacity } from 'react-native';
+import { memo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 
 const COLORS = [
   '#3b82f6', '#8b5cf6', '#14b8a6', '#f59e0b',
@@ -38,7 +39,7 @@ const getStatusColor = (status) => {
   return '#94a3b8';
 };
 
-export default function Avatar({ uri: rawUri, name, size = 44, online, status, isGlobal, style, border = true, onPress }) {
+function Avatar({ uri: rawUri, name, size = 44, online, status, isGlobal, style, border = true, onPress }) {
   const uri = rawUri && rawUri !== 'undefined' && rawUri !== 'null' && rawUri !== '' && rawUri.length > 5 ? rawUri : null;
   const [failed, setFailed] = useState(false);
   const label = (name || '?').trim();
@@ -59,7 +60,8 @@ export default function Avatar({ uri: rawUri, name, size = 44, online, status, i
   return (
     <Wrapper style={[z.wrap, { width: size, height: size }, style]} {...wrapperProps}>
       {showImage ? (
-        <RNImage source={{ uri }} onError={() => setFailed(true)}
+        <Image source={{ uri }} onError={() => setFailed(true)}
+          cachePolicy="memory-disk" recyclingKey={getStableKey(uri)} transition={120} contentFit="cover"
           style={[z.img, { width: size, height: size, borderRadius: r }, border && z.imgBorder]} />
       ) : (
         <View style={[z.fallback, { width: size, height: size, borderRadius: r, backgroundColor: bg }, border && z.fallbackBorder]}>
@@ -85,3 +87,5 @@ const z = StyleSheet.create({
   badgeOuter: { position: 'absolute', backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 },
   badge: {},
 });
+
+export default memo(Avatar);

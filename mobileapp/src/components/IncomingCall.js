@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, Animated, Vibration, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { router } from 'expo-router';
 import Avatar from './Avatar';
 
@@ -20,33 +20,29 @@ export default function IncomingCall({ callState, callType, remoteUser, onAccept
 
     const playRingtone = async () => {
       try {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-          shouldDuckAndroid: false,
-          playThroughEarpieceAndroid: false,
+        await setAudioModeAsync({
+          allowsRecording: false,
+          playsInSilentMode: true,
+          shouldPlayInBackground: true,
+          shouldRouteThroughEarpiece: false,
         });
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/ringtone.wav'),
-          { isLooping: true, volume: 1.0, shouldPlay: true }
-        );
+        const player = createAudioPlayer(require('../../assets/ringtone.wav'));
+        player.loop = true;
+        player.volume = 1.0;
+        player.play();
         if (mounted) {
-          soundRef.current = sound;
+          soundRef.current = player;
         } else {
-          await sound.unloadAsync();
+          player.remove();
         }
       } catch (e) {
         console.log('[IncomingCall] ringtone error:', e.message);
       }
     };
 
-    const stopRingtone = async () => {
+    const stopRingtone = () => {
       if (soundRef.current) {
-        try {
-          await soundRef.current.stopAsync();
-          await soundRef.current.unloadAsync();
-        } catch {}
+        try { soundRef.current.pause(); soundRef.current.remove(); } catch {}
         soundRef.current = null;
       }
     };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Linking, Dimensions, Modal, Pressable, Vibration, Platform, ScrollView, Animated, PanResponder, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
@@ -285,7 +285,7 @@ function PollWidget({ content, metadata, isOwn, accentColor, onVote, messageId }
   );
 }
 
-export default function ChatBubble({ message, isOwn, showName, onAction, accentColor = '#ffd54a', textSize = 15, onReact, onPollVote, viewerIsAdmin, onImagePress, isDark = false }) {
+function ChatBubble({ message, isOwn, showName, onAction, accentColor = '#ffd54a', textSize = 15, onReact, onPollVote, viewerIsAdmin, onImagePress, isDark = false }) {
   const [expanded, setExpanded] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const ACCENT = accentColor;
@@ -903,3 +903,29 @@ const z = StyleSheet.create({
   footerInline: { marginTop: 0, paddingLeft: 0 },
   ft: { fontSize: 11, fontWeight: '400', fontVariant: ['tabular-nums'] },
 });
+
+// Custom equality — message identity + the few primitive props that affect rendering.
+// Skips re-render when only sibling props change (e.g. typing indicator in parent).
+function areEqual(prev, next) {
+  if (prev.isOwn !== next.isOwn) return false;
+  if (prev.showName !== next.showName) return false;
+  if (prev.accentColor !== next.accentColor) return false;
+  if (prev.textSize !== next.textSize) return false;
+  if (prev.isDark !== next.isDark) return false;
+  if (prev.viewerIsAdmin !== next.viewerIsAdmin) return false;
+  // Handler identity changes are intentionally ignored — parent should pass stable refs.
+  const a = prev.message, b = next.message;
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.id === b.id &&
+    a.status === b.status &&
+    a.edited === b.edited &&
+    a.deletedAt === b.deletedAt &&
+    a.uploadProgress === b.uploadProgress &&
+    a.reactions === b.reactions &&
+    a.content === b.content
+  );
+}
+
+export default memo(ChatBubble, areEqual);

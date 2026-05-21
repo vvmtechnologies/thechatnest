@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, memo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, memo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   TextInput, RefreshControl, Platform, ActivityIndicator, Vibration, Modal, Pressable, ScrollView,
@@ -12,6 +12,8 @@ import ImageViewer from '../../src/components/ImageViewer';
 import { getThreads, hideGroupThread } from '../../src/api/chat';
 import api from '../../src/api/config';
 import { getCachedThreads, cacheThreads, updateCachedThread } from '../../src/services/cache';
+import { setBadgeCount } from '../../src/services/notifications';
+import { StorageKeys } from '../../src/constants/storageKeys';
 import { useAuth } from '../../src/store/AuthContext';
 import { useTheme } from '../../src/store/ThemeContext';
 import useSocket from '../../src/hooks/useSocket';
@@ -139,7 +141,7 @@ export default function ChatsScreen() {
       cacheThreads(all);
       // Update app icon badge with total unread
       const totalUnread = all.reduce((sum, th) => sum + (th.unread || 0), 0);
-      try { const { setBadgeCount } = require('../../src/services/notifications'); setBadgeCount(totalUnread); } catch {}
+      try { setBadgeCount(totalUnread); } catch {}
     } catch (err) {
       console.warn('[chats]', err?.message);
     } finally { setLoading(false); }
@@ -151,7 +153,7 @@ export default function ChatsScreen() {
   useFocusEffect(useCallback(() => { loadThreads(); }, [loadThreads]));
 
   // Reload threads when socket reconnects
-  useEffect(() => { if (connected) loadThreads(); }, [connected]);
+  useEffect(() => { if (connected) loadThreads(); }, [connected, loadThreads]);
 
   // ─── Realtime socket listeners ───
   useEffect(() => {
@@ -307,30 +309,32 @@ export default function ChatsScreen() {
   const [showHeaderMenu, setShowHeaderMenu] = useState(false);
   const [viewPhoto, setViewPhoto] = useState(null);
 
-  // Apply filter + search + pin sort + archive hide
-  const filtered = threads.filter(th => {
-    if (archivedChats?.has?.(th.id)) return false;
-    if (chatFilter === 'groups' && th.type !== 'group') return false;
-    if (chatFilter === 'unread' && !th.unread) return false;
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      return (th.name || '').toLowerCase().includes(q) || (th.email || '').toLowerCase().includes(q);
-    }
-    return true;
-  }).sort((a, b) => {
-    const ap = pinnedChats?.has?.(a.id) ? 1 : 0;
-    const bp = pinnedChats?.has?.(b.id) ? 1 : 0;
-    if (ap !== bp) return bp - ap;
-    return 0;
-  });
+  // Apply filter + search + pin sort + archive hide.
+  // Memoized so typing-indicator and other unrelated re-renders don't rebuild the whole row list.
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return threads.filter(th => {
+      if (archivedChats?.has?.(th.id)) return false;
+      if (chatFilter === 'groups' && th.type !== 'group') return false;
+      if (chatFilter === 'unread' && !th.unread) return false;
+      if (q) {
+        return (th.name || '').toLowerCase().includes(q) || (th.email || '').toLowerCase().includes(q);
+      }
+      return true;
+    }).sort((a, b) => {
+      const ap = pinnedChats?.has?.(a.id) ? 1 : 0;
+      const bp = pinnedChats?.has?.(b.id) ? 1 : 0;
+      return bp - ap;
+    });
+  }, [threads, search, chatFilter, archivedChats, pinnedChats]);
 
   // Load pinned/archived from storage
   useEffect(() => {
     (async () => {
       try {
 
-        const p = await AsyncStorage.getItem('pinned_chats');
-        const a = await AsyncStorage.getItem('archived_chats');
+        const p = await AsyncStorage.getItem(StorageKeys.pinnedChats);
+        const a = await AsyncStorage.getItem(StorageKeys.archivedChats);
         if (p) setPinnedChats(new Set(JSON.parse(p)));
         if (a) setArchivedChats(new Set(JSON.parse(a)));
       } catch {}
@@ -346,7 +350,7 @@ export default function ChatsScreen() {
       snapshot = next;
       return next;
     });
-    try { await AsyncStorage.setItem('pinned_chats', JSON.stringify([...snapshot])); } catch {}
+    try { await AsyncStorage.setItem(StorageKeys.pinnedChats, JSON.stringify([...snapshot])); } catch {}
   };
 
   const toggleArchive = async (id) => {
@@ -358,12 +362,23 @@ export default function ChatsScreen() {
       snapshot = next;
       return next;
     });
-    try { await AsyncStorage.setItem('archived_chats', JSON.stringify([...snapshot])); } catch {}
+    try { await AsyncStorage.setItem(StorageKeys.archivedChats, JSON.stringify([...snapshot])); } catch {}
   };
 
   const openChat = (thread) => {
     router.push(`/chat/${thread.id}?name=${encodeURIComponent(thread.name || '')}&avatar=${encodeURIComponent(thread.avatar || '')}`);
   };
+
+  // Hoist theme-dependent row style fragments — referenced by every row;
+  // memoizing them keeps row identity stable across unrelated re-renders.
+  const threadRowBase = useMemo(
+    () => ({ borderBottomColor: isDark ? '#1e293b' : (t.divider || '#f1f5f9') }),
+    [isDark, t.divider],
+  );
+  const threadRowUnread = useMemo(
+    () => ({ backgroundColor: isDark ? 'rgba(234,76,137,0.08)' : 'rgba(234,76,137,0.04)' }),
+    [isDark],
+  );
 
   const renderThread = useCallback(({ item }) => {
     const isGroup = item.type === 'group';
@@ -384,7 +399,7 @@ export default function ChatsScreen() {
 
     return (
       <TouchableOpacity
-        style={[s.thread, { borderBottomColor: isDark ? '#1e293b' : (t.divider || '#f1f5f9') }, item.unread > 0 && { backgroundColor: isDark ? 'rgba(234,76,137,0.08)' : 'rgba(234,76,137,0.04)' }]}
+        style={[s.thread, threadRowBase, item.unread > 0 && threadRowUnread]}
         onPress={() => openChat(item)}
         onLongPress={() => { Vibration.vibrate(30); setLongPressItem(item); }}
         delayLongPress={400}
@@ -436,7 +451,7 @@ export default function ChatsScreen() {
         </View>
       </TouchableOpacity>
     );
-  }, [t, user?.id, pinnedChats, userStatuses, isDark]);
+  }, [t, user?.id, pinnedChats, userStatuses, isDark, threadRowBase, threadRowUnread]);
 
   return (
     <SafeAreaView style={[s.root, { backgroundColor: t.bg }]} edges={['top', 'bottom']}>
@@ -455,10 +470,14 @@ export default function ChatsScreen() {
             </View>
           </View>
           <View style={s.headerRight}>
-            <TouchableOpacity style={[s.headerBtn, { backgroundColor: t.surface }]} onPress={() => { setShowGlobalSearch(true); setTimeout(() => searchInputRef.current?.focus(), 200); }}>
+            <TouchableOpacity style={[s.headerBtn, { backgroundColor: t.surface }]}
+              onPress={() => { setShowGlobalSearch(true); setTimeout(() => searchInputRef.current?.focus(), 200); }}
+              accessibilityLabel="Search all messages" accessibilityRole="button" hitSlop={8}>
               <Ionicons name="search" size={18} color={t.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={[s.headerBtn, { backgroundColor: t.surface }]} onPress={() => setShowHeaderMenu(true)}>
+            <TouchableOpacity style={[s.headerBtn, { backgroundColor: t.surface }]}
+              onPress={() => setShowHeaderMenu(true)}
+              accessibilityLabel="More options" accessibilityRole="button" hitSlop={8}>
               <Ionicons name="ellipsis-horizontal" size={18} color={t.text} />
             </TouchableOpacity>
           </View>
@@ -711,7 +730,8 @@ export default function ChatsScreen() {
 
       {/* AI Assistant FAB */}
       <TouchableOpacity style={[s.fab, { bottom: fabBottom, backgroundColor: t.accent, shadowColor: t.accent }]} activeOpacity={0.85}
-        onPress={() => router.push('/chat/assistant')}>
+        onPress={() => router.push('/chat/assistant')}
+        accessibilityLabel="Open AI assistant" accessibilityRole="button" hitSlop={6}>
         <Ionicons name="sparkles" size={22} color="#6e4f10" />
       </TouchableOpacity>
     </SafeAreaView>

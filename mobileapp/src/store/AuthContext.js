@@ -3,6 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { getMe, logout as apiLogout } from '../api/auth';
 import { getOrganizations } from '../api/chat';
 import { clearAllCache } from '../services/cache';
+import { decodeJwtPayload } from '../utils/jwt';
 
 const ACTIVE_ORG_KEY = 'activeOrgId';
 
@@ -18,9 +19,8 @@ export function AuthProvider({ children }) {
     try {
       const token = await SecureStore.getItemAsync('accessToken');
       if (!token) { setLoading(false); return; }
-      // Decode JWT for role fallback (payload is base64 middle part)
-      let tokenPayload = {};
-      try { tokenPayload = JSON.parse(atob(token.split('.')[1])); } catch {}
+      // Decode JWT for role fallback (Hermes atob is unreliable — use safe helper)
+      const tokenPayload = decodeJwtPayload(token);
 
       // Try to get fresh user data from API
       try {

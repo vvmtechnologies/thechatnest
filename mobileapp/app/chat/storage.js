@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../src/store/ThemeContext';
 import { useToast } from '../../src/components/Toast';
 import { clearAllCache } from '../../src/services/cache';
+import { StorageKeys } from '../../src/constants/storageKeys';
 
 const formatSize = (bytes) => {
   if (!bytes || bytes <= 0) return '0 B';
@@ -66,7 +67,7 @@ export default function StorageScreen() {
         cachedThreads = keys.filter(k => k.startsWith('threads')).length;
         cachedMessages = keys.filter(k => k.startsWith('msgs-')).length;
         draftCount = keys.filter(k => k.startsWith('draft-')).length;
-        const starred = await AsyncStorage.getItem('starred_messages');
+        const starred = await AsyncStorage.getItem(StorageKeys.starredMessages);
         starredCount = starred ? JSON.parse(starred).length : 0;
       } catch {}
 

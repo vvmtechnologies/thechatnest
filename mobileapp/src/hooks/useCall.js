@@ -15,15 +15,28 @@ try {
   console.warn('[useCall] WebRTC not available (Expo Go?) — calling disabled');
 }
 
-const RTC_CONFIG = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'turn:a.relay.metered.ca:80', username: 'e8dd65b92a0abe29be4e6ed4', credential: '5sIJGwERkrG2tLLu' },
-    { urls: 'turn:a.relay.metered.ca:443', username: 'e8dd65b92a0abe29be4e6ed4', credential: '5sIJGwERkrG2tLLu' },
-    { urls: 'turns:a.relay.metered.ca:443?transport=tcp', username: 'e8dd65b92a0abe29be4e6ed4', credential: '5sIJGwERkrG2tLLu' },
-  ],
-};
+// TURN credentials come from .env (EXPO_PUBLIC_TURN_*). See .env.example.
+// If unset, calls fall back to STUN-only — works on most networks but symmetric NATs may fail.
+const TURN_HOST = process.env.EXPO_PUBLIC_TURN_HOST;
+const TURN_USERNAME = process.env.EXPO_PUBLIC_TURN_USERNAME;
+const TURN_CREDENTIAL = process.env.EXPO_PUBLIC_TURN_CREDENTIAL;
+
+const STUN_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+];
+
+const TURN_SERVERS = (TURN_HOST && TURN_USERNAME && TURN_CREDENTIAL) ? [
+  { urls: `turn:${TURN_HOST}:80`,                       username: TURN_USERNAME, credential: TURN_CREDENTIAL },
+  { urls: `turn:${TURN_HOST}:443`,                      username: TURN_USERNAME, credential: TURN_CREDENTIAL },
+  { urls: `turns:${TURN_HOST}:443?transport=tcp`,       username: TURN_USERNAME, credential: TURN_CREDENTIAL },
+] : [];
+
+if (!TURN_SERVERS.length) {
+  console.warn('[useCall] TURN servers not configured — STUN-only fallback. Set EXPO_PUBLIC_TURN_* in .env');
+}
+
+const RTC_CONFIG = { iceServers: [...STUN_SERVERS, ...TURN_SERVERS] };
 
 // Call states: idle | outgoing | incoming | active
 export default function useCall() {

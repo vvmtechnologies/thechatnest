@@ -11,7 +11,6 @@ import {
   PiHeadsetDuotone,
   PiArrowRightBold,
 } from "react-icons/pi";
-import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
 
 const navLinks = [
@@ -31,32 +30,12 @@ const Navbar = () => {
   const [showScrollDown, setShowScrollDown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [appsOpen, setAppsOpen] = useState(false);
-  const [appUrl, setAppUrl] = useState("/");
-
-  // Fetch desktop app URL once
-  useEffect(() => {
-    let cancelled = false;
-    const fetchUrl = async () => {
-      if (!API_BASE_URL) return;
-      try {
-        const url = `${API_BASE_URL.replace(/\/$/, "")}/api/desktop-apps/active`;
-        const res = await fetch(url, { headers: { Accept: "application/json" } });
-        if (!res.ok) return;
-        const ct = res.headers.get("content-type") || "";
-        if (!ct.includes("application/json")) return;
-        const data = await res.json();
-        if (!cancelled && data?.success && data.data?.length > 0) {
-          setAppUrl(data.data[0].app_url);
-        }
-      } catch {
-        /* keep default */
-      }
-    };
-    fetchUrl();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // "Get our app" CTA always points at the /downloads page — that's where
+  // platform-specific installers and links live. The earlier attempt to
+  // fetch a "currently active" desktop app URL from /api/desktop-apps/active
+  // has been removed because that endpoint was never implemented on the
+  // backend (the orphan request just produced a 404 in the console).
+  const appUrl = "/downloads";
 
   // Scroll-based UI state
   useEffect(() => {

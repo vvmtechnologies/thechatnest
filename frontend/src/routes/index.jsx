@@ -45,6 +45,7 @@ const About = lazy(() => import("../website/pages/About.jsx"));
 const SaasPrivacy = lazy(() => import("../website/pages/SaasPrivacy.jsx"));
 const Gdpr = lazy(() => import("../website/pages/Gdpr.jsx"));
 const RefundPolicy = lazy(() => import("../website/pages/RefundPolicy.jsx"));
+const Brochure = lazy(() => import("../website/pages/Brochure.jsx"));
 
 export default function Router() {
   const authenticated = authStore.useAuthStatus();
@@ -114,6 +115,7 @@ export default function Router() {
           { path: "contact", element: <Contact /> },
           { path: "compare", element: <Compare /> },
           { path: "downloads", element: <Downloads /> },
+          { path: "brochure", element: <Brochure /> },
           { path: "versions", element: <Versions /> },
           { path: "brand", element: <Brand /> },
           { path: "security", element: <Security /> },

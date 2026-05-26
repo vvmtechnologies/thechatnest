@@ -42,6 +42,7 @@ const translateRoutes = require('./routes/translateRoutes');
 const aiProviderRoutes = require('./routes/aiProviderRoutes');
 const gifRoutes = require('./routes/gifRoutes');
 const meetingRoutes = require('./routes/meetingRoutes');
+const brochureRoutes = require('./routes/brochureRoutes');
 
 const app = express();
 // Behind Render / Vercel / nginx the real client IP arrives in
@@ -220,6 +221,7 @@ app.use('/translate', translateRoutes);
 app.use('/ai-providers', aiProviderRoutes);
 app.use('/gifs', gifRoutes);
 app.use('/meetings', meetingRoutes);
+app.use('/brochure', brochureRoutes);
 
 
 app.use((req, res, next) => {

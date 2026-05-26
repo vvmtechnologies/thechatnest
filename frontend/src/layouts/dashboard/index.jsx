@@ -18,6 +18,7 @@ import { MeetingProvider } from "../../contexts/MeetingContext.jsx";
 import MeetingInviteDialog from "../../components/meeting/MeetingInviteDialog.jsx";
 import { appBrandingAssets } from "../../data/CommonData.js";
 import { ensurePushSubscription } from "../../utils/webPushClient.js";
+import useHideTawkWhileMounted from "../../utils/hideTawkWhileMounted.js";
 
 const OutletFallback = () => {
   const theme = useTheme();
@@ -119,6 +120,11 @@ const OutletFallback = () => {
 };
 
 const DashboardLayout = () => {
+  // Hide the Tawk.to marketing chat widget while the user is inside the app —
+  // they already have in-app messaging. Restored automatically when the user
+  // navigates back to the public website.
+  useHideTawkWhileMounted();
+
   // Register a web-push subscription so notifications arrive even when the tab
   // is closed or the app is backgrounded. Safe to retry — the helper diffs state.
   useEffect(() => {

@@ -35,6 +35,7 @@ import authStore from "../../../utils/auth";
 import { downloadInvoicePdf } from "../../../utils/invoicePdf";
 import SettingsDrawer from "../../../components/settings/drawer/index.jsx";
 import OwnerSidebar from "./OwnerSidebar";
+import useHideTawkWhileMounted from "../../../utils/hideTawkWhileMounted";
 
 const ORG_PAGE_SIZE = 20;
 const RESOURCE_PAGE_SIZE = 20;
@@ -3962,6 +3963,9 @@ const SmtpSettingsPanel = () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const OwnerDashboard = () => {
+  // Hide Tawk marketing chat widget while inside the owner dashboard.
+  useHideTawkWhileMounted();
+
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();

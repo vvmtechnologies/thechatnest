@@ -10,22 +10,21 @@
   "theme_color": "#0b0f1e",
   "icons": [
     {
-      "src": "/chat.png",
-      "sizes": "192x192",
+      "src": "/thechatnestElement.png",
+      "sizes": "any",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/chat.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/chat.png",
-      "sizes": "512x512",
+      "src": "/thechatnestElement.png",
+      "sizes": "any",
       "type": "image/png",
       "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
     }
   ]
 }

@@ -21,6 +21,7 @@ const linkGroups = [
       { label: "Pricing", to: "/pricing" },
       { label: "Compare", to: "/compare" },
       { label: "Downloads", to: "/downloads" },
+      { label: "Brochure", to: "/brochure" },
       { label: "What's new", to: "/versions" },
     ],
   },
@@ -171,7 +172,7 @@ const Footer = () => {
                 <h6>{group.title}</h6>
                 <ul>
                   {group.links.map((link) => (
-                    <li key={link.to}>
+                    <li key={`${link.to}|${link.label}`}>
                       <Link to={link.to}>{link.label}</Link>
                     </li>
                   ))}

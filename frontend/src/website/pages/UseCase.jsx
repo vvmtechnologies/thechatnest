@@ -42,7 +42,7 @@ const USE_CASES = {
     workflow: [
       { time: "08:42", act: "Catch up on overnight PR threads with the AI summary instead of scrolling 142 messages." },
       { time: "10:00", act: "Drop a 2-minute voice note as your standup. It's transcribed, searchable, watchable at 2x." },
-      { time: "13:30", act: "Sprint planning in #eng-shipping. Auto-translate keeps the Bratislava + Bangalore halves in sync." },
+      { time: "13:30", act: "Sprint planning in #eng-shipping. Auto-translate keeps the Bratislava + Varanasi halves in sync." },
       { time: "17:45", act: "Mark unread on tomorrow's blockers, log off. The on-call rotation in #prod-alerts handles the night." },
     ],
     quote: "We replaced four subscriptions with TheChatNest and our team's deep-work time doubled in the first month.",
@@ -91,7 +91,7 @@ const USE_CASES = {
     lede: "Async-first by design. Voice notes, auto-translation, do-not-disturb that respects everyone's working hours.",
     pains: [
       "5-hour meeting marathons because half the team can't read tone in text",
-      "Slack notifications pinging at 2 AM in Berlin from Bangalore",
+      "Slack notifications pinging at 2 AM in Berlin from Varanasi",
       "Language barriers in international teams",
       "New hires struggle to catch up on context",
     ],

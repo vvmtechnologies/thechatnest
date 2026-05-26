@@ -64,7 +64,7 @@ const baseMockThreadsByOrg = {
       designation_id: 1,
       department: "Product",
       department_id: 1,
-      location: "Bengaluru",
+      location: "Varanasi",
       location_id: 1,
       mobile: "+91 90000 00001",
       password_hash: "$2a$10$emilyCarterPwd",
@@ -750,10 +750,10 @@ const DEFAULT_OPERATING_SYSTEM = "Windows";
 const DEFAULT_BROWSER = "Chrome";
 
 const LOCATION_INFO_BY_LABEL = {
-  bengaluru: {
-    label: "Bengaluru Campus",
-    city: "Bengaluru",
-    state: "Karnataka",
+  varanasi: {
+    label: "Varanasi Campus",
+    city: "Varanasi",
+    state: "Uttar Pradesh",
     country: "India",
     timezone: "Asia/Kolkata",
   },
@@ -1412,8 +1412,8 @@ export const mockLocationDirectory = [
     id: 1,
     label: "Thechatnest HQ",
     address: "91 Springboard, MG Road",
-    city: "Bengaluru",
-    state: "Karnataka",
+    city: "Varanasi",
+    state: "Uttar Pradesh",
     country: "India",
   },
   {

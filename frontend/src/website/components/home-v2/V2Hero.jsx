@@ -50,7 +50,7 @@ const V2Hero = () => {
             <span>VOL. 01&nbsp;/&nbsp;ISS. 06</span>
           </span>
           <span className="v2-mono">
-            EST. 2026&nbsp;·&nbsp;BUILT IN BENGALURU
+            EST. 2026&nbsp;·&nbsp;BUILT IN VARANASI
           </span>
         </div>
 

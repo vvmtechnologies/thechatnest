@@ -32,9 +32,9 @@ const COMPANY = {
     line1: "VVM Technologies Pvt Ltd",
     line2: "[Floor / Building Name]",
     line3: "[Street Address]",
-    city: "Bengaluru",
-    state: "Karnataka",
-    pincode: "560001",
+    city: "Varanasi",
+    state: "Uttar Pradesh",
+    pincode: "221001",
     country: "India",
   },
   contact: {
@@ -45,13 +45,13 @@ const COMPANY = {
   },
   team: {
     size: "Small team",
-    location: "Bengaluru, India",
+    location: "Varanasi, India",
   },
 };
 
 const FACTS = [
   { Icon: PiCalendarDuotone, label: "Founded",        value: COMPANY.founded,           tint: "#2065D1" },
-  { Icon: PiMapPinDuotone,   label: "Headquartered",  value: "Bengaluru, India",        tint: "#16a34a" },
+  { Icon: PiMapPinDuotone,   label: "Headquartered",  value: "Varanasi, India",        tint: "#16a34a" },
   { Icon: PiUsersThreeDuotone,label: "Team",           value: COMPANY.team.size,         tint: "#a855f7" },
   { Icon: PiSparkleDuotone,  label: "Mission",        value: "Affordable, honest team chat", tint: "#f59e0b" },
 ];
@@ -96,8 +96,8 @@ const About = () => {
     <div className="tcn-about">
       <Seo
         title="About"
-        description={`${COMPANY.brandName} is built by ${COMPANY.legalName}, a Bengaluru-based MSME-registered company. Full company details, registered office, CIN, GSTIN, and contact information.`}
-        keywords="thechatnest company, about us, vvm technologies, CIN, GSTIN, MSME, registered office, Bengaluru"
+        description={`${COMPANY.brandName} is built by ${COMPANY.legalName}, a Varanasi-based MSME-registered company. Full company details, registered office, CIN, GSTIN, and contact information.`}
+        keywords="thechatnest company, about us, vvm technologies, CIN, GSTIN, MSME, registered office, Varanasi"
         breadcrumbs={[
           { label: "Home", to: "/" },
           { label: "About", to: "/about" },
@@ -496,7 +496,7 @@ const About = () => {
           </h1>
           <p className="lede">
             TheChatNest is a product of <strong style={{ color: "#fff" }}>{COMPANY.legalName}</strong> —
-            a Bengaluru-based, MSME-registered private limited company. Full details below for
+            a Varanasi-based, MSME-registered private limited company. Full details below for
             your procurement team's records.
           </p>
 

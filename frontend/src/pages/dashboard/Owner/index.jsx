@@ -128,8 +128,14 @@ const parseGatewayConfig = (raw) => {
 
 const serializeGatewayConfig = (state) => ({
   active_mode: state.active_mode || "sandbox",
-  accounts: (state.accounts || []).map(({ _id, sandbox, live, ...rest }) => ({
+  // Every account must carry a stable account_id so the backend can match
+  // it against the existing DB row during the merge / preserve-masked pass.
+  // Without one, the masked credentials we re-send unchanged get treated as
+  // fresh values and overwrite the real secret stored in the DB. Fall back
+  // to a positional id (`acc_1`, `acc_2`, …) if the user left it blank.
+  accounts: (state.accounts || []).map(({ _id, sandbox, live, account_id, ...rest }, idx) => ({
     ...rest,
+    account_id: String(account_id || "").trim() || `acc_${idx + 1}`,
     sandbox: kvToObj(sandbox),
     live: kvToObj(live),
   })),
@@ -3595,6 +3601,13 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
   const [form, setForm] = useState(SMTP_EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // ── Test email state ──────────────────────────────────────────────────
+  // The owner can fire a one-off SMTP probe (verify + sendMail) without
+  // committing the form. Useful for confirming Gmail App Passwords /
+  // sendgrid keys / etc. before flipping a config to Active.
+  const [testTo, setTestTo] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testStatus, setTestStatus] = useState(null); // { severity, message }
 
   useEffect(() => {
     if (!open) return;
@@ -3610,10 +3623,19 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
         contact_notify_to: editRow.contact_notify_to || "",
         status: String(editRow.status || "inactive"),
       });
+      // Default the test recipient to the first contact_notify_to address
+      // or the SMTP username so a single click can fire the probe.
+      const firstNotify = String(editRow.contact_notify_to || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)[0];
+      setTestTo(firstNotify || editRow.smtp_user || "");
     } else {
       setForm(SMTP_EMPTY_FORM);
+      setTestTo("");
     }
     setError("");
+    setTestStatus(null);
   }, [open, editRow]);
 
   const handleChange = (name, value) => {
@@ -3663,6 +3685,62 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
       setError(err.message || "Failed to save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Fire a real SMTP verify + send against the stored row. The current
+  // (possibly unsaved) form values are sent as `override` so the owner
+  // can probe changes without committing them. The button is only useful
+  // after a row exists in the DB (i.e. editing, not creating from scratch).
+  const handleTest = async () => {
+    if (!editRow?.smtp_settings_id) {
+      setTestStatus({ severity: "error", message: "Save the config once before testing." });
+      return;
+    }
+    const to = String(testTo || "").trim();
+    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      setTestStatus({ severity: "error", message: "Enter a valid recipient email to test." });
+      return;
+    }
+    setTesting(true);
+    setTestStatus(null);
+    try {
+      const override = {
+        host: form.host,
+        port: Number(form.port) || 587,
+        secure: form.secure === "true",
+        smtp_user: form.smtp_user,
+        from_address: form.from_address,
+      };
+      // Only send password override when the user actually typed something
+      // (avoids overwriting the stored secret with the masked placeholder).
+      if (form.smtp_pass && form.smtp_pass !== "********") {
+        override.smtp_pass = form.smtp_pass;
+      }
+      const { response, payload } = await fetchWithAuth(
+        `${API_BASE_URL}/smtp-settings/${editRow.smtp_settings_id}/test`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to, override }),
+        }
+      );
+      if (!response.ok) {
+        setTestStatus({
+          severity: "error",
+          message: payload?.message || `Test failed (HTTP ${response.status})`,
+        });
+        return;
+      }
+      const recipient = payload?.data?.recipient || to;
+      setTestStatus({
+        severity: "success",
+        message: `Test email sent to ${recipient}. Check the inbox (and spam folder).`,
+      });
+    } catch (err) {
+      setTestStatus({ severity: "error", message: err.message || "Failed to send test email" });
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -3729,6 +3807,64 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
             );
           })}
         </Box>
+
+        {/* ── Send test email ────────────────────────────────────────────
+            Probe the real SMTP server with a throwaway message so the
+            owner can confirm "this config actually works" before flipping
+            it Active. Only available after the row exists — for a fresh
+            config the owner saves first, then comes back to test.        */}
+        {editRow ? (
+          <Box
+            sx={{
+              mt: 2,
+              p: 1.75,
+              borderRadius: 2,
+              border: "1px dashed",
+              borderColor: cardBorder || "rgba(148,163,184,0.4)",
+              background: isDark ? "rgba(15,23,42,0.45)" : "#fafbff",
+            }}
+          >
+            <Stack spacing={1}>
+              <Box>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? "#e2e8f0" : "#1e293b" }}>
+                  Send a test email
+                </Typography>
+                <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  Verifies the live SMTP connection using the values above (or stored value if a field is blank). The mail is sent immediately — no need to Save first.
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "stretch", flexWrap: "wrap" }}>
+                <TextField
+                  size="small"
+                  type="email"
+                  label="Recipient"
+                  placeholder="you@example.com"
+                  value={testTo}
+                  onChange={(e) => { setTestTo(e.target.value); setTestStatus(null); }}
+                  sx={{ flex: 1, minWidth: 220 }}
+                />
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={handleTest}
+                  disabled={testing || saving}
+                  sx={{ fontWeight: 700, textTransform: "none", minWidth: 160 }}
+                >
+                  {testing ? "Sending..." : "Send Test Email"}
+                </Button>
+              </Box>
+              {testStatus ? (
+                <Alert severity={testStatus.severity} sx={{ mt: 0.5 }}>
+                  {testStatus.message}
+                </Alert>
+              ) : null}
+            </Stack>
+          </Box>
+        ) : (
+          <Typography variant="caption" sx={{ display: "block", mt: 1.5, color: "text.secondary" }}>
+            Save the config once to enable the &quot;Send Test Email&quot; probe.
+          </Typography>
+        )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={saving}>Cancel</Button>

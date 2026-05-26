@@ -1,3 +1,4 @@
+const nodemailer = require('nodemailer');
 const smtpSettingsModel = require('../models/smtpSettingsModel');
 const { invalidateTransporterCache } = require('../utils/mail');
 const { success } = require('../utils/response');
@@ -147,10 +148,117 @@ const deleteSmtpSettings = async (req, res, next) => {
   }
 };
 
+// Verify a saved SMTP config by opening a real connection and sending a
+// throwaway test message. The owner can hit this from the Owner Dashboard
+// to confirm a host / port / credentials combination works BEFORE the
+// app starts using it for real auth / contact / notification mail.
+// Body: { to?: string, override?: { host, port, secure, smtp_user, smtp_pass, from_address } }
+// `override` lets the UI test unsaved form values; if omitted, we use the
+// stored row (with the real password from the DB).
+const TEST_TIMEOUT_MS = 15000;
+
+const testSmtpSettings = async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    const stored = await smtpSettingsModel.findById(id);
+    if (!stored) {
+      const err = new Error('SMTP config not found');
+      err.status = 404;
+      throw err;
+    }
+
+    const override = req.body?.override && typeof req.body.override === 'object' ? req.body.override : null;
+    const config = {
+      host: String((override?.host ?? stored.host) || '').trim(),
+      port: Number(override?.port ?? stored.port) || 587,
+      secure: override
+        ? override.secure === true || String(override.secure) === 'true'
+        : Boolean(stored.secure),
+      smtp_user: String((override?.smtp_user ?? stored.smtp_user) || '').trim(),
+      // If override password is empty or the masked placeholder, fall back
+      // to the stored real password so "Send test" works straight after a
+      // round-trip without forcing the user to retype.
+      smtp_pass: (() => {
+        if (!override) return stored.smtp_pass || '';
+        const v = override.smtp_pass;
+        if (v === undefined || v === null || v === '' || v === '********') return stored.smtp_pass || '';
+        return String(v);
+      })(),
+      from_address: String((override?.from_address ?? stored.from_address) || stored.smtp_user || '').trim(),
+    };
+
+    if (!config.host) {
+      const err = new Error('SMTP host is required to send a test'); err.status = 400; throw err;
+    }
+    if (!config.smtp_user) {
+      const err = new Error('SMTP username is required to send a test'); err.status = 400; throw err;
+    }
+
+    const requestedTo = String(req.body?.to || '').trim();
+    const recipient =
+      requestedTo ||
+      String(stored.contact_notify_to || '').split(',').map((s) => s.trim()).filter(Boolean)[0] ||
+      String(req.user?.email || '').trim() ||
+      config.smtp_user;
+
+    if (!recipient) {
+      const err = new Error('No recipient available for the test email'); err.status = 400; throw err;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: config.host,
+      port: config.port,
+      secure: config.secure,
+      connectionTimeout: TEST_TIMEOUT_MS,
+      greetingTimeout: TEST_TIMEOUT_MS,
+      socketTimeout: TEST_TIMEOUT_MS,
+      auth: { user: config.smtp_user, pass: config.smtp_pass },
+    });
+
+    // verify() catches "bad credentials" / "connection refused" before
+    // we attempt sendMail — gives a cleaner error message back to the UI.
+    await transporter.verify();
+
+    const info = await transporter.sendMail({
+      from: config.from_address || config.smtp_user,
+      to: recipient,
+      subject: 'TheChatNest — SMTP test',
+      text:
+        `This is a test email from TheChatNest.\n\n` +
+        `Config: ${stored.label || 'SMTP config #' + id}\n` +
+        `Host: ${config.host}:${config.port} (secure=${config.secure})\n` +
+        `From: ${config.from_address || config.smtp_user}\n` +
+        `Sent at: ${new Date().toISOString()}\n\n` +
+        `If you received this, the SMTP settings are working.`,
+    });
+
+    return success(res, {
+      ok: true,
+      recipient,
+      message_id: info?.messageId || null,
+      accepted: info?.accepted || [],
+      rejected: info?.rejected || [],
+      response: info?.response || null,
+    }, 'Test email sent');
+  } catch (error) {
+    // Bubble up SMTP error message so the owner sees the real reason
+    // (e.g. "Invalid login", "Connection timeout").
+    const wrapped = new Error(error?.message || 'Failed to send test email');
+    wrapped.status = error?.status || 502;
+    wrapped.details = {
+      smtp_code: error?.code || null,
+      smtp_response: error?.response || null,
+      smtp_responseCode: error?.responseCode || null,
+    };
+    return next(wrapped);
+  }
+};
+
 module.exports = {
   getAllSmtpSettings,
   createSmtpSettings,
   updateSmtpSettings,
   activateSmtpSettings,
   deleteSmtpSettings,
+  testSmtpSettings,
 };

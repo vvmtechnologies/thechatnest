@@ -109,12 +109,25 @@ const isSensitiveKeyPath = (keyPath = []) => {
   return SENSITIVE_KEY_REGEX.test(leaf) || leaf.endsWith('_enc');
 };
 
+// Pattern produced by sanitizeSensitiveConfig — keep in sync with that
+// function. Used here as a safety net: the merge step in the controller
+// already tries to substitute the real DB value for any masked one the
+// UI sends back unchanged, but if the merge can't match the field (e.g.
+// an account row arrived without an account_id) the masked string would
+// otherwise reach the encryptor and overwrite the real secret with the
+// encryption of '********(encrypted)'. Treat any masked input as "no
+// change" by storing an empty string — the read path masks empty as
+// empty, so this is safe and obvious to the user that something didn't
+// land.
+const MASKED_PLACEHOLDER_REGEX = /^\*{4,}/;
+
 const encryptSensitiveConfig = (configJson = {}) =>
   mapDeep(toPlainObject(configJson), (val, keyPath) => {
     if (!isSensitiveKeyPath(keyPath)) return val;
     if (val === null || val === undefined) return val;
     const text = String(val).trim();
     if (!text) return text;
+    if (MASKED_PLACEHOLDER_REGEX.test(text)) return '';
     return encryptSecretValue(text);
   });
 

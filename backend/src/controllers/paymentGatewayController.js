@@ -43,9 +43,21 @@ const MASKED_REGEX = /^\*{4,}/;
 const deepMergePreserveMasked = (existing, incoming) => {
   if (Array.isArray(incoming)) {
     if (Array.isArray(existing)) {
-      return incoming.map((newItem) => {
-        if (newItem && typeof newItem === 'object' && newItem.account_id) {
-          const oldItem = existing.find((o) => o?.account_id === newItem.account_id);
+      return incoming.map((newItem, idx) => {
+        if (newItem && typeof newItem === 'object') {
+          // Match the old record by account_id when present so reordering /
+          // adding accounts doesn't mis-pair them. Fall back to index when
+          // the incoming account_id is missing (older UI states left this
+          // blank) — without a fallback, masked credential strings
+          // ('********(encrypted)') flow through as fresh values and end
+          // up overwriting the real secret on the next encrypt pass.
+          let oldItem = null;
+          if (newItem.account_id) {
+            oldItem = existing.find((o) => o?.account_id === newItem.account_id) || null;
+          }
+          if (!oldItem) {
+            oldItem = existing[idx] || null;
+          }
           return deepMergePreserveMasked(oldItem || {}, newItem);
         }
         return newItem;

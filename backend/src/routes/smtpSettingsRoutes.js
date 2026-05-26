@@ -9,6 +9,7 @@ router.get('/',          auth, requireOwner, smtpSettingsController.getAllSmtpSe
 router.post('/',         auth, requireOwner, smtpSettingsController.createSmtpSettings);
 router.patch('/:id',     auth, requireOwner, smtpSettingsController.updateSmtpSettings);
 router.post('/:id/activate', auth, requireOwner, smtpSettingsController.activateSmtpSettings);
+router.post('/:id/test',     auth, requireOwner, smtpSettingsController.testSmtpSettings);
 router.delete('/:id',    auth, requireOwner, smtpSettingsController.deleteSmtpSettings);
 
 module.exports = router;

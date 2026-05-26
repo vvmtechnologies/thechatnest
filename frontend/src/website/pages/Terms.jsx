@@ -233,7 +233,7 @@ export default function Terms() {
         <p>
           These Terms are governed by the laws of India. Any dispute arising from these Terms
           or your use of the Service shall be subject to the exclusive jurisdiction of the
-          courts in Bengaluru, Karnataka. Both parties agree to attempt good-faith mediation
+          courts in Varanasi, Uttar Pradesh. Both parties agree to attempt good-faith mediation
           before initiating litigation.
         </p>
       ),
@@ -259,7 +259,7 @@ export default function Terms() {
             <li><strong>Email:</strong> <a href="mailto:legal@thechatnest.com">legal@thechatnest.com</a></li>
             <li><strong>Support:</strong> <a href="mailto:support@thechatnest.com">support@thechatnest.com</a></li>
             <li><strong>Security:</strong> <a href="mailto:security@thechatnest.com">security@thechatnest.com</a></li>
-            <li><strong>Registered office:</strong> VVM Technologies Private Limited, Bengaluru, Karnataka, India</li>
+            <li><strong>Registered office:</strong> VVM Technologies Private Limited, Varanasi, Uttar Pradesh, India</li>
           </ul>
           <p>
             For our full company details (CIN, GSTIN, registered address, MSME registration),

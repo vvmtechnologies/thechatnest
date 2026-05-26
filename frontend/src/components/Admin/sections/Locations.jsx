@@ -2,7 +2,7 @@ import { Stack, Typography } from "@mui/material";
 import FormCard from "../forms/FormCard";
 
 const defaultLocations = [
-  { id: 1, city: "Bengaluru", country: "India", floor: "10F" },
+  { id: 1, city: "Varanasi", country: "India", floor: "10F" },
   { id: 2, city: "Pune", country: "India", floor: "5F" },
   { id: 3, city: "Austin", country: "USA", floor: "HQ" },
 ];

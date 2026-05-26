@@ -31,11 +31,6 @@ import {
   PiCaretDownBold,
   PiCalendarDotsDuotone,
   PiWhatsappLogoDuotone,
-  PiFacebookLogoDuotone,
-  PiTwitterLogoDuotone,
-  PiLinkedinLogoDuotone,
-  PiYoutubeLogoDuotone,
-  PiHeartDuotone,
 } from "react-icons/pi";
 import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { useSiteBranding } from "../../contexts/SiteBrandingContext.jsx";
@@ -104,6 +99,23 @@ const VALUE_PILLARS = [
     title: "Ships in minutes",
     desc: "Sign up, invite by email or link, and you're chatting in under 10 minutes — no IT ticket.",
   },
+];
+
+// "At a glance" — the 10-second pitch. What the product is, what it does,
+// and the three strongest reasons to choose it, in one scrollable view so
+// the prospect doesn't have to read the whole brochure to "get it".
+const AT_A_GLANCE_WHAT = [
+  "1:1, group and channel messaging — threads, mentions, reactions",
+  "HD audio + video calls with screen share, recordings & meetings",
+  "AI assistant: summaries, smart replies, translate (14 languages)",
+  "Encrypted file sharing with previews and global search",
+  "Broadcast channels, approvals and audit logs for ops teams",
+  "Admin console, SSO/SAML, custom roles & retention policies",
+];
+const AT_A_GLANCE_WHY = [
+  "All-in-one — replaces chat + calls + file sharing + AI in one app",
+  "Secure by default — AES-256-GCM, audit logs, self-hosted option",
+  "Honest pricing — per seat in INR or USD, GST invoices included",
 ];
 
 // Pain points — keeps the tone factual ("Slack starts at $X", "Teams ties you
@@ -335,6 +347,48 @@ const Brochure = () => {
         });
       };
 
+      // Set explicit fills on SVGs whose icons rely on `currentColor` —
+      // html2canvas doesn't reliably resolve currentColor through CSS
+      // inheritance, so the icons render invisible (looks like a black
+      // square because only the colored container shows).
+      const setSvgFill = (root, selector, color) => {
+        root.querySelectorAll(selector).forEach((container) => {
+          container.style.color = color;
+          container.querySelectorAll("svg").forEach((svg) => {
+            svg.setAttribute("fill", color);
+            svg.style.color = color;
+            svg.querySelectorAll("path, circle, rect, polygon, line").forEach((p) => {
+              const f = p.getAttribute("fill");
+              if (!f || f === "currentColor") p.setAttribute("fill", color);
+              const s = p.getAttribute("stroke");
+              if (s === "currentColor") p.setAttribute("stroke", color);
+            });
+          });
+        });
+      };
+
+      // Replace gradient-clipped text (which html2canvas renders as a yellow
+      // rectangle over invisible text) with a flat colour.
+      const flattenGradientText = (root) => {
+        root.querySelectorAll(".tcn-broch-headline .grad").forEach((el) => {
+          el.style.background = "none";
+          el.style.backgroundClip = "border-box";
+          el.style.webkitBackgroundClip = "border-box";
+          el.style.color = "#ffd54a";
+          el.style.webkitTextFillColor = "#ffd54a";
+        });
+      };
+
+      // Force every FAQ open so the PDF includes all answers.
+      const expandAllFaqs = (root) => {
+        root.querySelectorAll(".tcn-broch-faq-item").forEach((item) => {
+          item.classList.add("open");
+        });
+        root.querySelectorAll(".tcn-broch-faq-a").forEach((p) => {
+          p.style.display = "block";
+        });
+      };
+
       const canvas = await html2canvas(brochureRef.current, {
         scale: 2,
         useCORS: true,
@@ -343,7 +397,27 @@ const Brochure = () => {
         logging: false,
         imageTimeout: 12000,
         windowWidth: brochureRef.current.scrollWidth,
-        onclone: (clonedDoc, clonedEl) => swapCrossOriginImages(clonedEl),
+        onclone: (clonedDoc, clonedEl) => {
+          swapCrossOriginImages(clonedEl);
+          flattenGradientText(clonedEl);
+          expandAllFaqs(clonedEl);
+
+          // Fix SVG icons across every icon-bearing container.
+          setSvgFill(clonedEl, ".tcn-broch-pillar .ic", "#6d5dfc");
+          setSvgFill(clonedEl, ".tcn-broch-use .ic", "#ffd54a");
+          setSvgFill(clonedEl, ".tcn-broch-step .ic", "#ffffff");
+          setSvgFill(clonedEl, ".tcn-broch-badge .ic", "#16a34a");
+          setSvgFill(clonedEl, ".tcn-broch-feature .icon", "#6d5dfc");
+          setSvgFill(clonedEl, ".tcn-broch-contact-card .ic", "#6d5dfc");
+          setSvgFill(clonedEl, ".tcn-broch-eyebrow", "#ffd54a");
+          setSvgFill(clonedEl, ".tcn-broch-trust-pill", "#ffd54a");
+          setSvgFill(clonedEl, ".tcn-broch-cta-actions a", "#11162a");
+          setSvgFill(clonedEl, ".tcn-broch-hero-cta .primary", "#11162a");
+          setSvgFill(clonedEl, ".tcn-broch-hero-cta .ghost", "#ffffff");
+          setSvgFill(clonedEl, ".tcn-broch-compare .yes", "#16a34a");
+          setSvgFill(clonedEl, ".tcn-broch-compare .no", "#dc2626");
+          setSvgFill(clonedEl, ".tcn-broch-faq-q .chev", "#6d5dfc");
+        },
       });
 
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
@@ -367,7 +441,31 @@ const Brochure = () => {
       }
 
       const safeName = String(displayBrand).replace(/[^a-z0-9]+/gi, "-");
-      pdf.save(`${safeName}-Brochure.pdf`);
+
+      // Download + preview via a single blob URL.
+      // Why not just pdf.save()? Chrome's download bar tries to *open* the
+      // downloaded file from a file:// URL, which many Chrome installs
+      // block (ERR_FAILED). Blob URLs aren't restricted the same way, so
+      // we (a) trigger the download via an anchor click and (b) immediately
+      // open the same blob in a new tab so the user can read the PDF right
+      // away without hunting through their Downloads folder.
+      const blob = pdf.output("blob");
+      const blobUrl = URL.createObjectURL(blob);
+
+      const dl = document.createElement("a");
+      dl.href = blobUrl;
+      dl.download = `${safeName}-Brochure.pdf`;
+      document.body.appendChild(dl);
+      dl.click();
+      document.body.removeChild(dl);
+
+      // Open inline preview in a new tab. If the popup blocker bites, the
+      // download still succeeded — no fallback action needed.
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+      // Revoke the blob URL after a minute so the new tab has time to load
+      // and we don't leak memory.
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
     } catch (err) {
       console.error("Brochure PDF generation failed:", err);
       const msg = err && err.message ? err.message : String(err);
@@ -421,6 +519,11 @@ const Brochure = () => {
 
       <style>{`
         /* ============ Frame ============ */
+        /* Rendered inside WebsiteLayout — Navbar sits above us. Top padding
+           clears that navbar; the sticky toolbar parks just below it. The
+           website Footer is intentionally hidden on /brochure (see
+           website/index.jsx) so we don't get a duplicate footer underneath
+           the brochure's own rich brand footer. */
         .tcn-brochure {
           background:
             radial-gradient(1100px 600px at 8% -10%, rgba(109,93,252,0.10), transparent 60%),
@@ -707,6 +810,116 @@ const Brochure = () => {
           line-height: 1.55;
           margin: 0;
         }
+
+        /* ============ At a glance ============ */
+        .tcn-broch-glance {
+          background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+        }
+        .tcn-broch-glance-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.25rem;
+          margin-top: 0.4rem;
+        }
+        @media (max-width: 720px) {
+          .tcn-broch-glance-grid { grid-template-columns: 1fr; }
+        }
+        .tcn-broch-glance-col {
+          background: #ffffff;
+          border: 1px solid rgba(17, 22, 42, 0.08);
+          border-radius: 16px;
+          padding: 1.5rem 1.35rem;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+        .tcn-broch-glance-col.why {
+          background: linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
+          border-color: transparent;
+          color: #fff;
+        }
+        .tcn-broch-glance-head .badge {
+          display: inline-block;
+          font-size: 0.7rem;
+          font-weight: 800;
+          letter-spacing: 0.10em;
+          text-transform: uppercase;
+          background: rgba(109,93,252,0.10);
+          color: #6d5dfc;
+          padding: 5px 11px;
+          border-radius: 999px;
+          margin-bottom: 0.6rem;
+        }
+        .tcn-broch-glance-head .badge.why {
+          background: rgba(255,213,74,0.16);
+          color: #ffd54a;
+        }
+        .tcn-broch-glance-head h4 {
+          font-size: 1.05rem;
+          font-weight: 800;
+          color: #11162a;
+          margin: 0;
+          letter-spacing: -0.01em;
+        }
+        .tcn-broch-glance-col.why h4 { color: #ffffff; }
+        .tcn-broch-glance-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+        }
+        .tcn-broch-glance-list li {
+          position: relative;
+          padding-left: 28px;
+          font-size: 0.92rem;
+          line-height: 1.5;
+          color: #11162a;
+        }
+        .tcn-broch-glance-col.why .tcn-broch-glance-list li { color: rgba(255,255,255,0.92); }
+        .tcn-broch-glance-list.features li::before {
+          content: "";
+          position: absolute;
+          left: 0; top: 0.42em;
+          width: 14px; height: 14px;
+          border-radius: 4px;
+          background: linear-gradient(135deg, #6d5dfc, #4d3df0);
+          box-shadow: 0 4px 10px -4px rgba(109,93,252,0.55);
+        }
+        .tcn-broch-glance-list.features li::after {
+          content: "✓";
+          position: absolute;
+          left: 2px; top: -1px;
+          font-size: 0.78rem;
+          color: #ffffff;
+          font-weight: 800;
+          line-height: 1.7;
+        }
+        .tcn-broch-glance-list.reasons li::before {
+          content: "★";
+          position: absolute;
+          left: 0; top: 0;
+          color: #ffd54a;
+          font-size: 1rem;
+          line-height: 1.4;
+        }
+        .tcn-broch-glance-cta { margin-top: auto; padding-top: 0.5rem; }
+        .tcn-broch-glance-cta .primary {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 0.7rem 1.25rem;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #ffd54a, #ff9a4a);
+          color: #11162a;
+          font-weight: 800;
+          text-decoration: none;
+          font-size: 0.88rem;
+          box-shadow: 0 12px 28px -12px rgba(255, 154, 74, 0.55);
+          transition: transform 0.18s ease;
+        }
+        .tcn-broch-glance-cta .primary:hover { transform: translateY(-2px); }
 
         /* ============ Pain points ============ */
         .tcn-broch-pain {
@@ -1063,6 +1276,10 @@ const Brochure = () => {
           font-size: 0.92rem;
           line-height: 1.6;
           margin: 0;
+          display: none;
+        }
+        .tcn-broch-section .tcn-broch-faq-item.open .tcn-broch-faq-a {
+          display: block;
         }
 
         /* ============ CTA + contact ============ */
@@ -1182,112 +1399,28 @@ const Brochure = () => {
           word-break: break-word;
         }
 
-        /* ============ Footer (rich brand footer) ============ */
+        /* ============ Footer (minimal — brochure-appropriate) ============ */
+        /* Keep this lightweight: compliance pills + copyright + meta. The
+           heavy nav-link / social footer is the website's job (Footer.jsx);
+           a downloaded PDF / printed brochure doesn't need nav links. */
         .tcn-broch-foot {
           background:
             radial-gradient(700px 320px at 0% 100%, rgba(109,93,252,0.18), transparent 60%),
             radial-gradient(600px 280px at 100% 0%, rgba(255,213,74,0.10), transparent 60%),
             linear-gradient(180deg, #0b0f1e 0%, #11162a 100%);
           color: rgba(255,255,255,0.72);
-          padding: 2.5rem 3rem 1.5rem;
+          padding: 1.5rem 3rem;
           position: relative;
         }
-        @media (max-width: 720px) { .tcn-broch-foot { padding: 2rem 1.25rem 1.25rem; } }
-
-        .tcn-broch-foot-grid {
-          display: grid;
-          grid-template-columns: 1.6fr 1fr 1fr 1fr;
-          gap: 2rem;
-          margin-bottom: 1.75rem;
-        }
-        @media (max-width: 860px) { .tcn-broch-foot-grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; } }
-        @media (max-width: 540px) { .tcn-broch-foot-grid { grid-template-columns: 1fr; gap: 1.25rem; } }
-
-        .tcn-broch-foot-brand { max-width: 320px; }
-        .tcn-broch-foot-brandline {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 0.85rem;
-        }
-        .tcn-broch-foot-logo {
-          height: 52px;
-          width: auto;
-          max-width: 220px;
-          object-fit: contain;
-          display: block;
-          filter: drop-shadow(0 4px 14px rgba(255, 213, 74, 0.15));
-        }
-        .tcn-broch-foot-brandline .nm {
-          font-size: 1.1rem;
-          font-weight: 800;
-          color: #ffffff;
-          letter-spacing: -0.01em;
-        }
-        .tcn-broch-foot-tag {
-          font-size: 0.85rem;
-          color: rgba(255,255,255,0.6);
-          line-height: 1.55;
-          margin: 0 0 1rem;
-        }
-        .tcn-broch-foot-social {
-          display: flex;
-          gap: 8px;
-          margin-top: 0.5rem;
-        }
-        .tcn-broch-foot-social a {
-          width: 34px;
-          height: 34px;
-          border-radius: 50%;
-          background: rgba(255,255,255,0.06);
-          border: 1px solid rgba(255,255,255,0.10);
-          color: rgba(255,255,255,0.78);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.18s ease;
-          text-decoration: none;
-        }
-        .tcn-broch-foot-social a:hover {
-          background: rgba(109,93,252,0.22);
-          border-color: rgba(109,93,252,0.4);
-          color: #ffd54a;
-          transform: translateY(-1px);
-        }
-
-        .tcn-broch-foot-col h5 {
-          font-size: 0.78rem;
-          font-weight: 700;
-          color: #ffd54a;
-          letter-spacing: 0.10em;
-          text-transform: uppercase;
-          margin: 0 0 0.9rem;
-        }
-        .tcn-broch-foot-col ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-        .tcn-broch-foot-col li a {
-          color: rgba(255,255,255,0.7);
-          text-decoration: none;
-          font-size: 0.86rem;
-          transition: color 0.15s ease;
-          display: inline-block;
-        }
-        .tcn-broch-foot-col li a:hover { color: #ffd54a; }
+        @media (max-width: 720px) { .tcn-broch-foot { padding: 1.25rem 1.25rem; } }
 
         .tcn-broch-foot-compliance {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
-          padding: 1rem 0;
-          border-top: 1px solid rgba(255,255,255,0.08);
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+          padding-bottom: 1rem;
           margin-bottom: 1rem;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         .tcn-broch-foot-compliance .cp {
           background: rgba(255,255,255,0.06);
@@ -1299,26 +1432,40 @@ const Brochure = () => {
           border-radius: 999px;
         }
 
+        /* Stacked layout: copyright on its own line, meta on the next.
+           Removes any risk of the bottom row overflowing the sheet edge —
+           the brochure is read in PDFs / prints where awkward wrapping
+           looks unprofessional. On wide viewports both lines are simply
+           left-aligned; on phones they remain stacked with tighter type. */
         .tcn-broch-foot-bottom {
           display: flex;
-          flex-wrap: wrap;
-          gap: 0.75rem 1rem;
-          justify-content: space-between;
-          align-items: center;
+          flex-direction: column;
+          gap: 0.35rem;
           font-size: 0.78rem;
-          color: rgba(255,255,255,0.5);
+          color: rgba(255,255,255,0.55);
         }
-        .tcn-broch-foot-bottom .copy { font-weight: 600; color: rgba(255,255,255,0.7); }
+        .tcn-broch-foot-bottom .copy {
+          font-weight: 600;
+          color: rgba(255,255,255,0.75);
+        }
         .tcn-broch-foot-bottom .meta {
-          display: inline-flex;
+          display: flex;
           flex-wrap: wrap;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.4rem 0.65rem;
+          color: rgba(255,255,255,0.55);
         }
+        .tcn-broch-foot-bottom .meta-item { white-space: nowrap; }
         .tcn-broch-foot-bottom .dot { opacity: 0.5; }
         .tcn-broch-foot-bottom .made-with {
-          color: rgba(255,255,255,0.8);
+          color: rgba(255,255,255,0.85);
           font-weight: 600;
+        }
+        .tcn-broch-foot-bottom .made-with .heart { color: #ff6b6b; }
+        @media (max-width: 560px) {
+          .tcn-broch-foot-bottom { font-size: 0.72rem; }
+          .tcn-broch-foot-bottom .dot { display: none; }
+          .tcn-broch-foot-bottom .meta { gap: 0.35rem 0.5rem; }
         }
 
         /* ============ Print ============ */
@@ -1425,6 +1572,51 @@ const Brochure = () => {
             </div>
           </div>
         </header>
+
+        {/* ─── At a glance (10-second pitch) ─── */}
+        <section className="tcn-broch-section tcn-broch-glance">
+          <p className="tcn-broch-kicker">At a glance</p>
+          <h2 className="tcn-broch-h2">
+            What is {displayBrand} — and why teams pick it.
+          </h2>
+          <p className="tcn-broch-lead">
+            Everything you need to know in one screen. If you have 10 seconds,
+            this is the part to read.
+          </p>
+
+          <div className="tcn-broch-glance-grid">
+            <div className="tcn-broch-glance-col">
+              <div className="tcn-broch-glance-head">
+                <span className="badge">What's inside</span>
+                <h4>One app. Every conversation.</h4>
+              </div>
+              <ul className="tcn-broch-glance-list features">
+                {AT_A_GLANCE_WHAT.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="tcn-broch-glance-col why">
+              <div className="tcn-broch-glance-head">
+                <span className="badge why">Why teams pick it</span>
+                <h4>Three reasons it actually sticks.</h4>
+              </div>
+              <ul className="tcn-broch-glance-list reasons">
+                {AT_A_GLANCE_WHY.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+              <div className="tcn-broch-glance-cta">
+                <Link to="/auth/register?ref=brochure-glance" className="primary">
+                  Start free trial <PiArrowRightBold />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <hr className="tcn-broch-rule" />
 
         {/* ─── Pain points ─── */}
         <section className="tcn-broch-section tcn-broch-pain">
@@ -1679,7 +1871,10 @@ const Brochure = () => {
                     <span>{item.q}</span>
                     <PiCaretDownBold className="chev" size={16} />
                   </button>
-                  {open && <p className="tcn-broch-faq-a">{item.a}</p>}
+                  {/* Always render the answer so the PDF / print snapshot can
+                      reveal every FAQ at once. Visibility is controlled by
+                      .tcn-broch-faq-item.open in CSS. */}
+                  <p className="tcn-broch-faq-a">{item.a}</p>
                 </div>
               );
             })}
@@ -1768,86 +1963,16 @@ const Brochure = () => {
           </div>
         </section>
 
-        {/* ─── Footer (rich brand footer) ─── */}
+        {/* ─── Brochure footer (minimal — print/PDF-friendly) ─── */}
+        {/*
+          Intentionally light: a brochure is a single-purpose marketing
+          document. Nav-link columns + social icons belong on the website
+          (Footer.jsx), not on a pitch sheet a prospect downloads as PDF.
+          We keep only what a sales reader actually needs at the bottom:
+          a compliance strip (credibility), copyright, brochure version,
+          and a small made-in-India credit.
+        */}
         <footer className="tcn-broch-foot">
-          {/* Top: brand + navigation + compliance */}
-          <div className="tcn-broch-foot-grid">
-            {/* Brand block */}
-            <div className="tcn-broch-foot-brand">
-              <div className="tcn-broch-foot-brandline">
-                <img
-                  src={brand.logo_url || "/chat.png"}
-                  alt={displayBrand}
-                  className="tcn-broch-foot-logo"
-                  onError={(e) => {
-                    if (e.currentTarget.src.indexOf("/chat.png") === -1) {
-                      e.currentTarget.src = "/chat.png";
-                    } else {
-                      setLogoOk(false);
-                    }
-                  }}
-                />
-                {!logoOk && <span className="nm">{displayBrand}</span>}
-              </div>
-              <p className="tcn-broch-foot-tag">
-                The secure team workspace for messaging, calls, file sharing
-                and AI — built for businesses that own their data.
-              </p>
-              {(brand.social?.facebook || brand.social?.twitter || brand.social?.linkedin || brand.social?.youtube) && (
-                <div className="tcn-broch-foot-social">
-                  {brand.social?.facebook && (
-                    <a href={brand.social.facebook} target="_blank" rel="noreferrer" aria-label="Facebook"><PiFacebookLogoDuotone size={18} /></a>
-                  )}
-                  {brand.social?.twitter && (
-                    <a href={brand.social.twitter} target="_blank" rel="noreferrer" aria-label="Twitter / X"><PiTwitterLogoDuotone size={18} /></a>
-                  )}
-                  {brand.social?.linkedin && (
-                    <a href={brand.social.linkedin} target="_blank" rel="noreferrer" aria-label="LinkedIn"><PiLinkedinLogoDuotone size={18} /></a>
-                  )}
-                  {brand.social?.youtube && (
-                    <a href={brand.social.youtube} target="_blank" rel="noreferrer" aria-label="YouTube"><PiYoutubeLogoDuotone size={18} /></a>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Product links */}
-            <div className="tcn-broch-foot-col">
-              <h5>Product</h5>
-              <ul>
-                <li><Link to="/features">Features</Link></li>
-                <li><Link to="/pricing">Pricing</Link></li>
-                <li><Link to="/compare">Compare</Link></li>
-                <li><Link to="/downloads">Downloads</Link></li>
-                <li><Link to="/security">Security</Link></li>
-              </ul>
-            </div>
-
-            {/* Resources */}
-            <div className="tcn-broch-foot-col">
-              <h5>Resources</h5>
-              <ul>
-                <li><Link to="/help">Help Center</Link></li>
-                <li><Link to="/how-it-works">How it works</Link></li>
-                <li><Link to="/status">System status</Link></li>
-                <li><Link to="/blog">Blog</Link></li>
-                <li><Link to="/contact">Contact sales</Link></li>
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div className="tcn-broch-foot-col">
-              <h5>Legal</h5>
-              <ul>
-                <li><Link to="/terms">Terms of Service</Link></li>
-                <li><Link to="/privacy">Privacy Policy</Link></li>
-                <li><Link to="/gdpr">GDPR &amp; DPDP</Link></li>
-                <li><Link to="/refund-policy">Refund Policy</Link></li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Compliance strip */}
           <div className="tcn-broch-foot-compliance">
             <span className="cp">🔒 AES-256-GCM</span>
             <span className="cp">🛡️ TLS 1.3</span>
@@ -1857,19 +1982,21 @@ const Brochure = () => {
             <span className="cp">⚡ 99.9% Uptime target</span>
           </div>
 
-          {/* Bottom strip */}
           <div className="tcn-broch-foot-bottom">
             <div className="copy">
               © {new Date().getFullYear()} {displayBrand}. All rights reserved.
             </div>
             <div className="meta">
-              <span>Brochure {data.version || "v1"}</span>
+              <span className="meta-item">Brochure {data.version || "v1"}</span>
               <span className="dot">•</span>
-              <span>Generated {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
-              <span className="dot">•</span>
-              <span className="made-with">
-                Made with <PiHeartDuotone size={12} style={{ color: "#ff6b6b", verticalAlign: "-2px" }} /> in India
+              <span className="meta-item">
+                Generated {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
               </span>
+              <span className="dot">•</span>
+              {/* Unicode heart instead of an SVG icon so the whole phrase is a
+                  single un-breakable text run — keeps "Made with ❤ in India"
+                  on one line regardless of viewport width. */}
+              <span className="meta-item made-with">Made with <span className="heart">❤</span> in India</span>
             </div>
           </div>
         </footer>

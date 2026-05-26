@@ -148,7 +148,7 @@ const FAQS = [
   },
   {
     q: "Who's behind this?",
-    a: "A small team in Bengaluru. Engineers and designers who've spent careers in messaging — including stints at companies you've probably used. We're not VC-funded, we're not chasing a billion-dollar exit. We want to build a profitable, useful product and answer support tickets ourselves. Old-school.",
+    a: "A small team in Varanasi. Engineers and designers who've spent careers in messaging — including stints at companies you've probably used. We're not VC-funded, we're not chasing a billion-dollar exit. We want to build a profitable, useful product and answer support tickets ourselves. Old-school.",
   },
 ];
 
@@ -1202,7 +1202,7 @@ const Why = () => {
         <div className="container">
           <div className="tcn-why-section-head">
             <span className="tag">Chapter 06</span>
-            <h2>Built in <em>Bengaluru</em>, for teams everywhere.</h2>
+            <h2>Built in <em>Varanasi</em>, for teams everywhere.</h2>
             <p>
               We're proudly Indian and globally engineered. Data centers in Mumbai keep your messages fast at home. The product is built to a global standard, in our local idiom.
             </p>
@@ -1215,10 +1215,10 @@ const Why = () => {
                 Built in India. <em>Built right.</em>
               </h3>
               <p>
-                Founded and operated from Bengaluru. Our team understands Indian SMBs — GST invoices, INR pricing, Hindi support, UPI checkout — out of the box. We also ship to teams from Berlin to São Paulo, because good software shouldn't care where you're from.
+                Founded and operated from Varanasi. Our team understands Indian SMBs — GST invoices, INR pricing, Hindi support, UPI checkout — out of the box. We also ship to teams from Berlin to São Paulo, because good software shouldn't care where you're from.
               </p>
               <div className="tcn-why-geo-tags">
-                <span><PiMapPinDuotone size={9} /> BENGALURU HQ</span>
+                <span><PiMapPinDuotone size={9} /> VARANASI HQ</span>
                 <span><PiCloudDuotone size={9} /> MUMBAI DC</span>
                 <span><PiCurrencyInrDuotone size={9} /> INR + USD + EUR + GBP</span>
                 <span><PiRobotDuotone size={9} /> ENGLISH + HINDI + HINGLISH</span>
@@ -1260,7 +1260,7 @@ const Why = () => {
               <div className="sign-ic"><PiPlantDuotone size={22} /></div>
               <div className="sign-meta">
                 <strong>The TheChatNest team</strong>
-                <span>Bengaluru · Building since 2025</span>
+                <span>Varanasi · Building since 2025</span>
               </div>
               <div className="sign-scribble">— team@thechatnest</div>
             </div>

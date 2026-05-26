@@ -25,7 +25,7 @@ const V2TrustStrip = () => {
             <div className="v2-trust-body">
               <h3>Hosted in India</h3>
               <p>
-                Mumbai &amp; Bengaluru regions.
+                Mumbai &amp; Varanasi regions.
                 <br />
                 No data leaves the country.
               </p>
@@ -71,7 +71,7 @@ const V2TrustStrip = () => {
           <article className="v2-trust-card">
             <span className="v2-trust-icon icon-india" aria-hidden />
             <div className="v2-trust-body">
-              <h3>Built in Bengaluru</h3>
+              <h3>Built in Varanasi</h3>
               <p>
                 By VVM Technologies Pvt Ltd
                 <br />

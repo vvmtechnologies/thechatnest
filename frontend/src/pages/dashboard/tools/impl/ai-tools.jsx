@@ -495,3 +495,93 @@ export const AiAltText = () => (
     run={(input) => runAi("alt-text", input)}
   />
 );
+
+// ─── Phase 7B AI tools ─────────────────────────────────────────────
+export const AiMeetingSummarizer = () => (
+  <AiSingleTool
+    title="Summarize meeting"
+    hint="Paste a meeting transcript or notes → get TL;DR + decisions + action items + open questions."
+    inputLabel="Transcript or notes"
+    inputPlaceholder="Paste the full meeting transcript here…"
+    outputLabel="Meeting summary"
+    run={(input) => runAi("meeting-summary", input)}
+  />
+);
+
+export const AiJobDescription = () => (
+  <AiSingleTool
+    title="Draft JD"
+    hint="Bullet what you need → AI produces a polished, inclusive job description."
+    inputLabel="Role brief"
+    inputPlaceholder={"e.g.\n- Senior Frontend Engineer\n- React + TypeScript\n- 4+ years\n- remote-first, IST overlap\n- works closely with design and PM"}
+    outputLabel="Job description"
+    run={(input) => runAi("job-description", input)}
+  />
+);
+
+export const AiProposal = () => (
+  <AiSingleTool
+    title="Draft proposal"
+    hint="Bullet your understanding + approach → AI structures it into a client-ready proposal."
+    inputLabel="Project brief"
+    inputPlaceholder={"e.g.\n- client: D2C skincare brand\n- needs a 6-week site redesign\n- moving from Shopify to Next.js storefront\n- existing brand kit\n- budget ~10L INR"}
+    outputLabel="Proposal draft"
+    run={(input) => runAi("proposal", input)}
+  />
+);
+
+export const AiNewsletter = () => (
+  <AiSingleTool
+    title="Write newsletter"
+    hint="Bullet your updates → AI builds a friendly, scannable newsletter."
+    inputLabel="Updates this week"
+    inputPlaceholder={"e.g.\n- shipped the new SMTP test probe\n- 4 PRs merged on billing\n- next week: PDF AI summarizer launches\n- welcoming Mira to design"}
+    outputLabel="Newsletter draft"
+    run={(input) => runAi("newsletter", input)}
+  />
+);
+
+export const AiPressRelease = () => (
+  <AiSingleTool
+    title="Write press release"
+    hint="Brief the announcement → AI drafts a properly formatted press release."
+    inputLabel="Announcement brief"
+    inputPlaceholder={"e.g.\n- launching v3 of TheChatNest\n- adds 56 in-app utilities + AI assistants\n- aimed at distributed SMB teams\n- founder quote: 'our users asked, we delivered'"}
+    outputLabel="Press release"
+    run={(input) => runAi("press-release", input)}
+  />
+);
+
+export const AiFaq = () => (
+  <AiSingleTool
+    title="Generate FAQ"
+    hint="Describe a product / feature → AI writes 8-12 Q&A pairs."
+    inputLabel="Product or feature description"
+    inputPlaceholder="e.g. 'TheChatNest Business plan is a team chat app priced per seat, includes file storage, AI assistants, video calls, integrates with Google Cal…'"
+    outputLabel="FAQ"
+    run={(input) => runAi("faq", input)}
+  />
+);
+
+export const AiBlogTitles = () => (
+  <AiSingleTool
+    title="Generate titles"
+    hint="Topic or article draft → 10 catchy blog post titles in varied styles."
+    inputLabel="Topic or draft"
+    inputPlaceholder='e.g. "the hidden cost of having too many meetings on a distributed team"'
+    outputLabel="10 title ideas"
+    run={(input) => runAi("blog-title", input)}
+  />
+);
+
+export const AiColorPalette = () => (
+  <AiSingleTool
+    title="Generate palette"
+    hint="Describe the mood + audience → AI returns a 5-color brand palette."
+    inputLabel="Brief"
+    inputPlaceholder='e.g. "wellness app, target audience women 25-40, calming but premium, asian-inspired"'
+    outputLabel="Palette"
+    variant="json"
+    run={(input) => runAi("color-palette", input)}
+  />
+);

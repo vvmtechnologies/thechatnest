@@ -30,9 +30,23 @@ export const TOOLS = [
   { slug: "ai-acronyms",     title: "AI Acronym Decoder",     desc: "Find every acronym in text and explain it with context.",                category: "ai", icon: "PiAtDuotone" },
   { slug: "ai-actions",      title: "AI Action Items",        desc: "Meeting notes → list of tasks with owners + due dates.",                 category: "ai", icon: "PiListBulletsDuotone" },
   { slug: "ai-sentiment",    title: "AI Sentiment",           desc: "Analyse the sentiment of a thread or batch of messages.",                category: "ai", icon: "PiSmileySadDuotone" },
-  { slug: "ai-alt-text",     title: "AI Alt-Text Writer",     desc: "Describe an image → accessibility-ready alt text (≤120 chars).",         category: "ai", icon: "PiEyeDuotone" },
+  { slug: "ai-alt-text",      title: "AI Alt-Text Writer",     desc: "Describe an image → accessibility-ready alt text (≤120 chars).",         category: "ai", icon: "PiEyeDuotone" },
+  // Phase 7B additions
+  { slug: "ai-meeting-sum",   title: "AI Meeting Summarizer",  desc: "Transcript → TL;DR + decisions + action items + open questions.",        category: "ai", icon: "PiVideoCameraDuotone" },
+  { slug: "ai-jd",            title: "AI Job Description",     desc: "Role brief → polished, inclusive JD with all standard sections.",        category: "ai", icon: "PiBriefcaseMetalDuotone" },
+  { slug: "ai-proposal",      title: "AI Proposal Writer",     desc: "Project brief → client-ready proposal with phases + investment.",        category: "ai", icon: "PiSealCheckDuotone" },
+  { slug: "ai-newsletter",    title: "AI Newsletter Writer",   desc: "Bullet your updates → scannable, friendly team newsletter.",             category: "ai", icon: "PiNewspaperDuotone" },
+  { slug: "ai-pr",            title: "AI Press Release",       desc: "Announcement brief → properly formatted press release.",                 category: "ai", icon: "PiMegaphoneDuotone" },
+  { slug: "ai-faq",           title: "AI FAQ Generator",       desc: "Product description → 8–12 Q&A pairs for support / docs.",               category: "ai", icon: "PiQuestionDuotone" },
+  { slug: "ai-blog-titles",   title: "AI Blog Title Generator", desc: "Topic → 10 catchy titles in varied styles (listicle, how-to, etc).",     category: "ai", icon: "PiLightbulbFilamentDuotone" },
+  { slug: "ai-palette",       title: "AI Color Palette",       desc: "Brand brief → 5-color JSON palette with usage hints.",                   category: "ai", icon: "PiPaletteDuotone" },
 
   // ── Team & Chat ──────────────────────────────────────────────────
+  { slug: "spin-the-wheel",     title: "Spin the Wheel",             desc: "Animated wheel of names — visual upgrade to Random Picker.",       category: "team", icon: "PiAtomDuotone" },
+  { slug: "truth-or-dare",      title: "Truth or Dare",              desc: "Team-safe truth questions + work-friendly dares.",                 category: "team", icon: "PiQuestionDuotone" },
+  { slug: "would-you-rather",   title: "Would You Rather",           desc: "Curated work + life dilemmas for breakout discussions.",           category: "team", icon: "PiArrowsLeftRightDuotone" },
+  { slug: "never-have-i-ever",  title: "Never Have I Ever",          desc: "Work-themed confession prompts. Use for retro warm-ups.",          category: "team", icon: "PiHandPalmDuotone" },
+  { slug: "emoji-picker",       title: "Emoji Picker",               desc: "Searchable emoji with one-tap copy. 80+ work-relevant emojis.",    category: "team", icon: "PiSmileyMehDuotone" },
   { slug: "mention-formatter",  title: "Mention/Markdown Formatter", desc: "Bold, italic, code blocks, lists — pick a style, copy to chat.",  category: "team", icon: "PiTextAaDuotone" },
   { slug: "calendar-link",      title: "Calendar Link Generator",    desc: "Google Cal / Outlook links + downloadable .ics, share in chat.",   category: "team", icon: "PiCalendarPlusDuotone" },
   { slug: "recurring-cost",     title: "Recurring Meeting Cost",     desc: "Frequency-aware cost breakdown: per occurrence / month / year.",   category: "team", icon: "PiChartLineUpDuotone" },
@@ -46,6 +60,12 @@ export const TOOLS = [
   { slug: "salary-hourly",    title: "Salary → Hourly Converter", desc: "Annual salary → minute / hour / day / week / month equivalent.",   category: "hr", icon: "PiMoneyDuotone" },
 
   // ── File & Media ─────────────────────────────────────────────────
+  { slug: "image-converter",  title: "Image Converter",    desc: "Convert PNG ↔ JPG ↔ WebP, quality slider, side-by-side preview.",     category: "file", icon: "PiArrowsLeftRightDuotone" },
+  { slug: "image-resizer",    title: "Image Resizer",      desc: "Exact pixel dimensions with optional aspect-ratio lock.",            category: "file", icon: "PiFrameCornersDuotone" },
+  { slug: "social-resizer",   title: "Social Media Image Resizer", desc: "11 presets — Instagram, X, LinkedIn, YouTube thumbnail, OG.",         category: "file", icon: "PiInstagramLogoDuotone" },
+  { slug: "image-watermark",  title: "Image Watermark",    desc: "Add text watermark — position, opacity, font size, color.",          category: "file", icon: "PiCopyrightDuotone" },
+  { slug: "image-to-pdf",     title: "Image → PDF",        desc: "Multiple images → one PDF, A4/Letter/A5, auto-orientation.",          category: "file", icon: "PiFilePdfDuotone" },
+  { slug: "meme-generator",   title: "Meme Generator",     desc: "Top + bottom text overlay on any image — classic Impact font.",      category: "file", icon: "PiSmileyXEyesDuotone" },
   { slug: "image-compressor", title: "Image Compressor",  desc: "Drop an image, resize + re-encode to JPEG, download smaller version.", category: "file", icon: "PiImageDuotone" },
   { slug: "ocr",              title: "Image → Text (OCR)", desc: "Extract text from screenshots & scans, 8 languages. Runs locally.",  category: "file", icon: "PiTextboxDuotone" },
   { slug: "pdf-splitter",     title: "PDF Splitter",       desc: "Split a PDF by page ranges, or one PDF per page.",                    category: "file", icon: "PiSplitHorizontalDuotone" },
@@ -87,7 +107,15 @@ export const TOOLS = [
   { slug: "color-converter", title: "Color Converter",    desc: "Pick a color, convert between HEX, RGB, HSL.",                     category: "design", icon: "PiPaintBrushDuotone" },
   { slug: "qr-generator",    title: "QR Code Generator",  desc: "Create scannable QR codes for any URL or text.",                   category: "design", icon: "PiQrCodeDuotone" },
 
+  // ── Games — extras ───────────────────────────────────────────────
+  { slug: "whack-a-mole",     title: "Whack-a-Mole",       desc: "30-second timed reflex game — 3×3 grid, beat your best.",            category: "games", icon: "PiHammerDuotone" },
+  { slug: "trivia-quiz",      title: "Trivia Quiz",        desc: "Multiple-choice from Open Trivia DB — 8 categories, 3 difficulties.", category: "games", icon: "PiQuestionDuotone" },
+
   // ── Productivity (kept) ──────────────────────────────────────────
+  { slug: "unit-converter",   title: "Unit Converter",     desc: "Length, weight, volume, area, speed, time, data, temperature.",      category: "productivity", icon: "PiArrowsLeftRightDuotone" },
+  { slug: "tip-calculator",   title: "Tip Calculator",     desc: "Bill + tip % + split N ways, with slider for common tips.",          category: "productivity", icon: "PiReceiptDuotone" },
+  { slug: "date-difference",  title: "Date Difference",    desc: "Days, weeks, months, hours between any two dates.",                  category: "productivity", icon: "PiCalendarBlankDuotone" },
+  { slug: "countdown-timer",  title: "Countdown Timer",    desc: "Live countdown to a target datetime — launches, deadlines.",         category: "productivity", icon: "PiHourglassMediumDuotone" },
   { slug: "meeting-cost",       title: "Meeting Cost Calculator", desc: "See how much your meeting is really costing.",              category: "productivity", icon: "PiCalculatorDuotone" },
   { slug: "timezone-converter", title: "Timezone Converter",      desc: "Find a meeting slot across timezones.",                     category: "productivity", icon: "PiGlobeDuotone" },
   { slug: "word-counter",       title: "Word & Character Counter", desc: "Count words, chars, sentences, reading time.",              category: "productivity", icon: "PiTextAlignLeftDuotone" },

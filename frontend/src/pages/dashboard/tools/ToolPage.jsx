@@ -81,6 +81,25 @@ const REGISTRY = {
   "vacation-tracker":      lazyNamed(() => import("./impl/hr.jsx"), "VacationTracker"),
   "salary-hourly":         lazyNamed(() => import("./impl/hr.jsx"), "SalaryToHourly"),
 
+  // Phase 7A — browser-only additions (file-media-extras, team-extras, productivity-extras)
+  "image-converter":       lazyNamed(() => import("./impl/file-media-extras.jsx"), "ImageConverter"),
+  "image-resizer":         lazyNamed(() => import("./impl/file-media-extras.jsx"), "ImageResizer"),
+  "social-resizer":        lazyNamed(() => import("./impl/file-media-extras.jsx"), "SocialMediaResizer"),
+  "image-watermark":       lazyNamed(() => import("./impl/file-media-extras.jsx"), "ImageWatermark"),
+  "image-to-pdf":          lazyNamed(() => import("./impl/file-media-extras.jsx"), "ImageToPdf"),
+  "meme-generator":        lazyNamed(() => import("./impl/file-media-extras.jsx"), "MemeGenerator"),
+  "spin-the-wheel":        lazyNamed(() => import("./impl/team-extras.jsx"), "SpinTheWheel"),
+  "truth-or-dare":         lazyNamed(() => import("./impl/team-extras.jsx"), "TruthOrDare"),
+  "would-you-rather":      lazyNamed(() => import("./impl/team-extras.jsx"), "WouldYouRather"),
+  "never-have-i-ever":     lazyNamed(() => import("./impl/team-extras.jsx"), "NeverHaveIEver"),
+  "emoji-picker":          lazyNamed(() => import("./impl/team-extras.jsx"), "EmojiPicker"),
+  "whack-a-mole":          lazyNamed(() => import("./impl/team-extras.jsx"), "WhackAMole"),
+  "trivia-quiz":           lazyNamed(() => import("./impl/team-extras.jsx"), "TriviaQuiz"),
+  "unit-converter":        lazyNamed(() => import("./impl/productivity-extras.jsx"), "UnitConverter"),
+  "tip-calculator":        lazyNamed(() => import("./impl/productivity-extras.jsx"), "TipCalculator"),
+  "date-difference":       lazyNamed(() => import("./impl/productivity-extras.jsx"), "DateDifference"),
+  "countdown-timer":       lazyNamed(() => import("./impl/productivity-extras.jsx"), "CountdownTimer"),
+
   // AI Tools — phase 6 (all call the active configured AI provider)
   "ai-translator":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiTranslator"),
   "ai-summarizer":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSummarizer"),
@@ -94,6 +113,16 @@ const REGISTRY = {
   "ai-actions":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiActionItems"),
   "ai-sentiment":          lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSentiment"),
   "ai-alt-text":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAltText"),
+
+  // AI Tools — phase 7B
+  "ai-meeting-sum":        lazyNamed(() => import("./impl/ai-tools.jsx"), "AiMeetingSummarizer"),
+  "ai-jd":                 lazyNamed(() => import("./impl/ai-tools.jsx"), "AiJobDescription"),
+  "ai-proposal":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiProposal"),
+  "ai-newsletter":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiNewsletter"),
+  "ai-pr":                 lazyNamed(() => import("./impl/ai-tools.jsx"), "AiPressRelease"),
+  "ai-faq":                lazyNamed(() => import("./impl/ai-tools.jsx"), "AiFaq"),
+  "ai-blog-titles":        lazyNamed(() => import("./impl/ai-tools.jsx"), "AiBlogTitles"),
+  "ai-palette":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiColorPalette"),
 };
 
 const ToolPage = () => {

@@ -370,11 +370,24 @@ const FilePreviewOverlay = ({
       }, 300);
       return () => clearTimeout(readyTimer);
     }
+    // Native PDF iframes in Chrome / Edge use the browser's built-in PDF
+    // plugin which loads silently and does NOT fire the iframe `onLoad`
+    // event. Without this branch we'd hit the 5s "error" fallback every
+    // single time and render "No Preview Available" for a perfectly
+    // good PDF. Mark it ready after a short delay; onError still fires
+    // for real failures (404, CORS) and routes to the Google Docs
+    // fallback as before.
+    if (isPdfFile && !pdfFallbackActive) {
+      const readyTimer = setTimeout(() => {
+        setPreviewStatus((prev) => (prev === "loading" ? "ready" : prev));
+      }, 800);
+      return () => clearTimeout(readyTimer);
+    }
     const timeout = setTimeout(() => {
       setPreviewStatus((prev) => (prev === "loading" ? "error" : prev));
     }, 5000);
     return () => clearTimeout(timeout);
-  }, [open, previewStatus, previewUrl, useTextPreview, useOfficeViewer]);
+  }, [open, previewStatus, previewUrl, useTextPreview, useOfficeViewer, isPdfFile, pdfFallbackActive]);
 
   useEffect(() => {
     if (!open || !useTextPreview || !sourceUrl) return undefined;
@@ -799,7 +812,9 @@ const FilePreviewOverlay = ({
                 allowFullScreen
                 onLoad={() => setPreviewStatus("ready")}
                 onError={handleFrameError}
-                {...(!useOfficeViewer ? { sandbox: "allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation" } : {})}
+                {...(!useOfficeViewer && !isPdfFile
+                  ? { sandbox: "allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation" }
+                  : {})}
                 sx={{
                   border: "none",
                   width: "100%",

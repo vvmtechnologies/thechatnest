@@ -18,6 +18,31 @@ import {
 // Persisted in localStorage. Re-prompted only if version is bumped.
 
 const STORAGE_KEY = "tcn.cookieConsent.v1";
+const COOKIE_NAME = "tcn_cc_v1";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year, per GDPR guidance
+const SESSION_FLAG = "tcn.cookieConsent.dismissedThisSession";
+
+// Cookie helpers — used as a fallback when localStorage is unavailable
+// (incognito, Chrome "Clear cookies on close", aggressive privacy modes).
+// A site-wide cookie survives even if Application → Local Storage is
+// wiped by the browser between visits.
+const readCookie = (name) => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.split("; ").find((row) => row.startsWith(`${name}=`));
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match.split("=")[1] || "");
+  } catch {
+    return null;
+  }
+};
+const writeCookie = (name, value, maxAgeSec) => {
+  if (typeof document === "undefined") return;
+  try {
+    const secure = window.location?.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAgeSec}; Path=/; SameSite=Lax${secure}`;
+  } catch { /* third-party-cookies blocked etc. */ }
+};
 
 const loadGoogleAnalytics = () => {
   if (window.__tcnGaLoaded) return;
@@ -51,27 +76,52 @@ const applyConsent = (consent) => {
   if (consent.marketing) loadTawk();
 };
 
+// Read the saved consent from whichever store still has it. We check the
+// session flag first so the banner can't reappear mid-session even if the
+// browser flushed both localStorage and cookies, then localStorage (the
+// canonical store), then the cookie fallback. Any positive answer wins.
 const readConsent = () => {
+  // 1. Per-session "we already showed and they chose" guard.
+  try {
+    const sessionMark = window.sessionStorage.getItem(SESSION_FLAG);
+    if (sessionMark) {
+      try {
+        const parsed = JSON.parse(sessionMark);
+        if (parsed && typeof parsed === "object") return parsed;
+      } catch { /* fall through */ }
+    }
+  } catch { /* sessionStorage blocked */ }
+
+  // 2. localStorage — primary persistent store.
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed;
-  } catch {
-    return null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch { /* localStorage blocked */ }
+
+  // 3. Cookie fallback — survives localStorage being cleared on close.
+  const cookieRaw = readCookie(COOKIE_NAME);
+  if (cookieRaw) {
+    try {
+      const parsed = JSON.parse(cookieRaw);
+      if (parsed && typeof parsed === "object") return parsed;
+    } catch { /* malformed cookie */ }
   }
+
+  return null;
 };
 
+// Write to all three stores. If any one fails (incognito, third-party
+// cookies blocked, etc.) the others still pin the decision.
 const writeConsent = (consent) => {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      ...consent,
-      decided_at: new Date().toISOString(),
-    }));
-  } catch {
-    /* localStorage blocked — UI still works for the session */
-  }
+  const payload = { ...consent, decided_at: new Date().toISOString() };
+  const serialized = JSON.stringify(payload);
+
+  try { window.localStorage.setItem(STORAGE_KEY, serialized); } catch { /* blocked */ }
+  try { window.sessionStorage.setItem(SESSION_FLAG, serialized); } catch { /* blocked */ }
+  writeCookie(COOKIE_NAME, serialized, COOKIE_MAX_AGE);
 };
 
 const CookieConsent = () => {

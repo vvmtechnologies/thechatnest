@@ -15,38 +15,85 @@ const lazyNamed = (loader, name) =>
   });
 
 const REGISTRY = {
-  "json-formatter":      lazy(() => import("./impl/json-formatter.jsx")),
-  "json-to-yaml":        lazyNamed(() => import("./impl/converters.jsx"), "JsonToYaml"),
-  "yaml-to-json":        lazyNamed(() => import("./impl/converters.jsx"), "YamlToJson"),
+  // Document & Data (kept)
+  "markdown-html":       lazyNamed(() => import("./impl/converters.jsx"), "MarkdownHtml"),
   "json-to-csv":         lazyNamed(() => import("./impl/converters.jsx"), "JsonToCsv"),
   "csv-to-json":         lazyNamed(() => import("./impl/converters.jsx"), "CsvToJson"),
-  "base64":              lazyNamed(() => import("./impl/converters.jsx"), "Base64"),
-  "url-codec":           lazyNamed(() => import("./impl/converters.jsx"), "UrlCodec"),
-  "markdown-html":       lazyNamed(() => import("./impl/converters.jsx"), "MarkdownHtml"),
-  "text-diff":           lazyNamed(() => import("./impl/converters.jsx"), "TextDiff"),
+  "case-converter":      lazyNamed(() => import("./impl/converters.jsx"), "CaseConverter"),
   "lorem-ipsum":         lazyNamed(() => import("./impl/converters.jsx"), "LoremIpsum"),
+
+  // Security (kept)
   "password-generator":  lazyNamed(() => import("./impl/security.jsx"), "PasswordGenerator"),
-  "jwt-decoder":         lazyNamed(() => import("./impl/security.jsx"), "JwtDecoder"),
-  "hash-generator":      lazyNamed(() => import("./impl/security.jsx"), "HashGenerator"),
+
+  // Design (kept)
   "color-converter":     lazyNamed(() => import("./impl/design.jsx"), "ColorConverter"),
   "qr-generator":        lazyNamed(() => import("./impl/design.jsx"), "QrGenerator"),
-  "regex-tester":        lazyNamed(() => import("./impl/design.jsx"), "RegexTester"),
+
+  // Productivity (kept)
   "meeting-cost":        lazyNamed(() => import("./impl/productivity.jsx"), "MeetingCost"),
   "timezone-converter":  lazyNamed(() => import("./impl/productivity.jsx"), "TimezoneConverter"),
   "word-counter":        lazyNamed(() => import("./impl/productivity.jsx"), "WordCounter"),
-  "timestamp-converter": lazyNamed(() => import("./impl/productivity.jsx"), "TimestampConverter"),
-
-  // ── batch 2 ─────────────────────────────────────────────────────────
-  "xml-json":            lazyNamed(() => import("./impl/converters.jsx"), "XmlJson"),
-  "case-converter":      lazyNamed(() => import("./impl/converters.jsx"), "CaseConverter"),
-  "css-gradient":        lazyNamed(() => import("./impl/design.jsx"), "CssGradient"),
-  "box-shadow":          lazyNamed(() => import("./impl/design.jsx"), "BoxShadow"),
-  "favicon-preview":     lazyNamed(() => import("./impl/design.jsx"), "FaviconPreview"),
   "stopwatch":           lazyNamed(() => import("./impl/productivity.jsx"), "Stopwatch"),
   "pomodoro":            lazyNamed(() => import("./impl/productivity.jsx"), "Pomodoro"),
   "age-calculator":      lazyNamed(() => import("./impl/productivity.jsx"), "AgeCalculator"),
   "percentage-calc":     lazyNamed(() => import("./impl/productivity.jsx"), "PercentageCalc"),
-  "uuid-generator":      lazyNamed(() => import("./impl/security.jsx"), "UuidGenerator"),
+
+  // Quick Decisions (NEW — phase 1)
+  "random-picker":       lazyNamed(() => import("./impl/decisions.jsx"), "RandomPicker"),
+  "coin-flip":           lazyNamed(() => import("./impl/decisions.jsx"), "CoinFlip"),
+  "dice-roller":         lazyNamed(() => import("./impl/decisions.jsx"), "DiceRoller"),
+  "random-number":       lazyNamed(() => import("./impl/decisions.jsx"), "RandomNumber"),
+  "yes-no":              lazyNamed(() => import("./impl/decisions.jsx"), "YesNo"),
+
+  // Games (NEW — phase 1)
+  "tic-tac-toe":         lazyNamed(() => import("./impl/games.jsx"), "TicTacToe"),
+
+  // Games — phase 2
+  "connect-four":          lazyNamed(() => import("./impl/games.jsx"), "ConnectFour"),
+  "rock-paper-scissors":   lazyNamed(() => import("./impl/games.jsx"), "RockPaperScissors"),
+  "reaction-time":         lazyNamed(() => import("./impl/games.jsx"), "ReactionTime"),
+  "memory-match":          lazyNamed(() => import("./impl/arcade.jsx"), "MemoryMatch"),
+  "game-2048":             lazyNamed(() => import("./impl/arcade.jsx"), "Game2048"),
+  "snake":                 lazyNamed(() => import("./impl/arcade.jsx"), "Snake"),
+  "minesweeper":           lazyNamed(() => import("./impl/arcade.jsx"), "Minesweeper"),
+  "wordle":                lazyNamed(() => import("./impl/puzzles.jsx"), "Wordle"),
+  "hangman":               lazyNamed(() => import("./impl/puzzles.jsx"), "Hangman"),
+  "typing-test":           lazyNamed(() => import("./impl/puzzles.jsx"), "TypingTest"),
+  "sudoku":                lazyNamed(() => import("./impl/puzzles.jsx"), "Sudoku"),
+
+  // File & Media — phase 3
+  "image-compressor":      lazyNamed(() => import("./impl/file-media.jsx"), "ImageCompressor"),
+  "ocr":                   lazyNamed(() => import("./impl/file-media.jsx"), "Ocr"),
+  "pdf-splitter":          lazyNamed(() => import("./impl/file-media.jsx"), "PdfSplitter"),
+  "pdf-merger":            lazyNamed(() => import("./impl/file-media.jsx"), "PdfMerger"),
+  "file-size":             lazyNamed(() => import("./impl/file-media.jsx"), "FileSizeFormatter"),
+
+  // Team & Chat — phase 4
+  "mention-formatter":     lazyNamed(() => import("./impl/team-chat.jsx"), "MentionFormatter"),
+  "calendar-link":         lazyNamed(() => import("./impl/team-chat.jsx"), "CalendarLink"),
+  "recurring-cost":        lazyNamed(() => import("./impl/team-chat.jsx"), "RecurringMeetingCost"),
+  "status-builder":        lazyNamed(() => import("./impl/team-chat.jsx"), "StatusBuilder"),
+  "standup-picker":        lazyNamed(() => import("./impl/team-chat.jsx"), "StandupPicker"),
+  "channel-names":         lazyNamed(() => import("./impl/team-chat.jsx"), "ChannelNameGenerator"),
+
+  // HR — phase 5
+  "working-days":          lazyNamed(() => import("./impl/hr.jsx"), "WorkingDays"),
+  "vacation-tracker":      lazyNamed(() => import("./impl/hr.jsx"), "VacationTracker"),
+  "salary-hourly":         lazyNamed(() => import("./impl/hr.jsx"), "SalaryToHourly"),
+
+  // AI Tools — phase 6 (all call the active configured AI provider)
+  "ai-translator":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiTranslator"),
+  "ai-summarizer":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSummarizer"),
+  "ai-rewriter":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiRewriter"),
+  "ai-reply":              lazyNamed(() => import("./impl/ai-tools.jsx"), "AiReplySuggester"),
+  "ai-email":              lazyNamed(() => import("./impl/ai-tools.jsx"), "AiEmailDrafter"),
+  "ai-grammar":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiGrammarCheck"),
+  "ai-tone":               lazyNamed(() => import("./impl/ai-tools.jsx"), "AiToneDetector"),
+  "ai-jargon":             lazyNamed(() => import("./impl/ai-tools.jsx"), "AiJargonSimplifier"),
+  "ai-acronyms":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAcronymDecoder"),
+  "ai-actions":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiActionItems"),
+  "ai-sentiment":          lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSentiment"),
+  "ai-alt-text":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAltText"),
 };
 
 const ToolPage = () => {

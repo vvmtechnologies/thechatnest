@@ -1348,4 +1348,119 @@ RULES:
   }
 };
 
-module.exports = { translate, summarize, smartReply, grammarCorrect, toneAdjust, semanticSearch, generateCallNotes, smartCompose, transcribeAudio, appHelp };
+// ─────────────────────────────────────────────────────────────────────
+// Generic AI task runner — single endpoint for all the /app/tools AI
+// utilities (Rewriter, Email Drafter, Tone Detector, Jargon Simplifier,
+// Acronym Decoder, Action Items, Sentiment, Image Alt-Text, etc.).
+// Each task slug maps to a system prompt; the user input is passed as
+// the user message. Adding a new tool is one entry in TASK_REGISTRY.
+// ─────────────────────────────────────────────────────────────────────
+const TASK_REGISTRY = {
+  "rewrite-friendly": {
+    system: "You rewrite messages to sound warmer, more friendly, and approachable while preserving the original meaning. Return ONLY the rewritten message — no preamble, no explanation, no markdown wrapper.",
+  },
+  "rewrite-formal": {
+    system: "You rewrite messages in a professional, formal tone suitable for executive or external communication. Preserve meaning. Return ONLY the rewritten message.",
+  },
+  "rewrite-concise": {
+    system: "You rewrite messages to be as concise as possible without losing meaning. Aim for half the original length. Return ONLY the rewritten message.",
+  },
+  "rewrite-assertive": {
+    system: "You rewrite messages to sound clear, direct, and assertive without being rude. Remove hedging like 'just', 'sorry to bother', 'maybe', 'I think'. Return ONLY the rewritten message.",
+  },
+  "email-draft": {
+    system: "You turn a bullet list into a polished, well-structured email with a subject line, greeting, body paragraphs, and sign-off. Default tone: professional and warm. Format output as: 'Subject: ...' on the first line, blank line, then the email body.",
+  },
+  "tone-detect": {
+    system: "Analyse the tone of the user's message. Return a JSON object with this exact shape: {\"tone\": \"friendly|neutral|assertive|aggressive|passive-aggressive|enthusiastic\", \"confidence\": 0-100, \"perceived_as\": \"short phrase\", \"suggestion\": \"one-sentence rewrite that would land better\"}. Return ONLY the JSON, no markdown wrapper.",
+  },
+  "jargon-simplify": {
+    system: "Rewrite the user's technical or jargon-heavy text into plain English that a non-technical teammate would understand. Preserve all important details. Return ONLY the simplified version.",
+  },
+  "acronym-decode": {
+    system: "Identify every acronym in the user's text and return a JSON array: [{\"acronym\": \"OKR\", \"meaning\": \"Objectives and Key Results\", \"context_hint\": \"one-line explanation of how it's used here\"}]. Return ONLY the JSON.",
+  },
+  "action-items": {
+    system: "Extract action items from the user's meeting notes or chat log. Return a JSON array: [{\"task\": \"...\", \"owner\": \"...\", \"due\": \"YYYY-MM-DD or null\"}]. If no owner or date is mentioned, use null. Return ONLY the JSON array.",
+  },
+  "sentiment": {
+    system: "Analyse the sentiment of the user's chat thread. Return JSON: {\"overall\": \"positive|neutral|negative|mixed\", \"score\": -100..100, \"highlights\": [\"short phrase\", ...]}. Return ONLY the JSON.",
+  },
+  "alt-text": {
+    system: "Write a single concise alt-text description (max 120 chars) for the image described in the user's input. Focus on what's important for accessibility. Return ONLY the alt-text.",
+  },
+};
+
+const runAiTask = async (req, res, next) => {
+  try {
+    const { task, input } = req.body || {};
+    const taskKey = String(task || '').trim();
+    const text = String(input || '').trim();
+    if (!taskKey || !TASK_REGISTRY[taskKey]) {
+      const e = new Error(`Unknown task. Supported: ${Object.keys(TASK_REGISTRY).join(', ')}`);
+      e.status = 400;
+      throw e;
+    }
+    if (!text) {
+      const e = new Error('input is required');
+      e.status = 400;
+      throw e;
+    }
+
+    const { system } = TASK_REGISTRY[taskKey];
+    const ai = await resolveAIProvider();
+    let output;
+
+    if (ai.provider === 'openai') {
+      const model = ai.model || 'gpt-4o-mini';
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ai.apiKey}` },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: text },
+          ],
+          temperature: 0.4, max_tokens: 800,
+        }),
+      });
+      if (!response.ok) throw Object.assign(new Error(`OpenAI API error: ${response.status}`), { status: 502 });
+      const data = await response.json();
+      output = data?.choices?.[0]?.message?.content?.trim() || '';
+    } else if (ai.provider === 'anthropic') {
+      const model = ai.model || 'claude-sonnet-4-6';
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ai.apiKey, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model, max_tokens: 800,
+          system,
+          messages: [{ role: 'user', content: text }],
+        }),
+      });
+      if (!response.ok) throw Object.assign(new Error(`Anthropic API error: ${response.status}`), { status: 502 });
+      const data = await response.json();
+      output = data?.content?.[0]?.text?.trim() || '';
+    } else {
+      const model = ai.model || 'gemini-2.0-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${ai.apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `${system}\n\nUSER INPUT:\n${text}` }] }],
+        }),
+      });
+      if (!response.ok) throw Object.assign(new Error(`Gemini API error: ${response.status}`), { status: 502 });
+      const data = await response.json();
+      output = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    }
+
+    return success(res, { output, task: taskKey, provider: ai.provider }, 'AI task completed');
+  } catch (err) {
+    return next(err);
+  }
+};
+
+module.exports = { translate, summarize, smartReply, grammarCorrect, toneAdjust, semanticSearch, generateCallNotes, smartCompose, transcribeAudio, appHelp, runAiTask };

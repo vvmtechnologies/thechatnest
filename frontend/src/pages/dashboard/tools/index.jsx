@@ -37,6 +37,18 @@ import {
   PiDiceFiveDuotone,
   PiQuestionDuotone,
   PiGameControllerDuotone,
+  // ── Phase 2 additions (games) ─────────────────────────────────────
+  PiCirclesFourDuotone,
+  PiHandFistDuotone,
+  PiCardsDuotone,
+  PiSquaresFourDuotone,
+  PiCircuitryDuotone,
+  PiGridFourDuotone,
+  PiTextTDuotone,
+  PiPersonSimpleDuotone,
+  PiKeyboardDuotone,
+  PiLightningDuotone,
+  PiGridNineDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -61,6 +73,17 @@ const ICON_MAP = {
   PiDiceFiveDuotone,
   PiQuestionDuotone,
   PiGameControllerDuotone,
+  PiCirclesFourDuotone,
+  PiHandFistDuotone,
+  PiCardsDuotone,
+  PiSquaresFourDuotone,
+  PiCircuitryDuotone,
+  PiGridFourDuotone,
+  PiTextTDuotone,
+  PiPersonSimpleDuotone,
+  PiKeyboardDuotone,
+  PiLightningDuotone,
+  PiGridNineDuotone,
 };
 
 const ToolsHub = () => {

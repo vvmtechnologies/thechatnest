@@ -47,6 +47,19 @@ const REGISTRY = {
 
   // Games (NEW — phase 1)
   "tic-tac-toe":         lazyNamed(() => import("./impl/games.jsx"), "TicTacToe"),
+
+  // Games — phase 2
+  "connect-four":          lazyNamed(() => import("./impl/games.jsx"), "ConnectFour"),
+  "rock-paper-scissors":   lazyNamed(() => import("./impl/games.jsx"), "RockPaperScissors"),
+  "reaction-time":         lazyNamed(() => import("./impl/games.jsx"), "ReactionTime"),
+  "memory-match":          lazyNamed(() => import("./impl/arcade.jsx"), "MemoryMatch"),
+  "game-2048":             lazyNamed(() => import("./impl/arcade.jsx"), "Game2048"),
+  "snake":                 lazyNamed(() => import("./impl/arcade.jsx"), "Snake"),
+  "minesweeper":           lazyNamed(() => import("./impl/arcade.jsx"), "Minesweeper"),
+  "wordle":                lazyNamed(() => import("./impl/puzzles.jsx"), "Wordle"),
+  "hangman":               lazyNamed(() => import("./impl/puzzles.jsx"), "Hangman"),
+  "typing-test":           lazyNamed(() => import("./impl/puzzles.jsx"), "TypingTest"),
+  "sudoku":                lazyNamed(() => import("./impl/puzzles.jsx"), "Sudoku"),
 };
 
 const ToolPage = () => {

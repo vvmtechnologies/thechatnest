@@ -22,7 +22,18 @@ export const TOOLS = [
   { slug: "yes-no",         title: "Yes or No",           desc: "Magic 8-ball style decision for the indecisive.",                  category: "decisions", icon: "PiQuestionDuotone" },
 
   // ── Games ────────────────────────────────────────────────────────
-  { slug: "tic-tac-toe",    title: "Tic Tac Toe",         desc: "Play vs a perfect AI (minimax) or pass-and-play with a teammate.", category: "games", icon: "PiGameControllerDuotone" },
+  { slug: "tic-tac-toe",       title: "Tic Tac Toe",         desc: "Play vs a perfect AI (minimax) or pass-and-play with a teammate.", category: "games", icon: "PiGameControllerDuotone" },
+  { slug: "connect-four",      title: "Connect 4",            desc: "Drop discs vs an AI (negamax, alpha-beta) — easy / medium / hard.", category: "games", icon: "PiCirclesFourDuotone" },
+  { slug: "rock-paper-scissors", title: "Rock Paper Scissors", desc: "vs an AI that learns your patterns over rounds.",                  category: "games", icon: "PiHandFistDuotone" },
+  { slug: "memory-match",      title: "Memory Match",         desc: "Flip cards, find pairs — 6/9/12 pair difficulty.",                 category: "games", icon: "PiCardsDuotone" },
+  { slug: "game-2048",         title: "2048",                 desc: "Slide and merge tiles, aim for 2048.",                             category: "games", icon: "PiSquaresFourDuotone" },
+  { slug: "snake",             title: "Snake",                desc: "Classic snake — eat the food, don't bite yourself.",               category: "games", icon: "PiCircuitryDuotone" },
+  { slug: "minesweeper",       title: "Minesweeper",          desc: "Reveal cells without hitting a mine — 3 board sizes.",             category: "games", icon: "PiGridFourDuotone" },
+  { slug: "wordle",            title: "Wordle",               desc: "Guess the 5-letter word in 6 tries. Copy result to chat.",         category: "games", icon: "PiTextTDuotone" },
+  { slug: "hangman",           title: "Hangman",              desc: "Guess the word before you run out of lives. Tech / animals / movies.", category: "games", icon: "PiPersonSimpleDuotone" },
+  { slug: "typing-test",       title: "Typing Speed Test",    desc: "WPM + accuracy on async-work paragraphs. Compete with teammates.", category: "games", icon: "PiKeyboardDuotone" },
+  { slug: "reaction-time",     title: "Reaction Time",        desc: "Click when green — measure your reflexes in milliseconds.",        category: "games", icon: "PiLightningDuotone" },
+  { slug: "sudoku",            title: "Sudoku",               desc: "Classic 9×9 puzzle, 3 difficulties, hint button.",                 category: "games", icon: "PiGridNineDuotone" },
 
   // ── Document & Data (kept) ───────────────────────────────────────
   { slug: "markdown-html",  title: "Markdown ↔ HTML",     desc: "Convert between markdown and rendered HTML.",                      category: "document", icon: "PiMarkdownLogoDuotone" },

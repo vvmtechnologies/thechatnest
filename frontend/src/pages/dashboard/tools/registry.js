@@ -12,6 +12,7 @@ export const CATEGORIES = {
   decisions:    { label: "Quick Decisions",  tint: "#f97316" },
   games:        { label: "Games",            tint: "#22c55e" },
   productivity: { label: "Productivity",     tint: "#a855f7" },
+  web:          { label: "Web & Network",    tint: "#0284c7" },
   document:     { label: "Document & Data",  tint: "#2065D1" },
   security:     { label: "Security",         tint: "#16a34a" },
   design:       { label: "Design & Dev",     tint: "#f59e0b" },
@@ -40,6 +41,12 @@ export const TOOLS = [
   { slug: "ai-faq",           title: "AI FAQ Generator",       desc: "Product description → 8–12 Q&A pairs for support / docs.",               category: "ai", icon: "PiQuestionDuotone" },
   { slug: "ai-blog-titles",   title: "AI Blog Title Generator", desc: "Topic → 10 catchy titles in varied styles (listicle, how-to, etc).",     category: "ai", icon: "PiLightbulbFilamentDuotone" },
   { slug: "ai-palette",       title: "AI Color Palette",       desc: "Brand brief → 5-color JSON palette with usage hints.",                   category: "ai", icon: "PiPaletteDuotone" },
+  // Phase 8B additions
+  { slug: "ai-hashtag",       title: "AI Hashtag Generator",   desc: "Topic → 15 hashtags (popular + niche + brand mix).",                     category: "ai", icon: "PiHashDuotone" },
+  { slug: "ai-ig-caption",    title: "AI Instagram Caption",   desc: "Post brief → IG-ready caption with hook, body, CTA, hashtags.",          category: "ai", icon: "PiInstagramLogoDuotone" },
+  { slug: "ai-quiz",          title: "AI Quiz Generator",      desc: "Source text → 5-question multiple-choice quiz with explanations.",       category: "ai", icon: "PiExamDuotone" },
+  { slug: "ai-code-explain",  title: "AI Code Explainer",      desc: "Paste code → plain-English breakdown for non-engineers.",                category: "ai", icon: "PiCodeBlockDuotone" },
+  { slug: "ai-domain",        title: "AI Domain Name Brainstorm", desc: "Product brief → 12 brandable .com name ideas.",                       category: "ai", icon: "PiGlobeSimpleDuotone" },
 
   // ── Team & Chat ──────────────────────────────────────────────────
   { slug: "spin-the-wheel",     title: "Spin the Wheel",             desc: "Animated wheel of names — visual upgrade to Random Picker.",       category: "team", icon: "PiAtomDuotone" },
@@ -111,7 +118,23 @@ export const TOOLS = [
   { slug: "whack-a-mole",     title: "Whack-a-Mole",       desc: "30-second timed reflex game — 3×3 grid, beat your best.",            category: "games", icon: "PiHammerDuotone" },
   { slug: "trivia-quiz",      title: "Trivia Quiz",        desc: "Multiple-choice from Open Trivia DB — 8 categories, 3 difficulties.", category: "games", icon: "PiQuestionDuotone" },
 
+  // ── Web & Network (new — phase 8) ────────────────────────────────
+  { slug: "url-shortener",    title: "URL Shortener",      desc: "Shorten long URLs via is.gd, with a history of recent shortens.",     category: "web", icon: "PiLinkSimpleDuotone" },
+  { slug: "og-preview",       title: "OG Preview",         desc: "See how a URL will render when shared (title / image / description).", category: "web", icon: "PiBrowsersDuotone" },
+  { slug: "public-holidays",  title: "Public Holidays",    desc: "National holidays for 20 countries, current or future year.",         category: "web", icon: "PiCalendarHeartDuotone" },
+  { slug: "currency-conv",    title: "Currency Converter", desc: "Live ECB rates via frankfurter.app — 20 currencies.",                 category: "web", icon: "PiCurrencyDollarDuotone" },
+  { slug: "website-status",   title: "Website Status",     desc: "Is the site up? Independent check via isitup.org.",                   category: "web", icon: "PiGlobeHemisphereWestDuotone" },
+  { slug: "ip-lookup",        title: "IP Address Lookup",  desc: "Geolocation + ISP + ASN for any IP (defaults to yours).",             category: "web", icon: "PiMapPinDuotone" },
+  { slug: "browser-info",     title: "Browser & Device Info", desc: "Browser, OS, CPU/RAM, viewport, timezone, user agent — all client-side.", category: "web", icon: "PiDeviceMobileCameraDuotone" },
+  { slug: "http-codes",       title: "HTTP Status Codes",  desc: "Searchable reference — click to copy '404 Not Found'.",                category: "web", icon: "PiNumberCircleFourDuotone" },
+  { slug: "slug-generator",   title: "Slug Generator",     desc: "Text → URL-safe slug (kebab / snake / dot).",                          category: "web", icon: "PiLinkBreakDuotone" },
+  { slug: "yt-thumbnail",     title: "YouTube Thumbnail",  desc: "Extract all thumbnail sizes from any YouTube URL or ID.",              category: "web", icon: "PiYoutubeLogoDuotone" },
+
   // ── Productivity (kept) ──────────────────────────────────────────
+  { slug: "loan-emi",         title: "Loan EMI Calculator", desc: "EMI + total interest from principal, annual rate, months.",          category: "productivity", icon: "PiBankDuotone" },
+  { slug: "compound-interest", title: "Compound Interest",  desc: "Lump sum + monthly contributions over N years, any frequency.",      category: "productivity", icon: "PiTrendUpDuotone" },
+  { slug: "discount-calc",    title: "Discount Calculator", desc: "Original price × discount % → final price, savings, breakdown.",      category: "productivity", icon: "PiTagDuotone" },
+  { slug: "aspect-ratio",     title: "Aspect Ratio Calculator", desc: "Compute ratio, solve for new dimensions at the same ratio.",       category: "productivity", icon: "PiResizeDuotone" },
   { slug: "unit-converter",   title: "Unit Converter",     desc: "Length, weight, volume, area, speed, time, data, temperature.",      category: "productivity", icon: "PiArrowsLeftRightDuotone" },
   { slug: "tip-calculator",   title: "Tip Calculator",     desc: "Bill + tip % + split N ways, with slider for common tips.",          category: "productivity", icon: "PiReceiptDuotone" },
   { slug: "date-difference",  title: "Date Difference",    desc: "Days, weeks, months, hours between any two dates.",                  category: "productivity", icon: "PiCalendarBlankDuotone" },

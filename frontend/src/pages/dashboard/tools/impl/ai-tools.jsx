@@ -585,3 +585,60 @@ export const AiColorPalette = () => (
     run={(input) => runAi("color-palette", input)}
   />
 );
+
+// ─── Phase 8B AI tools ─────────────────────────────────────────────
+export const AiHashtags = () => (
+  <AiSingleTool
+    title="Generate hashtags"
+    hint="Topic / post idea → 15 mixed hashtags (popular + niche + brand)."
+    inputLabel="Topic or post"
+    inputPlaceholder='e.g. "launching our async team chat app for remote startups"'
+    outputLabel="Hashtags"
+    run={(input) => runAi("hashtag", input)}
+  />
+);
+
+export const AiInstagramCaption = () => (
+  <AiSingleTool
+    title="Write caption"
+    hint="Describe the post → IG-ready caption with hook, body, CTA, and hashtags."
+    inputLabel="Post brief"
+    inputPlaceholder={"e.g.\n- product launch v3\n- 56 in-app tools\n- TheChatNest\n- for distributed teams\n- aspirational tone"}
+    outputLabel="Caption"
+    run={(input) => runAi("instagram-caption", input)}
+  />
+);
+
+export const AiQuizGenerator = () => (
+  <AiSingleTool
+    title="Generate quiz"
+    hint="Paste source material → 5-question MCQ JSON with correct answers and explanations."
+    inputLabel="Source text or topic"
+    inputPlaceholder="Paste a topic, article, or section of training material…"
+    outputLabel="Quiz"
+    variant="json"
+    run={(input) => runAi("quiz", input)}
+  />
+);
+
+export const AiCodeExplainer = () => (
+  <AiSingleTool
+    title="Explain code"
+    hint="Paste a code snippet → plain-English breakdown a non-engineer teammate can follow."
+    inputLabel="Code snippet"
+    inputPlaceholder={"// paste your function / SQL / config here"}
+    outputLabel="Explanation"
+    run={(input) => runAi("code-explain", input)}
+  />
+);
+
+export const AiDomainName = () => (
+  <AiSingleTool
+    title="Brainstorm names"
+    hint="Describe your product → 12 brandable .com name ideas with rationale."
+    inputLabel="Brief"
+    inputPlaceholder='e.g. "SaaS for indie filmmakers to manage shoots, casting, contracts, post-production"'
+    outputLabel="Names"
+    run={(input) => runAi("domain-name", input)}
+  />
+);

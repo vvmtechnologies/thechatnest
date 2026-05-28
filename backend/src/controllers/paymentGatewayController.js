@@ -162,7 +162,12 @@ const createPaymentGateway = async (req, res, next) => {
       is_successful: true,
       status: 'success',
     });
-    bumpEntityVersion(ENTITY);
+    // await the bump so the HTTP response can't reach the client before
+    // the Redis version counter has been incremented — otherwise the
+    // browser's immediate re-fetch races the bump and reads stale
+    // payment-gateway rows from the cache (which makes saved accounts
+    // look like they disappeared on the very next list refresh).
+    await bumpEntityVersion(ENTITY);
     return success(res, created, 'Payment gateway created', 201);
   } catch (error) {
     return next(error);
@@ -208,7 +213,7 @@ const updatePaymentGateway = async (req, res, next) => {
       is_successful: true,
       status: 'success',
     });
-    bumpEntityVersion(ENTITY);
+    await bumpEntityVersion(ENTITY);
     return success(res, updated, 'Payment gateway updated');
   } catch (error) {
     return next(error);
@@ -223,7 +228,7 @@ const deletePaymentGateway = async (req, res, next) => {
       err.status = 404;
       throw err;
     }
-    bumpEntityVersion(ENTITY);
+    await bumpEntityVersion(ENTITY);
     return success(res, null, 'Payment gateway deleted');
   } catch (error) {
     return next(error);

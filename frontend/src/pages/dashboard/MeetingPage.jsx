@@ -8,7 +8,6 @@ import {
   TextField,
   Button,
   Paper,
-  Divider,
   IconButton,
   InputAdornment,
   List,
@@ -49,6 +48,39 @@ import { useNavigate } from "react-router-dom";
 
 const MAX_EXTERNAL_GUESTS = 2;
 const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Small grouped sub-card used inside the form. Replaces the previous
+// bare-Divider + Title pattern, which made the long form look like an
+// undifferentiated stack. Each SectionCard groups one concern (Defaults,
+// Invite, External guests) with a header + content area.
+const SectionCard = ({ theme, children }) => (
+  <Box sx={{
+    p: 1.75,
+    borderRadius: 2,
+    border: `1px solid ${theme.palette.divider}`,
+    bgcolor: theme.palette.mode === "light" ? "#fcfcfe" : "rgba(255,255,255,0.02)",
+  }}>
+    {children}
+  </Box>
+);
+
+const SectionHeader = ({ icon, title, hint, action }) => (
+  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+    <Box sx={{
+      width: 26, height: 26, borderRadius: "8px",
+      background: "rgba(109,93,252,0.12)", color: "#6d5dfc",
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      flexShrink: 0,
+    }}>
+      {icon}
+    </Box>
+    <Box sx={{ flex: 1, minWidth: 0 }}>
+      <Typography variant="subtitle2" fontWeight={800} sx={{ lineHeight: 1.15 }}>{title}</Typography>
+      {hint && <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>{hint}</Typography>}
+    </Box>
+    {action}
+  </Stack>
+);
 
 const MeetingPage = () => {
   const theme = useTheme();
@@ -335,13 +367,14 @@ const MeetingPage = () => {
         </Stack>
       </Box>
 
-      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, p: 3, maxWidth: 1400, width: "100%", mx: "auto" }}>
+      <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 3, p: 3, maxWidth: 1400, width: "100%", mx: "auto", alignItems: "flex-start" }}>
         {/* Left: form */}
         <Paper
           elevation={0}
           sx={{
-            flex: 2,
-            p: 3,
+            flex: 1,
+            minWidth: 0,
+            p: { xs: 2, sm: 3 },
             border: `1px solid ${theme.palette.divider}`,
             borderRadius: "20px",
             boxShadow:
@@ -473,90 +506,118 @@ const MeetingPage = () => {
                     </Stack>
                   )}
 
-                  <Divider />
-                  <Typography variant="subtitle2">Settings</Typography>
-                  <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <FormControlLabel control={<Switch size="small" checked={enableVideo} onChange={(e) => setEnableVideo(e.target.checked)} />} label="Video" />
-                    <FormControlLabel control={<Switch size="small" checked={enableAudio} onChange={(e) => setEnableAudio(e.target.checked)} />} label="Audio" />
-                    <FormControlLabel control={<Switch size="small" checked={enableWaitingRoom} onChange={(e) => setEnableWaitingRoom(e.target.checked)} />} label="Waiting Room" />
-                  </Stack>
-
-                  <Divider />
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <PiUsersBold size={18} />
-                    <Typography variant="subtitle2">Invite Participants</Typography>
-                    {selectedMembers.length > 0 && <Chip label={selectedMembers.length} size="small" color="primary" />}
-                  </Stack>
-
-                  {selectedMembers.length > 0 && (
-                    <Stack direction="row" flexWrap="wrap" gap={0.5}>
-                      {selectedMembers.map((m) => (
-                        <Chip key={m.id} label={m.label || m.name} size="small"
-                          avatar={<Avatar src={m.avatar} sx={{ width: 20, height: 20 }} />}
-                          onDelete={() => toggleMember(m)} />
-                      ))}
+                  {/* Settings sub-card */}
+                  <SectionCard theme={theme}>
+                    <SectionHeader icon={<PiVideoCameraBold size={16} />} title="Defaults" hint="What's on when participants join" />
+                    <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ mt: 0.5 }}>
+                      <FormControlLabel control={<Switch size="small" checked={enableVideo} onChange={(e) => setEnableVideo(e.target.checked)} />} label="Video" />
+                      <FormControlLabel control={<Switch size="small" checked={enableAudio} onChange={(e) => setEnableAudio(e.target.checked)} />} label="Audio" />
+                      <FormControlLabel control={<Switch size="small" checked={enableWaitingRoom} onChange={(e) => setEnableWaitingRoom(e.target.checked)} />} label="Waiting Room" />
                     </Stack>
-                  )}
+                  </SectionCard>
 
-                  <TextField fullWidth size="small" placeholder="Search org members..."
-                    value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start"><PiMagnifyingGlassBold size={16} /></InputAdornment>,
-                    }} />
+                  {/* Invite Participants sub-card */}
+                  <SectionCard theme={theme}>
+                    <SectionHeader
+                      icon={<PiUsersBold size={16} />}
+                      title="Invite from your organization"
+                      hint={selectedMembers.length ? `${selectedMembers.length} selected` : "Search and pick teammates"}
+                      action={selectedMembers.length > 0 && <Chip label={selectedMembers.length} size="small" color="primary" sx={{ fontWeight: 700 }} />}
+                    />
 
-                  <List dense sx={{ maxHeight: 220, overflow: "auto", bgcolor: theme.palette.action.hover, borderRadius: 1 }}>
-                    {filteredMembers.map((m) => (
-                      <ListItem key={m.id} disablePadding>
-                        <ListItemButton onClick={() => toggleMember(m)} dense>
-                          <Checkbox edge="start" checked={!!selectedMembers.find((s) => s.id === m.id)} size="small" />
-                          <ListItemAvatar sx={{ minWidth: 36 }}>
-                            <Avatar src={m.avatar} sx={{ width: 28, height: 28 }} />
-                          </ListItemAvatar>
-                          <ListItemText primary={m.label || m.name} secondary={m.email}
-                            primaryTypographyProps={{ variant: "body2" }}
-                            secondaryTypographyProps={{ variant: "caption" }} />
-                        </ListItemButton>
-                      </ListItem>
-                    ))}
-                    {filteredMembers.length === 0 && (
-                      <Typography variant="caption" color="text.secondary" sx={{ p: 2, textAlign: "center", display: "block" }}>
-                        No members found
-                      </Typography>
+                    {selectedMembers.length > 0 && (
+                      <Stack direction="row" flexWrap="wrap" gap={0.5} sx={{ mb: 1.25 }}>
+                        {selectedMembers.map((m) => (
+                          <Chip key={m.id} label={m.label || m.name} size="small"
+                            avatar={<Avatar src={m.avatar} sx={{ width: 20, height: 20 }} />}
+                            onDelete={() => toggleMember(m)} />
+                        ))}
+                      </Stack>
                     )}
-                  </List>
 
-                  {/* External guests (email invites) */}
-                  <Divider />
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <PiEnvelopeBold size={18} />
-                    <Typography variant="subtitle2">External Guests</Typography>
-                    <Chip label={`${guestEmails.length}/${MAX_EXTERNAL_GUESTS}`} size="small"
-                      color={guestEmails.length >= MAX_EXTERNAL_GUESTS ? "warning" : "default"} />
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    Invite up to {MAX_EXTERNAL_GUESTS} people by email — they join via link + code without login.
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <TextField fullWidth size="small" placeholder="guest@example.com"
-                      value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGuestEmail(); } }}
-                      disabled={guestEmails.length >= MAX_EXTERNAL_GUESTS} />
-                    <Button variant="outlined" onClick={addGuestEmail}
-                      disabled={guestEmails.length >= MAX_EXTERNAL_GUESTS || !guestEmail.trim()}>
-                      Add
-                    </Button>
-                  </Stack>
-                  {guestEmails.length > 0 && (
-                    <Stack direction="row" flexWrap="wrap" gap={0.5}>
-                      {guestEmails.map((e) => (
-                        <Chip key={e} label={e} size="small" onDelete={() => removeGuestEmail(e)}
-                          icon={<PiEnvelopeBold />} />
-                      ))}
+                    <TextField fullWidth size="small" placeholder="Search org members…"
+                      value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start"><PiMagnifyingGlassBold size={16} /></InputAdornment>,
+                      }}
+                      sx={{ mb: 1 }} />
+
+                    <List dense sx={{
+                      maxHeight: 240,
+                      overflow: "auto",
+                      bgcolor: theme.palette.mode === "light" ? "#f8fafc" : "rgba(255,255,255,0.03)",
+                      borderRadius: 1.5,
+                      border: `1px solid ${theme.palette.divider}`,
+                      p: 0,
+                    }}>
+                      {filteredMembers.map((m) => {
+                        const checked = !!selectedMembers.find((s) => s.id === m.id);
+                        return (
+                          <ListItem key={m.id} disablePadding>
+                            <ListItemButton onClick={() => toggleMember(m)} dense sx={{ borderRadius: 1, mx: 0.5, my: 0.25 }}>
+                              <Checkbox edge="start" checked={checked} size="small" />
+                              <ListItemAvatar sx={{ minWidth: 36 }}>
+                                <Avatar src={m.avatar} sx={{ width: 28, height: 28 }} />
+                              </ListItemAvatar>
+                              <ListItemText primary={m.label || m.name} secondary={m.email}
+                                primaryTypographyProps={{ variant: "body2", fontWeight: checked ? 700 : 500 }}
+                                secondaryTypographyProps={{ variant: "caption" }} />
+                            </ListItemButton>
+                          </ListItem>
+                        );
+                      })}
+                      {filteredMembers.length === 0 && (
+                        <Stack alignItems="center" sx={{ py: 3 }}>
+                          <PiUsersBold size={26} color={theme.palette.text.disabled} />
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75 }}>
+                            {searchQuery ? `No matches for "${searchQuery}"` : "No teammates in your org yet"}
+                          </Typography>
+                        </Stack>
+                      )}
+                    </List>
+                  </SectionCard>
+
+                  {/* External guests sub-card */}
+                  <SectionCard theme={theme}>
+                    <SectionHeader
+                      icon={<PiEnvelopeBold size={16} />}
+                      title="External guests"
+                      hint={`Email-only invites · ${guestEmails.length}/${MAX_EXTERNAL_GUESTS} used`}
+                      action={
+                        <Chip
+                          label={`${guestEmails.length}/${MAX_EXTERNAL_GUESTS}`}
+                          size="small"
+                          sx={{
+                            fontWeight: 700,
+                            bgcolor: guestEmails.length >= MAX_EXTERNAL_GUESTS ? "rgba(245,158,11,0.18)" : "transparent",
+                            color: guestEmails.length >= MAX_EXTERNAL_GUESTS ? "#b45309" : "text.secondary",
+                            border: "1px solid",
+                            borderColor: guestEmails.length >= MAX_EXTERNAL_GUESTS ? "rgba(245,158,11,0.4)" : theme.palette.divider,
+                          }}
+                        />
+                      }
+                    />
+                    <Stack direction="row" spacing={1} sx={{ mb: guestEmails.length ? 1 : 0 }}>
+                      <TextField fullWidth size="small" placeholder="guest@example.com"
+                        value={guestEmail} onChange={(e) => setGuestEmail(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addGuestEmail(); } }}
+                        disabled={guestEmails.length >= MAX_EXTERNAL_GUESTS} />
+                      <Button variant="outlined" onClick={addGuestEmail}
+                        disabled={guestEmails.length >= MAX_EXTERNAL_GUESTS || !guestEmail.trim()}>
+                        Add
+                      </Button>
                     </Stack>
-                  )}
+                    {guestEmails.length > 0 && (
+                      <Stack direction="row" flexWrap="wrap" gap={0.5}>
+                        {guestEmails.map((e) => (
+                          <Chip key={e} label={e} size="small" onDelete={() => removeGuestEmail(e)}
+                            icon={<PiEnvelopeBold />} />
+                        ))}
+                      </Stack>
+                    )}
+                  </SectionCard>
 
-                  <Divider />
-                  <Stack direction="row" justifyContent="flex-end" spacing={2}>
+                  <Stack direction="row" justifyContent="flex-end" spacing={2} sx={{ pt: 1 }}>
                     {tab === 0 && (
                       <Button
                         size="large"
@@ -614,63 +675,89 @@ const MeetingPage = () => {
           )}
         </Paper>
 
-        {/* Right: upcoming meetings */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        {/* Right: meetings sidebar (sticky on desktop). Renders MeetingsList
+            in `embedded` mode so it shares this Paper rather than nesting
+            its own card + header. */}
+        <Box sx={{
+          flex: { xs: "0 0 auto", md: "0 0 360px" },
+          minWidth: 0,
+          width: { xs: "100%", md: 360 },
+          position: { md: "sticky" },
+          top: { md: 24 },
+          alignSelf: "flex-start",
+        }}>
           <Paper
             elevation={0}
             sx={{
-              p: 2.25,
               border: `1px solid ${theme.palette.divider}`,
               borderRadius: "20px",
-              height: "100%",
+              overflow: "hidden",
               boxShadow:
                 theme.palette.mode === "light"
                   ? "0 1px 3px rgba(15,23,42,0.04), 0 4px 14px rgba(15,23,42,0.04)"
                   : "none",
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 2 }}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={1.25}
+              sx={{
+                px: 2.25,
+                py: 1.75,
+                borderBottom: `1px solid ${theme.palette.divider}`,
+                background: theme.palette.mode === "light"
+                  ? "linear-gradient(135deg, rgba(109,93,252,0.04), rgba(255,213,74,0.03))"
+                  : "linear-gradient(135deg, rgba(109,93,252,0.10), rgba(255,213,74,0.04))",
+              }}
+            >
               <Box
                 sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "9px",
-                  background: "rgba(109,93,252,0.12)",
-                  color: "#6d5dfc",
+                  width: 30,
+                  height: 30,
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
+                  color: "#fff",
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  boxShadow: "0 4px 12px rgba(109,93,252,0.35)",
                 }}
               >
                 <PiCalendarBold size={16} />
               </Box>
-              <Typography variant="subtitle1" fontWeight={800} sx={{ letterSpacing: "-0.01em" }}>
-                Upcoming meetings
-              </Typography>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="subtitle2" fontWeight={800} sx={{ letterSpacing: "-0.01em", lineHeight: 1.1 }}>
+                  Your meetings
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
+                  Switch between upcoming and past
+                </Typography>
+              </Box>
             </Stack>
-            <MeetingsList
-              onJoinMeeting={async (m) => {
-                // Validate the meeting is still active. The host may have
-                // ended it after the list loaded; bail out before opening
-                // the room if the backend responds 410.
-                try {
-                  const fresh = await joinByCodeApi(m.meeting_id);
-                  const meetingData = fresh?.meeting || m;
-                  meeting.joinMeeting({
-                    meetingRoomId: m.meeting_id,
-                    meetingData,
-                    userName, enableVideo: true, enableAudio: true,
-                  });
-                  setMeetingRoomOpen(true);
-                } catch (err) {
-                  const msg = err?.message || "Failed to join";
-                  const friendly = /ended|cancel|not\s*found/i.test(msg)
-                    ? "This meeting has ended."
-                    : msg;
-                  setToast({ open: true, message: friendly, severity: "error" });
-                }
-              }}
-            />
+            <Box sx={{ px: 1.5, pb: 1.5, pt: 0 }}>
+              <MeetingsList
+                embedded
+                onJoinMeeting={async (m) => {
+                  try {
+                    const fresh = await joinByCodeApi(m.meeting_id);
+                    const meetingData = fresh?.meeting || m;
+                    meeting.joinMeeting({
+                      meetingRoomId: m.meeting_id,
+                      meetingData,
+                      userName, enableVideo: true, enableAudio: true,
+                    });
+                    setMeetingRoomOpen(true);
+                  } catch (err) {
+                    const msg = err?.message || "Failed to join";
+                    const friendly = /ended|cancel|not\s*found/i.test(msg)
+                      ? "This meeting has ended."
+                      : msg;
+                    setToast({ open: true, message: friendly, severity: "error" });
+                  }
+                }}
+              />
+            </Box>
           </Paper>
         </Box>
       </Box>

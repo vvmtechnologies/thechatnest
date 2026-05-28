@@ -8,7 +8,7 @@ import {
   Avatar,
   Button,
   Tooltip,
-  Divider,
+  Skeleton,
   CircularProgress,
   Tabs,
   Tab,
@@ -41,14 +41,11 @@ const statusColors = {
   cancelled: "error",
 };
 
-const rsvpIcons = {
-  accepted: <PiCheckBold size={12} />,
-  declined: <PiXBold size={12} />,
-  tentative: <PiQuestionBold size={12} />,
-  pending: <PiClockBold size={12} />,
-};
-
-const MeetingsList = ({ onJoinMeeting, onClose }) => {
+// When `embedded` is true, the popover-style outer wrapper (fixed width,
+// shadow, inner header) is stripped so the list slots cleanly into a parent
+// card (e.g. the right sidebar on /app/meeting). Outside of /app/meeting
+// the popover shape is preserved.
+const MeetingsList = ({ onJoinMeeting, onClose, embedded = false }) => {
   const theme = useTheme();
   const currentUser = useCurrentUser();
   const orgId = (() => {
@@ -160,9 +157,19 @@ const MeetingsList = ({ onJoinMeeting, onClose }) => {
     return d.toLocaleDateString([], { month: "short", day: "numeric" }) + " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  return (
-    <Box
-      sx={{
+  const wrapperSx = embedded
+    ? {
+        width: "100%",
+        height: "100%",
+        bgcolor: "transparent",
+        borderRadius: 0,
+        boxShadow: "none",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: 480,
+      }
+    : {
         width: 360,
         maxHeight: "70vh",
         bgcolor: theme.palette.background.paper,
@@ -171,47 +178,91 @@ const MeetingsList = ({ onJoinMeeting, onClose }) => {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-      }}
-    >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.5 }}>
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <PiCalendarBold size={20} />
-          <Typography variant="subtitle1" fontWeight={600}>Meetings</Typography>
+      };
+
+  return (
+    <Box sx={wrapperSx}>
+      {!embedded && (
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.5 }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <PiCalendarBold size={20} />
+            <Typography variant="subtitle1" fontWeight={600}>Meetings</Typography>
+          </Stack>
+          <Stack direction="row" spacing={0.5}>
+            <Tooltip title="Refresh">
+              <IconButton size="small" onClick={loadMeetings}>
+                <PiArrowClockwiseBold size={16} />
+              </IconButton>
+            </Tooltip>
+            {onClose && (
+              <IconButton size="small" onClick={onClose}>
+                <PiXBold size={16} />
+              </IconButton>
+            )}
+          </Stack>
         </Stack>
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title="Refresh">
-            <IconButton size="small" onClick={loadMeetings}>
-              <PiArrowClockwiseBold size={16} />
-            </IconButton>
-          </Tooltip>
-          {onClose && (
-            <IconButton size="small" onClick={onClose}>
-              <PiXBold size={16} />
-            </IconButton>
-          )}
-        </Stack>
-      </Stack>
+      )}
 
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
         variant="fullWidth"
-        sx={{ minHeight: 36, borderBottom: `1px solid ${theme.palette.divider}` }}
+        sx={{
+          minHeight: 38,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          "& .MuiTab-root": { minHeight: 38, textTransform: "none", fontSize: 13, fontWeight: 600 },
+          "& .MuiTabs-indicator": embedded
+            ? { background: "linear-gradient(90deg, #6d5dfc, #ffd54a)", height: 2.5, borderRadius: 2 }
+            : undefined,
+        }}
       >
-        <Tab value="upcoming" label="Upcoming" sx={{ minHeight: 36, textTransform: "none", fontSize: 13 }} />
-        <Tab value="past" label="Past" sx={{ minHeight: 36, textTransform: "none", fontSize: 13 }} />
+        <Tab value="upcoming" label="Upcoming" />
+        <Tab value="past" label="Past" />
+        {embedded && (
+          <Tooltip title="Refresh">
+            <IconButton size="small" onClick={loadMeetings} sx={{ ml: "auto", alignSelf: "center", mr: 1 }}>
+              <PiArrowClockwiseBold size={15} />
+            </IconButton>
+          </Tooltip>
+        )}
       </Tabs>
 
-      <Stack sx={{ flex: 1, overflow: "auto", p: 1 }}>
+      <Stack sx={{ flex: 1, overflow: "auto", p: embedded ? 0 : 1, pt: embedded ? 1.5 : 1 }}>
         {loading ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
-            <CircularProgress size={28} />
+          // Skeleton meeting cards instead of a blank spinner — gives the
+          // sidebar a sense of structure while the list is loading.
+          <Stack spacing={1} sx={{ px: embedded ? 0 : 0.5 }}>
+            {[0, 1, 2].map((i) => (
+              <Box key={i} sx={{ p: 1.5, borderRadius: 1.5, bgcolor: theme.palette.action.hover }}>
+                <Skeleton variant="text" width="65%" height={22} />
+                <Stack direction="row" spacing={0.75} sx={{ mt: 0.5 }}>
+                  <Skeleton variant="rounded" width={50} height={18} />
+                  <Skeleton variant="rounded" width={90} height={18} />
+                </Stack>
+                <Skeleton variant="rounded" width={120} height={22} sx={{ mt: 1 }} />
+              </Box>
+            ))}
           </Stack>
         ) : meetings.length === 0 ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ py: 4 }}>
-            <PiCalendarBold size={40} color={theme.palette.text.disabled} />
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              {tab === "past" ? "No past meetings yet" : "No upcoming meetings"}
+          <Stack alignItems="center" justifyContent="center" sx={{ py: embedded ? 6 : 4, px: 2, textAlign: "center", flex: 1 }}>
+            <Box
+              sx={{
+                width: 56, height: 56, borderRadius: "50%",
+                background: theme.palette.mode === "light" ? "rgba(109,93,252,0.10)" : "rgba(109,93,252,0.18)",
+                color: "#6d5dfc",
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                mb: 1.5,
+              }}
+            >
+              <PiCalendarBold size={26} />
+            </Box>
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
+              {tab === "past" ? "No past meetings" : "Nothing scheduled"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ maxWidth: 220, lineHeight: 1.5 }}>
+              {tab === "past"
+                ? "Meetings you join or host will appear here once they end."
+                : "Start an instant meeting or schedule one on the left. Invitees see it here automatically."}
             </Typography>
           </Stack>
         ) : (

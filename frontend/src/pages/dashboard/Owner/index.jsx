@@ -1639,6 +1639,22 @@ const ResourcePanel = ({
       if (!response.ok || result?.status === "error") {
         throw new Error(result?.message || `Unable to update ${moduleConfig.title}`);
       }
+      // Optimistically swap the freshly-saved row into the visible list
+      // BEFORE re-fetching. Two reasons:
+      // 1. Even if the API list cache (Redis) hasn't been invalidated yet,
+      //    the user already sees the new state — no "saved data vanished"
+      //    flash on the next open of the same row.
+      // 2. For complex JSON fields like payment_gateways.config_json,
+      //    relying on a refetch is fragile — the response IS the source
+      //    of truth for this exact row, so use it directly.
+      const updatedRow = result?.data && typeof result.data === "object" ? result.data : null;
+      if (updatedRow) {
+        setRows((prev) =>
+          prev.map((row) =>
+            resolveRowId(row, moduleConfig.idKeys) === rowId ? { ...row, ...updatedRow } : row
+          )
+        );
+      }
       setOpenEdit(false);
       setEditForm(toFormStateFromRow(moduleConfig, null));
       await fetchRows();

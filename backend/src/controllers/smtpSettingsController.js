@@ -157,6 +157,66 @@ const deleteSmtpSettings = async (req, res, next) => {
 // stored row (with the real password from the DB).
 const TEST_TIMEOUT_MS = 15000;
 
+const isNetworkBlockError = (error) => {
+  const code = String(error?.code || '').toUpperCase();
+  const message = String(error?.message || '');
+  return (
+    code === 'ETIMEDOUT' ||
+    code === 'ESOCKET' ||
+    code === 'ECONNECTION' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ENETUNREACH' ||
+    code === 'EHOSTUNREACH' ||
+    /timeout|timed out|refused|unreachable|ENETUNREACH|EHOSTUNREACH/i.test(message)
+  );
+};
+
+// Outbound 587 is the most commonly blocked SMTP port on shared / managed
+// hosts. When it fails with a network-level error, transparently retry on
+// 465 (and vice-versa) so the owner gets a definitive answer in one click
+// instead of having to hand-edit the form to test the alternative port.
+const ALTERNATIVE_PORT_TRIES = {
+  587: { port: 465, secure: true, note: 'port 465 with SSL' },
+  25:  { port: 465, secure: true, note: 'port 465 with SSL' },
+  465: { port: 587, secure: false, note: 'port 587 with STARTTLS' },
+};
+
+const buildTestTransporter = (config) => nodemailer.createTransport({
+  host: config.host,
+  port: config.port,
+  secure: config.secure,
+  connectionTimeout: TEST_TIMEOUT_MS,
+  greetingTimeout: TEST_TIMEOUT_MS,
+  socketTimeout: TEST_TIMEOUT_MS,
+  // Force IPv4 lookup. On managed hosts like Render, outbound IPv6
+  // isn't routed — Node otherwise resolves smtp.gmail.com to its IPv6
+  // record first (since Node 18) and the connect fails with
+  // ENETUNREACH 2607:f8b0:...:587. family: 4 makes the resolver
+  // return A records only, matching what production routing supports.
+  family: 4,
+  auth: { user: config.smtp_user, pass: config.smtp_pass },
+});
+
+const runOneProbe = async (config, recipient, stored, id, extraNote = '') => {
+  const transporter = buildTestTransporter(config);
+  // verify() catches "bad credentials" / "connection refused" before
+  // we attempt sendMail — gives a cleaner error message back to the UI.
+  await transporter.verify();
+  const info = await transporter.sendMail({
+    from: config.from_address || config.smtp_user,
+    to: recipient,
+    subject: 'TheChatNest — SMTP test',
+    text:
+      `This is a test email from TheChatNest.\n\n` +
+      `Config: ${stored.label || 'SMTP config #' + id}\n` +
+      `Host: ${config.host}:${config.port} (secure=${config.secure})${extraNote ? ' [' + extraNote + ']' : ''}\n` +
+      `From: ${config.from_address || config.smtp_user}\n` +
+      `Sent at: ${new Date().toISOString()}\n\n` +
+      `If you received this, the SMTP settings are working.`,
+  });
+  return info;
+};
+
 const testSmtpSettings = async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
@@ -205,38 +265,55 @@ const testSmtpSettings = async (req, res, next) => {
       const err = new Error('No recipient available for the test email'); err.status = 400; throw err;
     }
 
-    const transporter = nodemailer.createTransport({
-      host: config.host,
-      port: config.port,
-      secure: config.secure,
-      connectionTimeout: TEST_TIMEOUT_MS,
-      greetingTimeout: TEST_TIMEOUT_MS,
-      socketTimeout: TEST_TIMEOUT_MS,
-      // Force IPv4 lookup. On managed hosts like Render, outbound IPv6
-      // isn't routed — Node otherwise resolves smtp.gmail.com to its IPv6
-      // record first (since Node 18) and the connect fails with
-      // ENETUNREACH 2607:f8b0:...:587. family: 4 makes the resolver
-      // return A records only, matching what production routing supports.
-      family: 4,
-      auth: { user: config.smtp_user, pass: config.smtp_pass },
-    });
+    let info;
+    let usedFallback = null; // { port, secure, note }
+    let originalError = null;
 
-    // verify() catches "bad credentials" / "connection refused" before
-    // we attempt sendMail — gives a cleaner error message back to the UI.
-    await transporter.verify();
+    try {
+      info = await runOneProbe(config, recipient, stored, id);
+    } catch (firstErr) {
+      // If the failure looks like an outbound-port block and we know an
+      // alternative port/security combo to try, attempt it. This is the
+      // single most common SMTP gotcha on shared hosts — try 465+SSL when
+      // 587+STARTTLS times out, and vice-versa.
+      const alt = ALTERNATIVE_PORT_TRIES[config.port];
+      if (!alt || !isNetworkBlockError(firstErr)) throw firstErr;
+      originalError = firstErr;
+      try {
+        info = await runOneProbe(
+          { ...config, port: alt.port, secure: alt.secure },
+          recipient,
+          stored,
+          id,
+          `auto-fallback from port ${config.port}`
+        );
+        usedFallback = alt;
+      } catch (altErr) {
+        // Both ports failed. Surface the ORIGINAL error (matches what the
+        // owner asked for) but annotate the message to make clear we tried
+        // both, so they don't waste time swapping the port themselves.
+        const message = `${firstErr.message || 'Failed to send test email'}. ` +
+          `Also tried ${alt.note} as a fallback — that failed too. ` +
+          `Your host is almost certainly blocking outbound SMTP; switch to a ` +
+          `transactional email service (SendGrid, Mailgun, Resend) which uses ` +
+          `HTTPS instead of SMTP ports.`;
+        const wrapped = new Error(message);
+        wrapped.status = firstErr.status || 502;
+        wrapped.code = firstErr.code;
+        wrapped.details = {
+          smtp_code: firstErr.code || null,
+          smtp_response: firstErr.response || null,
+          smtp_responseCode: firstErr.responseCode || null,
+          fallback_attempted: alt,
+          fallback_error: altErr.message || String(altErr),
+        };
+        throw wrapped;
+      }
+    }
 
-    const info = await transporter.sendMail({
-      from: config.from_address || config.smtp_user,
-      to: recipient,
-      subject: 'TheChatNest — SMTP test',
-      text:
-        `This is a test email from TheChatNest.\n\n` +
-        `Config: ${stored.label || 'SMTP config #' + id}\n` +
-        `Host: ${config.host}:${config.port} (secure=${config.secure})\n` +
-        `From: ${config.from_address || config.smtp_user}\n` +
-        `Sent at: ${new Date().toISOString()}\n\n` +
-        `If you received this, the SMTP settings are working.`,
-    });
+    const responseMessage = usedFallback
+      ? `Test email sent via fallback (${usedFallback.note}). Your saved config uses port ${config.port} which is blocked — update it to port ${usedFallback.port} + Secure=${usedFallback.secure ? 'Yes' : 'No'} for normal emails to work.`
+      : 'Test email sent';
 
     return success(res, {
       ok: true,
@@ -245,23 +322,24 @@ const testSmtpSettings = async (req, res, next) => {
       accepted: info?.accepted || [],
       rejected: info?.rejected || [],
       response: info?.response || null,
-    }, 'Test email sent');
+      used_port: usedFallback ? usedFallback.port : config.port,
+      used_secure: usedFallback ? usedFallback.secure : config.secure,
+      fallback: usedFallback
+        ? {
+            from_port: config.port,
+            to_port: usedFallback.port,
+            to_secure: usedFallback.secure,
+            reason: originalError?.message || 'Original port failed',
+          }
+        : null,
+    }, responseMessage);
   } catch (error) {
     // Bubble up SMTP error message so the owner sees the real reason
     // (e.g. "Invalid login", "Connection timeout").
     let message = error?.message || 'Failed to send test email';
-    const code = String(error?.code || '').toUpperCase();
-    const looksLikeTimeout =
-      code === 'ETIMEDOUT' ||
-      code === 'ESOCKET' ||
-      code === 'ECONNECTION' ||
-      /timeout|timed out/i.test(message);
-    const looksLikeRefused =
-      code === 'ECONNREFUSED' || /refused|unreachable|ENETUNREACH/i.test(message);
-    // Most "connection timeout / refused" failures on managed hosts come
-    // down to the provider blocking outbound port 587. Surface a concrete
-    // next step so the owner isn't left staring at a generic error.
-    if (looksLikeTimeout || looksLikeRefused) {
+    // Only append the generic hint when the wrapped fallback path hasn't
+    // already given a more specific one.
+    if (isNetworkBlockError(error) && !/fallback|transactional email/i.test(message)) {
       message =
         `${message}. The SMTP server didn't respond — your host may be blocking ` +
         `outbound port ${req.body?.override?.port || 'this port'}. ` +
@@ -270,7 +348,7 @@ const testSmtpSettings = async (req, res, next) => {
     }
     const wrapped = new Error(message);
     wrapped.status = error?.status || 502;
-    wrapped.details = {
+    wrapped.details = error?.details || {
       smtp_code: error?.code || null,
       smtp_response: error?.response || null,
       smtp_responseCode: error?.responseCode || null,

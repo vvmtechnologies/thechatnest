@@ -3756,9 +3756,19 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
         return;
       }
       const recipient = payload?.data?.recipient || to;
+      const fallback = payload?.data?.fallback || null;
+      // Server message already explains the fallback path (which port it
+      // used and what to update) — prefer it over the generic success line.
+      // Falls back to a friendly default for normal success.
+      const successMessage = fallback
+        ? payload?.message ||
+          `Test email sent to ${recipient} via fallback port ${fallback.to_port}. Update your config to port ${fallback.to_port} + Secure=${fallback.to_secure ? "Yes" : "No"}.`
+        : `Test email sent to ${recipient}. Check the inbox (and spam folder).`;
       setTestStatus({
-        severity: "success",
-        message: `Test email sent to ${recipient}. Check the inbox (and spam folder).`,
+        // Surface fallback as a warning so it visually stands out from
+        // a clean success — the owner still needs to act (update saved port).
+        severity: fallback ? "warning" : "success",
+        message: successMessage,
       });
       setLastTestedAt(new Date());
     } catch (err) {

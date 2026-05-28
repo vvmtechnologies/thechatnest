@@ -80,6 +80,20 @@ const REGISTRY = {
   "working-days":          lazyNamed(() => import("./impl/hr.jsx"), "WorkingDays"),
   "vacation-tracker":      lazyNamed(() => import("./impl/hr.jsx"), "VacationTracker"),
   "salary-hourly":         lazyNamed(() => import("./impl/hr.jsx"), "SalaryToHourly"),
+
+  // AI Tools — phase 6 (all call the active configured AI provider)
+  "ai-translator":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiTranslator"),
+  "ai-summarizer":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSummarizer"),
+  "ai-rewriter":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiRewriter"),
+  "ai-reply":              lazyNamed(() => import("./impl/ai-tools.jsx"), "AiReplySuggester"),
+  "ai-email":              lazyNamed(() => import("./impl/ai-tools.jsx"), "AiEmailDrafter"),
+  "ai-grammar":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiGrammarCheck"),
+  "ai-tone":               lazyNamed(() => import("./impl/ai-tools.jsx"), "AiToneDetector"),
+  "ai-jargon":             lazyNamed(() => import("./impl/ai-tools.jsx"), "AiJargonSimplifier"),
+  "ai-acronyms":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAcronymDecoder"),
+  "ai-actions":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiActionItems"),
+  "ai-sentiment":          lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSentiment"),
+  "ai-alt-text":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAltText"),
 };
 
 const ToolPage = () => {

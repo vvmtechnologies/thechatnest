@@ -65,6 +65,19 @@ import {
   PiBriefcaseDuotone,
   PiSunDuotone,
   PiMoneyDuotone,
+  // ── Phase 6 additions (AI) ────────────────────────────────────────
+  PiTranslateDuotone,
+  PiNotePencilDuotone,
+  PiPencilSimpleLineDuotone,
+  PiArrowBendUpLeftDuotone,
+  PiEnvelopeDuotone,
+  PiCheckCircleDuotone,
+  PiSmileyDuotone,
+  PiBookOpenDuotone,
+  PiAtDuotone,
+  PiListBulletsDuotone,
+  PiSmileySadDuotone,
+  PiEyeDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -113,6 +126,18 @@ const ICON_MAP = {
   PiBriefcaseDuotone,
   PiSunDuotone,
   PiMoneyDuotone,
+  PiTranslateDuotone,
+  PiNotePencilDuotone,
+  PiPencilSimpleLineDuotone,
+  PiArrowBendUpLeftDuotone,
+  PiEnvelopeDuotone,
+  PiCheckCircleDuotone,
+  PiSmileyDuotone,
+  PiBookOpenDuotone,
+  PiAtDuotone,
+  PiListBulletsDuotone,
+  PiSmileySadDuotone,
+  PiEyeDuotone,
 };
 
 const ToolsHub = () => {

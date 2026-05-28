@@ -5,6 +5,7 @@
 // Categories appear as filter chips on /app/tools. New categories get added
 // to this map as later phases ship tools into them (ai, team, file, hr).
 export const CATEGORIES = {
+  ai:           { label: "AI Tools",         tint: "#6366f1" },
   team:         { label: "Team & Chat",      tint: "#0ea5e9" },
   hr:           { label: "HR & Decision",    tint: "#db2777" },
   file:         { label: "File & Media",     tint: "#0891b2" },
@@ -17,6 +18,20 @@ export const CATEGORIES = {
 };
 
 export const TOOLS = [
+  // ── AI Tools ─────────────────────────────────────────────────────
+  { slug: "ai-translator",   title: "AI Translator",          desc: "Translate text to any of 30 languages via your configured AI provider.", category: "ai", icon: "PiTranslateDuotone" },
+  { slug: "ai-summarizer",   title: "AI Summarizer",          desc: "Paste long text → clean bullet summary.",                                category: "ai", icon: "PiNotePencilDuotone" },
+  { slug: "ai-rewriter",     title: "AI Message Rewriter",    desc: "Rewrite messages: Friendly / Formal / Concise / Assertive.",             category: "ai", icon: "PiPencilSimpleLineDuotone" },
+  { slug: "ai-reply",        title: "AI Reply Suggester",     desc: "Paste a message → 3 ready-to-send reply suggestions.",                   category: "ai", icon: "PiArrowBendUpLeftDuotone" },
+  { slug: "ai-email",        title: "AI Email Drafter",       desc: "Bullet points → polished email with subject line.",                      category: "ai", icon: "PiEnvelopeDuotone" },
+  { slug: "ai-grammar",      title: "AI Grammar & Spell",     desc: "Paste text → grammar + spell-corrected version.",                        category: "ai", icon: "PiCheckCircleDuotone" },
+  { slug: "ai-tone",         title: "AI Tone Detector",       desc: "See how your message will land + a softer rewrite suggestion.",          category: "ai", icon: "PiSmileyDuotone" },
+  { slug: "ai-jargon",       title: "AI Jargon Simplifier",   desc: "Technical text → plain English for non-technical teammates.",            category: "ai", icon: "PiBookOpenDuotone" },
+  { slug: "ai-acronyms",     title: "AI Acronym Decoder",     desc: "Find every acronym in text and explain it with context.",                category: "ai", icon: "PiAtDuotone" },
+  { slug: "ai-actions",      title: "AI Action Items",        desc: "Meeting notes → list of tasks with owners + due dates.",                 category: "ai", icon: "PiListBulletsDuotone" },
+  { slug: "ai-sentiment",    title: "AI Sentiment",           desc: "Analyse the sentiment of a thread or batch of messages.",                category: "ai", icon: "PiSmileySadDuotone" },
+  { slug: "ai-alt-text",     title: "AI Alt-Text Writer",     desc: "Describe an image → accessibility-ready alt text (≤120 chars).",         category: "ai", icon: "PiEyeDuotone" },
+
   // ── Team & Chat ──────────────────────────────────────────────────
   { slug: "mention-formatter",  title: "Mention/Markdown Formatter", desc: "Bold, italic, code blocks, lists — pick a style, copy to chat.",  category: "team", icon: "PiTextAaDuotone" },
   { slug: "calendar-link",      title: "Calendar Link Generator",    desc: "Google Cal / Outlook links + downloadable .ics, share in chat.",   category: "team", icon: "PiCalendarPlusDuotone" },

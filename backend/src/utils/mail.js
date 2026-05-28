@@ -55,6 +55,12 @@ const getTransporter = async () => {
     connectionTimeout: timeoutMs,
     greetingTimeout: timeoutMs,
     socketTimeout: timeoutMs,
+    // Force IPv4 on outbound SMTP. Managed hosts (Render, Heroku, many
+    // home ISPs) don't route IPv6 — without this, Node 18+ prefers AAAA
+    // records and the very first OTP / verification mail dies with
+    // ENETUNREACH 2607:f8b0:...:587. Forcing family 4 makes the resolver
+    // hand back A records only, which production can actually reach.
+    family: 4,
     auth: { user: settings.smtp_user, pass: settings.smtp_pass },
   });
 

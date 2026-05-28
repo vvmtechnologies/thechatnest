@@ -2,6 +2,15 @@ const dotenv = require('dotenv');
 dotenv.config();
 const os = require('node:os');
 const http = require('node:http');
+const dns = require('node:dns');
+
+// Force the DNS resolver to return IPv4 addresses first for every outbound
+// lookup made in this process. Node 18+ defaults to "verbatim" ordering,
+// which can hand back AAAA (IPv6) records first — and managed hosts like
+// Render don't route outbound IPv6, so the first connect dies with
+// ENETUNREACH. SMTP (Gmail), Stripe, S3, webhook deliveries etc. all
+// benefit. Individual sockets can still opt back into v6 with `family: 6`.
+try { dns.setDefaultResultOrder('ipv4first'); } catch { /* Node < 18 */ }
 
 const app = require('./app');
 const { connectDatabase } = require('./config/database');

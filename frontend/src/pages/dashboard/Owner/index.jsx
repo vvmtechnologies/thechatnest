@@ -142,7 +142,29 @@ const serializeGatewayConfig = (state) => ({
   })),
 });
 
-const GatewayKVSection = ({ accId, mode, rows, label, color, bgColor, borderColor, readOnly, onAdd, onRemove, onUpdate }) => (
+// Known credential field names per provider, so the UI can offer one-tap
+// chips instead of forcing the owner to remember exact strings like
+// "publishable_key" / "secret_key" — typos here silently break billing
+// because the backend grep-matches these keys verbatim.
+const PROVIDER_FIELD_TEMPLATES = {
+  stripe: ["publishable_key", "secret_key", "webhook_secret"],
+  paypal: ["client_id", "client_secret", "webhook_id"],
+  razorpay: ["key_id", "key_secret", "webhook_secret"],
+  cashfree: ["app_id", "secret_key", "webhook_secret"],
+  phonepe: ["merchant_id", "salt_key", "salt_index"],
+  payu: ["merchant_key", "merchant_salt"],
+};
+
+const getTemplateFields = (providerKey) => {
+  const key = String(providerKey || "").toLowerCase();
+  return PROVIDER_FIELD_TEMPLATES[key] || [];
+};
+
+const GatewayKVSection = ({ accId, mode, rows, label, color, bgColor, borderColor, readOnly, providerKey, onAdd, onAddNamed, onRemove, onUpdate }) => {
+  const templates = getTemplateFields(providerKey);
+  const usedKeys = new Set((rows || []).map((kv) => String(kv.key || "").trim().toLowerCase()).filter(Boolean));
+  const remainingTemplates = templates.filter((name) => !usedKeys.has(name.toLowerCase()));
+  return (
   <Box sx={{ p: 1.25, borderRadius: 1.5, backgroundColor: bgColor, border: `1px solid ${borderColor}` }}>
     <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 0.75 }}>
       <Typography variant="caption" sx={{ fontWeight: 700, color, textTransform: "uppercase", letterSpacing: 0.6 }}>
@@ -154,10 +176,36 @@ const GatewayKVSection = ({ accId, mode, rows, label, color, bgColor, borderColo
         </Button>
       )}
     </Box>
+    {!readOnly && remainingTemplates.length > 0 && (
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 0.75 }}>
+        {remainingTemplates.map((name) => (
+          <Chip
+            key={name}
+            label={`+ ${name}`}
+            size="small"
+            onClick={() => onAddNamed(accId, mode, name)}
+            sx={{
+              height: 22,
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: "monospace",
+              cursor: "pointer",
+              bgcolor: "transparent",
+              border: "1px dashed",
+              borderColor: color,
+              color,
+              "&:hover": { bgcolor: bgColor === "#eff6ff" ? "#dbeafe" : "#dcfce7" },
+            }}
+          />
+        ))}
+      </Box>
+    )}
     <Stack spacing={0.6}>
       {rows.length === 0 && (
         <Typography variant="caption" sx={{ color: "text.disabled", pl: 0.5 }}>
-          No credentials. Click &quot;+ Add Field&quot; to add.
+          {templates.length > 0
+            ? `Tap a chip above for a ready-made ${providerKey} field, or "+ Add Field" for a custom one.`
+            : "No credentials. Click \"+ Add Field\" to add."}
         </Typography>
       )}
       {rows.map((kv) => (
@@ -188,9 +236,10 @@ const GatewayKVSection = ({ accId, mode, rows, label, color, bgColor, borderColo
       ))}
     </Stack>
   </Box>
-);
+  );
+};
 
-const GatewayConfigEditor = ({ value, onChange, readOnly }) => {
+const GatewayConfigEditor = ({ value, onChange, readOnly, providerKey = "" }) => {
   const state =
     value && typeof value === "object" && !Array.isArray(value)
       ? value
@@ -227,6 +276,16 @@ const GatewayConfigEditor = ({ value, onChange, readOnly }) => {
       ...s,
       accounts: s.accounts.map((a) =>
         a._id === accId ? { ...a, [mode]: [...a[mode], { _id: uid(), key: "", value: "" }] } : a
+      ),
+    }));
+
+  const addKVNamed = (accId, mode, name) =>
+    upd((s) => ({
+      ...s,
+      accounts: s.accounts.map((a) =>
+        a._id === accId
+          ? { ...a, [mode]: [...a[mode], { _id: uid(), key: name, value: "" }] }
+          : a
       ),
     }));
 
@@ -363,12 +422,14 @@ const GatewayConfigEditor = ({ value, onChange, readOnly }) => {
                     <GatewayKVSection
                       accId={acc._id} mode="sandbox" rows={acc.sandbox}
                       label="Sandbox" color="#2563eb" bgColor="#eff6ff" borderColor="#bfdbfe"
-                      readOnly={readOnly} onAdd={addKV} onRemove={removeKV} onUpdate={updKV}
+                      readOnly={readOnly} providerKey={providerKey}
+                      onAdd={addKV} onAddNamed={addKVNamed} onRemove={removeKV} onUpdate={updKV}
                     />
                     <GatewayKVSection
                       accId={acc._id} mode="live" rows={acc.live}
                       label="Live" color="#16a34a" bgColor="#f0fdf4" borderColor="#bbf7d0"
-                      readOnly={readOnly} onAdd={addKV} onRemove={removeKV} onUpdate={updKV}
+                      readOnly={readOnly} providerKey={providerKey}
+                      onAdd={addKV} onAddNamed={addKVNamed} onRemove={removeKV} onUpdate={updKV}
                     />
                   </Box>
                 </Paper>
@@ -2922,6 +2983,9 @@ const ResourcePanel = ({
                       value={formState?.[field.name]}
                       onChange={(newVal) => setFormState((prev) => ({ ...prev, [field.name]: newVal }))}
                       readOnly={readOnly}
+                      providerKey={String(
+                        formState?.provider || formState?.gateway_key || ""
+                      ).trim().toLowerCase()}
                     />
                   );
                 }

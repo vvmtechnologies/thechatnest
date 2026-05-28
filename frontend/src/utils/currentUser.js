@@ -220,6 +220,33 @@ export const setStoredCurrentUser = async (rawUser) => {
   return normalized;
 };
 
+// Flip the cached `planExpired` flag without touching anything else on the
+// stored user. Used by the billing flow on a successful renewal so the
+// chat composer's "Your plan has expired" banner clears immediately,
+// without waiting for the user to log out and back in. The user-changed
+// event is emitted so all useCurrentUser subscribers re-render.
+export const markCurrentUserPlanRenewed = async () => {
+  if (typeof window === "undefined") return null;
+  const raw = window.localStorage.getItem(USER_STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    // Touch every flag the normalizer looks at so a server reshape on
+    // next login can't bring the expired state back via a different key.
+    const next = {
+      ...parsed,
+      planExpired: false,
+      plan_expired: false,
+      subscription_status: "active",
+      plan_status: "active",
+    };
+    return await setStoredCurrentUser(next);
+  } catch {
+    return null;
+  }
+};
+
 export const clearStoredCurrentUser = () => {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(USER_STORAGE_KEY);

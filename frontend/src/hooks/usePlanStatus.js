@@ -72,6 +72,15 @@ const normalize = (payload) => {
   };
 };
 
+// Wipe the module-local plan cache so the next consumer (or the same
+// hook's effect after re-mount) refetches from /auth/organization-details
+// instead of returning the stale "expired" snapshot from before renewal.
+// Called by the billing flow on successful payment confirmation.
+export const invalidatePlanStatusCache = () => {
+  cache = null;
+  inflight = null;
+};
+
 const fetchPlan = async () => {
   if (!API_BASE_URL) return { loaded: true, status: "unknown" };
   try {

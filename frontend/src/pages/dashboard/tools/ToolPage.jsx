@@ -139,6 +139,13 @@ const REGISTRY = {
   "ai-faq":                lazyNamed(() => import("./impl/ai-tools.jsx"), "AiFaq"),
   "ai-blog-titles":        lazyNamed(() => import("./impl/ai-tools.jsx"), "AiBlogTitles"),
   "ai-palette":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiColorPalette"),
+
+  // AI Tools — phase 8B
+  "ai-hashtag":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiHashtags"),
+  "ai-ig-caption":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiInstagramCaption"),
+  "ai-quiz":               lazyNamed(() => import("./impl/ai-tools.jsx"), "AiQuizGenerator"),
+  "ai-code-explain":       lazyNamed(() => import("./impl/ai-tools.jsx"), "AiCodeExplainer"),
+  "ai-domain":             lazyNamed(() => import("./impl/ai-tools.jsx"), "AiDomainName"),
 };
 
 const ToolPage = () => {

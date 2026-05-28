@@ -1414,6 +1414,22 @@ const TASK_REGISTRY = {
   "color-palette": {
     system: "Generate a 5-color brand palette from the user's brief (mood, industry, audience). Return JSON: {\"name\": \"palette name\", \"description\": \"one-line mood\", \"colors\": [{\"hex\": \"#XXXXXX\", \"name\": \"role e.g. Primary / Background / Accent\", \"use_for\": \"short usage hint\"}]}. Return ONLY the JSON, no markdown wrapper.",
   },
+  // ── Phase 8B additions ──────────────────────────────────────────
+  "hashtag": {
+    system: "Generate 15 highly relevant hashtags for the user's social media post / topic. Mix popular (high reach), niche (engaged audience), and brand-specific. Format as space-separated #hashtags on a single line. Return ONLY the hashtags.",
+  },
+  "instagram-caption": {
+    system: "Write an Instagram caption from the user's post brief. Style: hooky first line, 2-3 short paragraphs (not a wall of text), 1-2 emojis sprinkled naturally, a 3-word CTA, 5-8 relevant hashtags at the end on a new line. Return only the caption.",
+  },
+  "quiz": {
+    system: "Generate a 5-question multiple-choice quiz from the user's topic or source text. Return JSON: {\"questions\": [{\"question\": \"...\", \"options\": [\"A...\", \"B...\", \"C...\", \"D...\"], \"correct\": 0, \"explanation\": \"why\"}]}. 'correct' is the index 0-3 of the right answer. Return ONLY the JSON.",
+  },
+  "code-explain": {
+    system: "Explain the user's code snippet in plain English to a non-engineer. Structure: ## What it does (1 paragraph, no jargon), ## How it works (3-5 numbered steps with the matching code lines), ## Edge cases (1-2 bullets), ## Plain-English summary (one sentence a teammate could repeat). Return as markdown. Skip any sections that don't apply.",
+  },
+  "domain-name": {
+    system: "Generate 12 brandable domain name ideas from the user's brief (industry, audience, vibe). Mix: 4 short single-word names, 4 compound names (two words joined), 4 invented / made-up names. Format as a numbered list. Each entry: 'name.com — short reason it works'. Return only the list.",
+  },
 };
 
 const runAiTask = async (req, res, next) => {

@@ -41,6 +41,12 @@ export const TOOLS = [
   { slug: "ai-faq",           title: "AI FAQ Generator",       desc: "Product description → 8–12 Q&A pairs for support / docs.",               category: "ai", icon: "PiQuestionDuotone" },
   { slug: "ai-blog-titles",   title: "AI Blog Title Generator", desc: "Topic → 10 catchy titles in varied styles (listicle, how-to, etc).",     category: "ai", icon: "PiLightbulbFilamentDuotone" },
   { slug: "ai-palette",       title: "AI Color Palette",       desc: "Brand brief → 5-color JSON palette with usage hints.",                   category: "ai", icon: "PiPaletteDuotone" },
+  // Phase 8B additions
+  { slug: "ai-hashtag",       title: "AI Hashtag Generator",   desc: "Topic → 15 hashtags (popular + niche + brand mix).",                     category: "ai", icon: "PiHashDuotone" },
+  { slug: "ai-ig-caption",    title: "AI Instagram Caption",   desc: "Post brief → IG-ready caption with hook, body, CTA, hashtags.",          category: "ai", icon: "PiInstagramLogoDuotone" },
+  { slug: "ai-quiz",          title: "AI Quiz Generator",      desc: "Source text → 5-question multiple-choice quiz with explanations.",       category: "ai", icon: "PiExamDuotone" },
+  { slug: "ai-code-explain",  title: "AI Code Explainer",      desc: "Paste code → plain-English breakdown for non-engineers.",                category: "ai", icon: "PiCodeBlockDuotone" },
+  { slug: "ai-domain",        title: "AI Domain Name Brainstorm", desc: "Product brief → 12 brandable .com name ideas.",                       category: "ai", icon: "PiGlobeSimpleDuotone" },
 
   // ── Team & Chat ──────────────────────────────────────────────────
   { slug: "spin-the-wheel",     title: "Spin the Wheel",             desc: "Animated wheel of names — visual upgrade to Random Picker.",       category: "team", icon: "PiAtomDuotone" },

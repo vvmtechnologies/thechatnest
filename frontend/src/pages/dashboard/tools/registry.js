@@ -30,7 +30,16 @@ export const TOOLS = [
   { slug: "ai-acronyms",     title: "AI Acronym Decoder",     desc: "Find every acronym in text and explain it with context.",                category: "ai", icon: "PiAtDuotone" },
   { slug: "ai-actions",      title: "AI Action Items",        desc: "Meeting notes → list of tasks with owners + due dates.",                 category: "ai", icon: "PiListBulletsDuotone" },
   { slug: "ai-sentiment",    title: "AI Sentiment",           desc: "Analyse the sentiment of a thread or batch of messages.",                category: "ai", icon: "PiSmileySadDuotone" },
-  { slug: "ai-alt-text",     title: "AI Alt-Text Writer",     desc: "Describe an image → accessibility-ready alt text (≤120 chars).",         category: "ai", icon: "PiEyeDuotone" },
+  { slug: "ai-alt-text",      title: "AI Alt-Text Writer",     desc: "Describe an image → accessibility-ready alt text (≤120 chars).",         category: "ai", icon: "PiEyeDuotone" },
+  // Phase 7B additions
+  { slug: "ai-meeting-sum",   title: "AI Meeting Summarizer",  desc: "Transcript → TL;DR + decisions + action items + open questions.",        category: "ai", icon: "PiVideoCameraDuotone" },
+  { slug: "ai-jd",            title: "AI Job Description",     desc: "Role brief → polished, inclusive JD with all standard sections.",        category: "ai", icon: "PiBriefcaseMetalDuotone" },
+  { slug: "ai-proposal",      title: "AI Proposal Writer",     desc: "Project brief → client-ready proposal with phases + investment.",        category: "ai", icon: "PiSealCheckDuotone" },
+  { slug: "ai-newsletter",    title: "AI Newsletter Writer",   desc: "Bullet your updates → scannable, friendly team newsletter.",             category: "ai", icon: "PiNewspaperDuotone" },
+  { slug: "ai-pr",            title: "AI Press Release",       desc: "Announcement brief → properly formatted press release.",                 category: "ai", icon: "PiMegaphoneDuotone" },
+  { slug: "ai-faq",           title: "AI FAQ Generator",       desc: "Product description → 8–12 Q&A pairs for support / docs.",               category: "ai", icon: "PiQuestionDuotone" },
+  { slug: "ai-blog-titles",   title: "AI Blog Title Generator", desc: "Topic → 10 catchy titles in varied styles (listicle, how-to, etc).",     category: "ai", icon: "PiLightbulbFilamentDuotone" },
+  { slug: "ai-palette",       title: "AI Color Palette",       desc: "Brand brief → 5-color JSON palette with usage hints.",                   category: "ai", icon: "PiPaletteDuotone" },
 
   // ── Team & Chat ──────────────────────────────────────────────────
   { slug: "spin-the-wheel",     title: "Spin the Wheel",             desc: "Animated wheel of names — visual upgrade to Random Picker.",       category: "team", icon: "PiAtomDuotone" },

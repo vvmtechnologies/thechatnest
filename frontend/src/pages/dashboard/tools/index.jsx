@@ -92,6 +92,14 @@ import {
   PiReceiptDuotone,
   PiCalendarBlankDuotone,
   PiHourglassMediumDuotone,
+  // ── Phase 7B additions (more AI tools) ────────────────────────────
+  PiVideoCameraDuotone,
+  PiBriefcaseMetalDuotone,
+  PiSealCheckDuotone,
+  PiNewspaperDuotone,
+  PiMegaphoneDuotone,
+  PiLightbulbFilamentDuotone,
+  PiPaletteDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -165,6 +173,13 @@ const ICON_MAP = {
   PiReceiptDuotone,
   PiCalendarBlankDuotone,
   PiHourglassMediumDuotone,
+  PiVideoCameraDuotone,
+  PiBriefcaseMetalDuotone,
+  PiSealCheckDuotone,
+  PiNewspaperDuotone,
+  PiMegaphoneDuotone,
+  PiLightbulbFilamentDuotone,
+  PiPaletteDuotone,
 };
 
 const ToolsHub = () => {

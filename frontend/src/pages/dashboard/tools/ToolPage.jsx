@@ -113,6 +113,16 @@ const REGISTRY = {
   "ai-actions":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiActionItems"),
   "ai-sentiment":          lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSentiment"),
   "ai-alt-text":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAltText"),
+
+  // AI Tools — phase 7B
+  "ai-meeting-sum":        lazyNamed(() => import("./impl/ai-tools.jsx"), "AiMeetingSummarizer"),
+  "ai-jd":                 lazyNamed(() => import("./impl/ai-tools.jsx"), "AiJobDescription"),
+  "ai-proposal":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiProposal"),
+  "ai-newsletter":         lazyNamed(() => import("./impl/ai-tools.jsx"), "AiNewsletter"),
+  "ai-pr":                 lazyNamed(() => import("./impl/ai-tools.jsx"), "AiPressRelease"),
+  "ai-faq":                lazyNamed(() => import("./impl/ai-tools.jsx"), "AiFaq"),
+  "ai-blog-titles":        lazyNamed(() => import("./impl/ai-tools.jsx"), "AiBlogTitles"),
+  "ai-palette":            lazyNamed(() => import("./impl/ai-tools.jsx"), "AiColorPalette"),
 };
 
 const ToolPage = () => {

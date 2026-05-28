@@ -1389,6 +1389,31 @@ const TASK_REGISTRY = {
   "alt-text": {
     system: "Write a single concise alt-text description (max 120 chars) for the image described in the user's input. Focus on what's important for accessibility. Return ONLY the alt-text.",
   },
+  // ── Phase 7B additions ──────────────────────────────────────────
+  "meeting-summary": {
+    system: "Summarize the meeting transcript or notes the user provides. Return a structured markdown summary with these sections: ## TL;DR (1-2 sentences), ## Key decisions (bullets), ## Action items (bulleted, format: [ ] task — owner — due), ## Open questions (bullets). Skip sections that aren't applicable. Return only the markdown.",
+  },
+  "job-description": {
+    system: "Write a complete job description from the user's bullet-point role brief. Output sections: **Role**, **About the team**, **What you'll do** (5-7 bullets), **You probably have** (5-7 bullets), **Bonus** (3-4 bullets), **What we offer** (3-4 bullets). Tone: warm, professional, inclusive. Return only the JD as markdown.",
+  },
+  "proposal": {
+    system: "Turn the user's bullet brief into a professional client proposal. Output sections: **Executive summary** (2-3 sentences), **Understanding of need**, **Proposed approach** (numbered phases), **Deliverables** (bullets), **Timeline**, **Investment** (placeholder amounts ok), **Why us** (3 bullets), **Next steps**. Return as markdown.",
+  },
+  "newsletter": {
+    system: "Write a friendly product / team newsletter from the user's bullet-point updates. Structure: catchy intro line, 3-5 sections each with a bolded headline + 2-3 sentences, a 'What's next' closer, and a sign-off. Tone: conversational, scannable. Return only the newsletter text.",
+  },
+  "press-release": {
+    system: "Write a press release from the user's announcement brief. Format: **For Immediate Release** header, headline (under 12 words), subheading (1 sentence), **City, Date —** opening paragraph with the 5 Ws, 2-3 body paragraphs with details and one quote (mark it as 'said [Spokesperson, Title]'), **About [Company]** boilerplate stub, **Contact:** placeholder. Return as markdown.",
+  },
+  "faq": {
+    system: "Generate a FAQ section from the user's product/feature description. Produce 8-12 Q&A pairs covering: what it is, who it's for, pricing, how to start, common edge cases, security/privacy if applicable, support. Format as markdown with **Q:** and **A:** bolded prefixes. Return only the FAQ.",
+  },
+  "blog-title": {
+    system: "Given the user's topic or article draft, return EXACTLY 10 catchy blog post titles as a numbered list (1. … 2. …). Mix styles: 3 listicles ('7 ways to …'), 2 how-tos, 2 questions, 2 contrarian, 1 narrative. Keep each title under 70 characters. Return only the numbered list.",
+  },
+  "color-palette": {
+    system: "Generate a 5-color brand palette from the user's brief (mood, industry, audience). Return JSON: {\"name\": \"palette name\", \"description\": \"one-line mood\", \"colors\": [{\"hex\": \"#XXXXXX\", \"name\": \"role e.g. Primary / Background / Accent\", \"use_for\": \"short usage hint\"}]}. Return ONLY the JSON, no markdown wrapper.",
+  },
 };
 
 const runAiTask = async (req, res, next) => {

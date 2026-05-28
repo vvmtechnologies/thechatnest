@@ -15,38 +15,38 @@ const lazyNamed = (loader, name) =>
   });
 
 const REGISTRY = {
-  "json-formatter":      lazy(() => import("./impl/json-formatter.jsx")),
-  "json-to-yaml":        lazyNamed(() => import("./impl/converters.jsx"), "JsonToYaml"),
-  "yaml-to-json":        lazyNamed(() => import("./impl/converters.jsx"), "YamlToJson"),
+  // Document & Data (kept)
+  "markdown-html":       lazyNamed(() => import("./impl/converters.jsx"), "MarkdownHtml"),
   "json-to-csv":         lazyNamed(() => import("./impl/converters.jsx"), "JsonToCsv"),
   "csv-to-json":         lazyNamed(() => import("./impl/converters.jsx"), "CsvToJson"),
-  "base64":              lazyNamed(() => import("./impl/converters.jsx"), "Base64"),
-  "url-codec":           lazyNamed(() => import("./impl/converters.jsx"), "UrlCodec"),
-  "markdown-html":       lazyNamed(() => import("./impl/converters.jsx"), "MarkdownHtml"),
-  "text-diff":           lazyNamed(() => import("./impl/converters.jsx"), "TextDiff"),
+  "case-converter":      lazyNamed(() => import("./impl/converters.jsx"), "CaseConverter"),
   "lorem-ipsum":         lazyNamed(() => import("./impl/converters.jsx"), "LoremIpsum"),
+
+  // Security (kept)
   "password-generator":  lazyNamed(() => import("./impl/security.jsx"), "PasswordGenerator"),
-  "jwt-decoder":         lazyNamed(() => import("./impl/security.jsx"), "JwtDecoder"),
-  "hash-generator":      lazyNamed(() => import("./impl/security.jsx"), "HashGenerator"),
+
+  // Design (kept)
   "color-converter":     lazyNamed(() => import("./impl/design.jsx"), "ColorConverter"),
   "qr-generator":        lazyNamed(() => import("./impl/design.jsx"), "QrGenerator"),
-  "regex-tester":        lazyNamed(() => import("./impl/design.jsx"), "RegexTester"),
+
+  // Productivity (kept)
   "meeting-cost":        lazyNamed(() => import("./impl/productivity.jsx"), "MeetingCost"),
   "timezone-converter":  lazyNamed(() => import("./impl/productivity.jsx"), "TimezoneConverter"),
   "word-counter":        lazyNamed(() => import("./impl/productivity.jsx"), "WordCounter"),
-  "timestamp-converter": lazyNamed(() => import("./impl/productivity.jsx"), "TimestampConverter"),
-
-  // ── batch 2 ─────────────────────────────────────────────────────────
-  "xml-json":            lazyNamed(() => import("./impl/converters.jsx"), "XmlJson"),
-  "case-converter":      lazyNamed(() => import("./impl/converters.jsx"), "CaseConverter"),
-  "css-gradient":        lazyNamed(() => import("./impl/design.jsx"), "CssGradient"),
-  "box-shadow":          lazyNamed(() => import("./impl/design.jsx"), "BoxShadow"),
-  "favicon-preview":     lazyNamed(() => import("./impl/design.jsx"), "FaviconPreview"),
   "stopwatch":           lazyNamed(() => import("./impl/productivity.jsx"), "Stopwatch"),
   "pomodoro":            lazyNamed(() => import("./impl/productivity.jsx"), "Pomodoro"),
   "age-calculator":      lazyNamed(() => import("./impl/productivity.jsx"), "AgeCalculator"),
   "percentage-calc":     lazyNamed(() => import("./impl/productivity.jsx"), "PercentageCalc"),
-  "uuid-generator":      lazyNamed(() => import("./impl/security.jsx"), "UuidGenerator"),
+
+  // Quick Decisions (NEW — phase 1)
+  "random-picker":       lazyNamed(() => import("./impl/decisions.jsx"), "RandomPicker"),
+  "coin-flip":           lazyNamed(() => import("./impl/decisions.jsx"), "CoinFlip"),
+  "dice-roller":         lazyNamed(() => import("./impl/decisions.jsx"), "DiceRoller"),
+  "random-number":       lazyNamed(() => import("./impl/decisions.jsx"), "RandomNumber"),
+  "yes-no":              lazyNamed(() => import("./impl/decisions.jsx"), "YesNo"),
+
+  // Games (NEW — phase 1)
+  "tic-tac-toe":         lazyNamed(() => import("./impl/games.jsx"), "TicTacToe"),
 };
 
 const ToolPage = () => {

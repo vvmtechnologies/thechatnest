@@ -75,6 +75,11 @@ const REGISTRY = {
   "status-builder":        lazyNamed(() => import("./impl/team-chat.jsx"), "StatusBuilder"),
   "standup-picker":        lazyNamed(() => import("./impl/team-chat.jsx"), "StandupPicker"),
   "channel-names":         lazyNamed(() => import("./impl/team-chat.jsx"), "ChannelNameGenerator"),
+
+  // HR — phase 5
+  "working-days":          lazyNamed(() => import("./impl/hr.jsx"), "WorkingDays"),
+  "vacation-tracker":      lazyNamed(() => import("./impl/hr.jsx"), "VacationTracker"),
+  "salary-hourly":         lazyNamed(() => import("./impl/hr.jsx"), "SalaryToHourly"),
 };
 
 const ToolPage = () => {

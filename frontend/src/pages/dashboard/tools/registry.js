@@ -6,6 +6,7 @@
 // to this map as later phases ship tools into them (ai, team, file, hr).
 export const CATEGORIES = {
   team:         { label: "Team & Chat",      tint: "#0ea5e9" },
+  hr:           { label: "HR & Decision",    tint: "#db2777" },
   file:         { label: "File & Media",     tint: "#0891b2" },
   decisions:    { label: "Quick Decisions",  tint: "#f97316" },
   games:        { label: "Games",            tint: "#22c55e" },
@@ -23,6 +24,11 @@ export const TOOLS = [
   { slug: "status-builder",     title: "Status Update Builder",      desc: "Yesterday / Today / Blockers template with mood and markdown.",    category: "team", icon: "PiListChecksDuotone" },
   { slug: "standup-picker",     title: "Standup Question Picker",    desc: "Random thoughtful standup question or team ice-breaker.",          category: "team", icon: "PiChatTeardropDotsDuotone" },
   { slug: "channel-names",      title: "Channel Name Generator",     desc: "Seed keywords → 10 channel name suggestions (kebab/snake/camel).", category: "team", icon: "PiHashStraightDuotone" },
+
+  // ── HR & Decision ────────────────────────────────────────────────
+  { slug: "working-days",     title: "Working Days Calculator",   desc: "Business days between dates, skip weekends + your holiday list.",  category: "hr", icon: "PiBriefcaseDuotone" },
+  { slug: "vacation-tracker", title: "Vacation Day Tracker",      desc: "PTO balance based on accrual, carry-over, used + pending.",        category: "hr", icon: "PiSunDuotone" },
+  { slug: "salary-hourly",    title: "Salary → Hourly Converter", desc: "Annual salary → minute / hour / day / week / month equivalent.",   category: "hr", icon: "PiMoneyDuotone" },
 
   // ── File & Media ─────────────────────────────────────────────────
   { slug: "image-compressor", title: "Image Compressor",  desc: "Drop an image, resize + re-encode to JPEG, download smaller version.", category: "file", icon: "PiImageDuotone" },

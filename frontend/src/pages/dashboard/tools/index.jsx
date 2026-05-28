@@ -61,6 +61,10 @@ import {
   PiListChecksDuotone,
   PiChatTeardropDotsDuotone,
   PiHashStraightDuotone,
+  // ── Phase 5 additions (HR) ────────────────────────────────────────
+  PiBriefcaseDuotone,
+  PiSunDuotone,
+  PiMoneyDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -106,6 +110,9 @@ const ICON_MAP = {
   PiListChecksDuotone,
   PiChatTeardropDotsDuotone,
   PiHashStraightDuotone,
+  PiBriefcaseDuotone,
+  PiSunDuotone,
+  PiMoneyDuotone,
 };
 
 const ToolsHub = () => {

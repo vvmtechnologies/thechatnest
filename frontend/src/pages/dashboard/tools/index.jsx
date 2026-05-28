@@ -78,6 +78,20 @@ import {
   PiListBulletsDuotone,
   PiSmileySadDuotone,
   PiEyeDuotone,
+  // ── Phase 7A additions ────────────────────────────────────────────
+  PiAtomDuotone,
+  PiArrowsLeftRightDuotone,
+  PiHandPalmDuotone,
+  PiSmileyMehDuotone,
+  PiFrameCornersDuotone,
+  PiInstagramLogoDuotone,
+  PiCopyrightDuotone,
+  PiFilePdfDuotone,
+  PiSmileyXEyesDuotone,
+  PiHammerDuotone,
+  PiReceiptDuotone,
+  PiCalendarBlankDuotone,
+  PiHourglassMediumDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -138,6 +152,19 @@ const ICON_MAP = {
   PiListBulletsDuotone,
   PiSmileySadDuotone,
   PiEyeDuotone,
+  PiAtomDuotone,
+  PiArrowsLeftRightDuotone,
+  PiHandPalmDuotone,
+  PiSmileyMehDuotone,
+  PiFrameCornersDuotone,
+  PiInstagramLogoDuotone,
+  PiCopyrightDuotone,
+  PiFilePdfDuotone,
+  PiSmileyXEyesDuotone,
+  PiHammerDuotone,
+  PiReceiptDuotone,
+  PiCalendarBlankDuotone,
+  PiHourglassMediumDuotone,
 };
 
 const ToolsHub = () => {

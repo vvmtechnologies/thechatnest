@@ -60,6 +60,7 @@ const FileAttachmentTile = ({
 
   return (
     <Box
+      data-file-attachment-tile
       sx={{
         position: "relative",
         display: "flex",

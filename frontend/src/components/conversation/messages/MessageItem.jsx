@@ -124,6 +124,12 @@ const bubbleStyles = (theme, own, { isEmojiOnly = false } = {}) => {
       "& .MuiTypography-root": { color: "inherit" },
       "& [data-meeting-invite-card]": { color: "initial" },
       "& [data-meeting-invite-card] .MuiTypography-root": { color: "unset" },
+      // File attachment tile renders its own light/dark surface inside the
+      // bubble — without this opt-out the bubble's color:inherit forces the
+      // filename / size to white, making them invisible on the white card
+      // in light mode.
+      "& [data-file-attachment-tile]": { color: "initial" },
+      "& [data-file-attachment-tile] .MuiTypography-root": { color: "unset" },
     };
   }
 

@@ -100,6 +100,21 @@ import {
   PiMegaphoneDuotone,
   PiLightbulbFilamentDuotone,
   PiPaletteDuotone,
+  // ── Phase 8A additions ────────────────────────────────────────────
+  PiLinkSimpleDuotone,
+  PiBrowsersDuotone,
+  PiCalendarHeartDuotone,
+  PiCurrencyDollarDuotone,
+  PiGlobeHemisphereWestDuotone,
+  PiMapPinDuotone,
+  PiDeviceMobileCameraDuotone,
+  PiNumberCircleFourDuotone,
+  PiLinkBreakDuotone,
+  PiYoutubeLogoDuotone,
+  PiBankDuotone,
+  PiTrendUpDuotone,
+  PiTagDuotone,
+  PiResizeDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -180,6 +195,20 @@ const ICON_MAP = {
   PiMegaphoneDuotone,
   PiLightbulbFilamentDuotone,
   PiPaletteDuotone,
+  PiLinkSimpleDuotone,
+  PiBrowsersDuotone,
+  PiCalendarHeartDuotone,
+  PiCurrencyDollarDuotone,
+  PiGlobeHemisphereWestDuotone,
+  PiMapPinDuotone,
+  PiDeviceMobileCameraDuotone,
+  PiNumberCircleFourDuotone,
+  PiLinkBreakDuotone,
+  PiYoutubeLogoDuotone,
+  PiBankDuotone,
+  PiTrendUpDuotone,
+  PiTagDuotone,
+  PiResizeDuotone,
 };
 
 const ToolsHub = () => {

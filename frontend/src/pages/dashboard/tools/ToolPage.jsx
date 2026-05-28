@@ -114,6 +114,22 @@ const REGISTRY = {
   "ai-sentiment":          lazyNamed(() => import("./impl/ai-tools.jsx"), "AiSentiment"),
   "ai-alt-text":           lazyNamed(() => import("./impl/ai-tools.jsx"), "AiAltText"),
 
+  // Phase 8A — utilities (calculators + web/network)
+  "loan-emi":              lazyNamed(() => import("./impl/calculators.jsx"), "LoanEMI"),
+  "compound-interest":     lazyNamed(() => import("./impl/calculators.jsx"), "CompoundInterest"),
+  "discount-calc":         lazyNamed(() => import("./impl/calculators.jsx"), "DiscountCalc"),
+  "aspect-ratio":          lazyNamed(() => import("./impl/calculators.jsx"), "AspectRatioCalc"),
+  "url-shortener":         lazyNamed(() => import("./impl/web-utils.jsx"), "UrlShortener"),
+  "og-preview":            lazyNamed(() => import("./impl/web-utils.jsx"), "OgPreview"),
+  "public-holidays":       lazyNamed(() => import("./impl/web-utils.jsx"), "PublicHolidays"),
+  "currency-conv":         lazyNamed(() => import("./impl/web-utils.jsx"), "CurrencyConverter"),
+  "website-status":        lazyNamed(() => import("./impl/web-utils.jsx"), "WebsiteStatus"),
+  "ip-lookup":             lazyNamed(() => import("./impl/web-utils.jsx"), "IpLookup"),
+  "browser-info":          lazyNamed(() => import("./impl/web-utils.jsx"), "BrowserInfo"),
+  "http-codes":            lazyNamed(() => import("./impl/web-utils.jsx"), "HttpStatusCodes"),
+  "slug-generator":        lazyNamed(() => import("./impl/web-utils.jsx"), "SlugGenerator"),
+  "yt-thumbnail":          lazyNamed(() => import("./impl/web-utils.jsx"), "YouTubeThumbnail"),
+
   // AI Tools — phase 7B
   "ai-meeting-sum":        lazyNamed(() => import("./impl/ai-tools.jsx"), "AiMeetingSummarizer"),
   "ai-jd":                 lazyNamed(() => import("./impl/ai-tools.jsx"), "AiJobDescription"),

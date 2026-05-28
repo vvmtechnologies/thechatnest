@@ -60,6 +60,13 @@ const REGISTRY = {
   "hangman":               lazyNamed(() => import("./impl/puzzles.jsx"), "Hangman"),
   "typing-test":           lazyNamed(() => import("./impl/puzzles.jsx"), "TypingTest"),
   "sudoku":                lazyNamed(() => import("./impl/puzzles.jsx"), "Sudoku"),
+
+  // File & Media — phase 3
+  "image-compressor":      lazyNamed(() => import("./impl/file-media.jsx"), "ImageCompressor"),
+  "ocr":                   lazyNamed(() => import("./impl/file-media.jsx"), "Ocr"),
+  "pdf-splitter":          lazyNamed(() => import("./impl/file-media.jsx"), "PdfSplitter"),
+  "pdf-merger":            lazyNamed(() => import("./impl/file-media.jsx"), "PdfMerger"),
+  "file-size":             lazyNamed(() => import("./impl/file-media.jsx"), "FileSizeFormatter"),
 };
 
 const ToolPage = () => {

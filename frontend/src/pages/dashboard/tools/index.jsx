@@ -49,6 +49,12 @@ import {
   PiKeyboardDuotone,
   PiLightningDuotone,
   PiGridNineDuotone,
+  // ── Phase 3 additions (file & media) ──────────────────────────────
+  PiImageDuotone,
+  PiTextboxDuotone,
+  PiSplitHorizontalDuotone,
+  PiArrowsInDuotone,
+  PiFileDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -84,6 +90,11 @@ const ICON_MAP = {
   PiKeyboardDuotone,
   PiLightningDuotone,
   PiGridNineDuotone,
+  PiImageDuotone,
+  PiTextboxDuotone,
+  PiSplitHorizontalDuotone,
+  PiArrowsInDuotone,
+  PiFileDuotone,
 };
 
 const ToolsHub = () => {

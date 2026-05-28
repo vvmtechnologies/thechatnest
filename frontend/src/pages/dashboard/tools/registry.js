@@ -5,6 +5,7 @@
 // Categories appear as filter chips on /app/tools. New categories get added
 // to this map as later phases ship tools into them (ai, team, file, hr).
 export const CATEGORIES = {
+  file:         { label: "File & Media",     tint: "#0891b2" },
   decisions:    { label: "Quick Decisions",  tint: "#f97316" },
   games:        { label: "Games",            tint: "#22c55e" },
   productivity: { label: "Productivity",     tint: "#a855f7" },
@@ -14,6 +15,13 @@ export const CATEGORIES = {
 };
 
 export const TOOLS = [
+  // ── File & Media ─────────────────────────────────────────────────
+  { slug: "image-compressor", title: "Image Compressor",  desc: "Drop an image, resize + re-encode to JPEG, download smaller version.", category: "file", icon: "PiImageDuotone" },
+  { slug: "ocr",              title: "Image → Text (OCR)", desc: "Extract text from screenshots & scans, 8 languages. Runs locally.",  category: "file", icon: "PiTextboxDuotone" },
+  { slug: "pdf-splitter",     title: "PDF Splitter",       desc: "Split a PDF by page ranges, or one PDF per page.",                    category: "file", icon: "PiSplitHorizontalDuotone" },
+  { slug: "pdf-merger",       title: "PDF Merger",         desc: "Combine multiple PDFs into one. Drag to reorder.",                    category: "file", icon: "PiArrowsInDuotone" },
+  { slug: "file-size",        title: "File Size Formatter", desc: "Convert bytes ↔ KB / MB / GB / TB and back.",                         category: "file", icon: "PiFileDuotone" },
+
   // ── Quick Decisions ──────────────────────────────────────────────
   { slug: "random-picker",  title: "Random Picker",       desc: "Paste a list, draw a random winner (retros, lottery, raffles).",  category: "decisions", icon: "PiShuffleDuotone" },
   { slug: "coin-flip",      title: "Coin Flip",           desc: "Animated heads or tails with history.",                            category: "decisions", icon: "PiCoinDuotone" },

@@ -28,7 +28,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { alpha, useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
-import { FiCreditCard, FiDownload, FiEdit2, FiEye, FiGift, FiMenu, FiMoon, FiSettings, FiSun, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FiCheckCircle, FiCreditCard, FiDownload, FiEdit2, FiEye, FiGift, FiMenu, FiMoon, FiSend, FiSettings, FiSun, FiTrash2, FiUserPlus, FiUsers } from "react-icons/fi";
 import { API_BASE_URL } from "../../../config/apiBaseUrl";
 import { fetchWithAuth } from "../../../utils/authApi";
 import authStore from "../../../utils/auth";
@@ -41,6 +41,7 @@ const ORG_PAGE_SIZE = 20;
 const RESOURCE_PAGE_SIZE = 20;
 const OWNER_THEME_STORAGE_KEY = "owner_dashboard_theme_mode";
 const OWNER_DIALOG_SIZE_STORAGE_KEY = "owner_dashboard_dialog_size";
+const OWNER_SMTP_DIALOG_SIZE_STORAGE_KEY = "owner_smtp_dialog_size";
 const OWNER_DIALOG_WIDTHS = {
   small: 980,
   medium: 1260,
@@ -3608,6 +3609,27 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
   const [testTo, setTestTo] = useState("");
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState(null); // { severity, message }
+  const [lastTestedAt, setLastTestedAt] = useState(null); // Date | null
+
+  // Per-dialog size preference (Medium / Large), persisted so the owner
+  // doesn't have to resize on every open. Stored under its own key so it
+  // doesn't fight with the dashboard-wide dialog size.
+  const [dialogSize, setDialogSize] = useState(() => {
+    if (typeof window === "undefined") return "medium";
+    const stored = window.localStorage.getItem(OWNER_SMTP_DIALOG_SIZE_STORAGE_KEY);
+    const normalized = normalizeDialogSize(stored);
+    return normalized === "small" ? "medium" : normalized;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { window.localStorage.setItem(OWNER_SMTP_DIALOG_SIZE_STORAGE_KEY, dialogSize); } catch { /* ignore quota errors */ }
+  }, [dialogSize]);
+  const dialogPaperSx = useMemo(() => ({
+    ...getDialogPaperSx(dialogSize),
+    background: cardBg,
+    border: "1px solid",
+    borderColor: cardBorder,
+  }), [dialogSize, cardBg, cardBorder]);
 
   useEffect(() => {
     if (!open) return;
@@ -3636,6 +3658,7 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
     }
     setError("");
     setTestStatus(null);
+    setLastTestedAt(null);
   }, [open, editRow]);
 
   const handleChange = (name, value) => {
@@ -3737,6 +3760,7 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
         severity: "success",
         message: `Test email sent to ${recipient}. Check the inbox (and spam folder).`,
       });
+      setLastTestedAt(new Date());
     } catch (err) {
       setTestStatus({ severity: "error", message: err.message || "Failed to send test email" });
     } finally {
@@ -3766,8 +3790,28 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
   ];
 
   return (
-    <Dialog open={open} onClose={onClose} PaperProps={{ sx: { width: "min(640px, calc(100vw - 32px))", m: 0, background: cardBg, border: "1px solid", borderColor: cardBorder } }}>
-      <DialogTitle sx={{ fontWeight: 800 }}>{editRow ? "Edit SMTP Config" : "Add SMTP Config"}</DialogTitle>
+    <Dialog open={open} onClose={onClose} maxWidth={false} PaperProps={{ sx: dialogPaperSx }}>
+      <DialogTitle sx={{ fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, pr: 2.5 }}>
+        <Box component="span" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+          {editRow ? "Edit SMTP Config" : "Add SMTP Config"}
+        </Box>
+        <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0 }}>
+          {["medium", "large"].map((sizeKey) => {
+            const selected = dialogSize === sizeKey;
+            return (
+              <Button
+                key={sizeKey}
+                size="small"
+                variant={selected ? "contained" : "outlined"}
+                onClick={() => setDialogSize(sizeKey)}
+                sx={{ minWidth: 70, textTransform: "none", fontWeight: 700, fontSize: 12, py: 0.4 }}
+              >
+                {sizeKey.charAt(0).toUpperCase() + sizeKey.slice(1)}
+              </Button>
+            );
+          })}
+        </Stack>
+      </DialogTitle>
       <DialogContent dividers>
         {error ? <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert> : null}
         <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: "1fr 1fr", pt: 0.5 }}>
@@ -3816,24 +3860,71 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
         {editRow ? (
           <Box
             sx={{
-              mt: 2,
-              p: 1.75,
+              mt: 2.5,
               borderRadius: 2,
-              border: "1px dashed",
-              borderColor: cardBorder || "rgba(148,163,184,0.4)",
-              background: isDark ? "rgba(15,23,42,0.45)" : "#fafbff",
+              border: "1px solid",
+              borderColor: isDark ? "rgba(59,130,246,0.35)" : "rgba(59,130,246,0.22)",
+              background: isDark
+                ? "linear-gradient(135deg, rgba(30,58,138,0.22), rgba(15,23,42,0.4))"
+                : "linear-gradient(135deg, #eff6ff, #f8fafc)",
+              overflow: "hidden",
             }}
           >
-            <Stack spacing={1}>
-              <Box>
-                <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? "#e2e8f0" : "#1e293b" }}>
-                  Send a test email
+            <Box
+              sx={{
+                px: 2,
+                py: 1.25,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.25,
+                borderBottom: "1px solid",
+                borderColor: isDark ? "rgba(71,85,105,0.4)" : "rgba(203,213,225,0.55)",
+                background: isDark ? "rgba(15,23,42,0.4)" : "rgba(255,255,255,0.65)",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: "9px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: isDark ? "rgba(59,130,246,0.22)" : "rgba(219,234,254,1)",
+                  color: isDark ? "#60a5fa" : "#1d4ed8",
+                  flexShrink: 0,
+                }}
+              >
+                <FiSend size={14} />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, color: isDark ? "#e2e8f0" : "#1e293b", lineHeight: 1.15 }}>
+                  SMTP probe
                 </Typography>
-                <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                  Verifies the live SMTP connection using the values above (or stored value if a field is blank). The mail is sent immediately — no need to Save first.
+                <Typography variant="caption" sx={{ color: "text.secondary", display: "block" }}>
+                  Sends a real test message using the values above (or stored values when blank). No need to Save first.
                 </Typography>
               </Box>
-              <Box sx={{ display: "flex", gap: 1, alignItems: "stretch", flexWrap: "wrap" }}>
+              {lastTestedAt ? (
+                <Chip
+                  size="small"
+                  icon={<FiCheckCircle size={12} />}
+                  label={`Last passed ${lastTestedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                  sx={{
+                    height: 22,
+                    fontSize: 11,
+                    fontWeight: 600,
+                    bgcolor: isDark ? "rgba(34,197,94,0.18)" : "rgba(220,252,231,1)",
+                    color: isDark ? "#4ade80" : "#15803d",
+                    border: "1px solid",
+                    borderColor: isDark ? "rgba(74,222,128,0.35)" : "rgba(134,239,172,0.6)",
+                    "& .MuiChip-icon": { color: "inherit", ml: 0.75 },
+                  }}
+                />
+              ) : null}
+            </Box>
+            <Box sx={{ p: 2 }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25} alignItems={{ xs: "stretch", sm: "flex-start" }}>
                 <TextField
                   size="small"
                   type="email"
@@ -3844,21 +3935,26 @@ const SmtpFormDialog = ({ open, onClose, onSaved, editRow, isDark, cardBg, cardB
                   sx={{ flex: 1, minWidth: 220 }}
                 />
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="primary"
                   onClick={handleTest}
                   disabled={testing || saving}
-                  sx={{ fontWeight: 700, textTransform: "none", minWidth: 160 }}
+                  startIcon={testing ? <CircularProgress size={14} color="inherit" /> : <FiSend size={14} />}
+                  sx={{ fontWeight: 700, textTransform: "none", minWidth: 180, px: 2.5, alignSelf: { xs: "stretch", sm: "auto" } }}
                 >
-                  {testing ? "Sending..." : "Send Test Email"}
+                  {testing ? "Sending probe…" : "Send Test Email"}
                 </Button>
-              </Box>
+              </Stack>
               {testStatus ? (
-                <Alert severity={testStatus.severity} sx={{ mt: 0.5 }}>
+                <Alert
+                  severity={testStatus.severity}
+                  icon={testStatus.severity === "success" ? <FiCheckCircle /> : undefined}
+                  sx={{ mt: 1.25, alignItems: "flex-start" }}
+                >
                   {testStatus.message}
                 </Alert>
               ) : null}
-            </Stack>
+            </Box>
           </Box>
         ) : (
           <Typography variant="caption" sx={{ display: "block", mt: 1.5, color: "text.secondary" }}>

@@ -212,6 +212,12 @@ const testSmtpSettings = async (req, res, next) => {
       connectionTimeout: TEST_TIMEOUT_MS,
       greetingTimeout: TEST_TIMEOUT_MS,
       socketTimeout: TEST_TIMEOUT_MS,
+      // Force IPv4 lookup. On managed hosts like Render, outbound IPv6
+      // isn't routed — Node otherwise resolves smtp.gmail.com to its IPv6
+      // record first (since Node 18) and the connect fails with
+      // ENETUNREACH 2607:f8b0:...:587. family: 4 makes the resolver
+      // return A records only, matching what production routing supports.
+      family: 4,
       auth: { user: config.smtp_user, pass: config.smtp_pass },
     });
 
@@ -243,7 +249,26 @@ const testSmtpSettings = async (req, res, next) => {
   } catch (error) {
     // Bubble up SMTP error message so the owner sees the real reason
     // (e.g. "Invalid login", "Connection timeout").
-    const wrapped = new Error(error?.message || 'Failed to send test email');
+    let message = error?.message || 'Failed to send test email';
+    const code = String(error?.code || '').toUpperCase();
+    const looksLikeTimeout =
+      code === 'ETIMEDOUT' ||
+      code === 'ESOCKET' ||
+      code === 'ECONNECTION' ||
+      /timeout|timed out/i.test(message);
+    const looksLikeRefused =
+      code === 'ECONNREFUSED' || /refused|unreachable|ENETUNREACH/i.test(message);
+    // Most "connection timeout / refused" failures on managed hosts come
+    // down to the provider blocking outbound port 587. Surface a concrete
+    // next step so the owner isn't left staring at a generic error.
+    if (looksLikeTimeout || looksLikeRefused) {
+      message =
+        `${message}. The SMTP server didn't respond — your host may be blocking ` +
+        `outbound port ${req.body?.override?.port || 'this port'}. ` +
+        `Try port 465 with SSL enabled, or use a transactional email service ` +
+        `(SendGrid, Mailgun, Resend) if your provider blocks SMTP entirely.`;
+    }
+    const wrapped = new Error(message);
     wrapped.status = error?.status || 502;
     wrapped.details = {
       smtp_code: error?.code || null,

@@ -55,6 +55,12 @@ import {
   PiSplitHorizontalDuotone,
   PiArrowsInDuotone,
   PiFileDuotone,
+  // ── Phase 4 additions (team & chat) ───────────────────────────────
+  PiCalendarPlusDuotone,
+  PiChartLineUpDuotone,
+  PiListChecksDuotone,
+  PiChatTeardropDotsDuotone,
+  PiHashStraightDuotone,
 } from "react-icons/pi";
 import { TOOLS, CATEGORIES } from "./registry.js";
 
@@ -95,6 +101,11 @@ const ICON_MAP = {
   PiSplitHorizontalDuotone,
   PiArrowsInDuotone,
   PiFileDuotone,
+  PiCalendarPlusDuotone,
+  PiChartLineUpDuotone,
+  PiListChecksDuotone,
+  PiChatTeardropDotsDuotone,
+  PiHashStraightDuotone,
 };
 
 const ToolsHub = () => {

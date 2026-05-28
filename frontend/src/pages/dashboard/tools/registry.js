@@ -5,6 +5,7 @@
 // Categories appear as filter chips on /app/tools. New categories get added
 // to this map as later phases ship tools into them (ai, team, file, hr).
 export const CATEGORIES = {
+  team:         { label: "Team & Chat",      tint: "#0ea5e9" },
   file:         { label: "File & Media",     tint: "#0891b2" },
   decisions:    { label: "Quick Decisions",  tint: "#f97316" },
   games:        { label: "Games",            tint: "#22c55e" },
@@ -15,6 +16,14 @@ export const CATEGORIES = {
 };
 
 export const TOOLS = [
+  // ── Team & Chat ──────────────────────────────────────────────────
+  { slug: "mention-formatter",  title: "Mention/Markdown Formatter", desc: "Bold, italic, code blocks, lists — pick a style, copy to chat.",  category: "team", icon: "PiTextAaDuotone" },
+  { slug: "calendar-link",      title: "Calendar Link Generator",    desc: "Google Cal / Outlook links + downloadable .ics, share in chat.",   category: "team", icon: "PiCalendarPlusDuotone" },
+  { slug: "recurring-cost",     title: "Recurring Meeting Cost",     desc: "Frequency-aware cost breakdown: per occurrence / month / year.",   category: "team", icon: "PiChartLineUpDuotone" },
+  { slug: "status-builder",     title: "Status Update Builder",      desc: "Yesterday / Today / Blockers template with mood and markdown.",    category: "team", icon: "PiListChecksDuotone" },
+  { slug: "standup-picker",     title: "Standup Question Picker",    desc: "Random thoughtful standup question or team ice-breaker.",          category: "team", icon: "PiChatTeardropDotsDuotone" },
+  { slug: "channel-names",      title: "Channel Name Generator",     desc: "Seed keywords → 10 channel name suggestions (kebab/snake/camel).", category: "team", icon: "PiHashStraightDuotone" },
+
   // ── File & Media ─────────────────────────────────────────────────
   { slug: "image-compressor", title: "Image Compressor",  desc: "Drop an image, resize + re-encode to JPEG, download smaller version.", category: "file", icon: "PiImageDuotone" },
   { slug: "ocr",              title: "Image → Text (OCR)", desc: "Extract text from screenshots & scans, 8 languages. Runs locally.",  category: "file", icon: "PiTextboxDuotone" },

@@ -67,6 +67,14 @@ const REGISTRY = {
   "pdf-splitter":          lazyNamed(() => import("./impl/file-media.jsx"), "PdfSplitter"),
   "pdf-merger":            lazyNamed(() => import("./impl/file-media.jsx"), "PdfMerger"),
   "file-size":             lazyNamed(() => import("./impl/file-media.jsx"), "FileSizeFormatter"),
+
+  // Team & Chat — phase 4
+  "mention-formatter":     lazyNamed(() => import("./impl/team-chat.jsx"), "MentionFormatter"),
+  "calendar-link":         lazyNamed(() => import("./impl/team-chat.jsx"), "CalendarLink"),
+  "recurring-cost":        lazyNamed(() => import("./impl/team-chat.jsx"), "RecurringMeetingCost"),
+  "status-builder":        lazyNamed(() => import("./impl/team-chat.jsx"), "StatusBuilder"),
+  "standup-picker":        lazyNamed(() => import("./impl/team-chat.jsx"), "StandupPicker"),
+  "channel-names":         lazyNamed(() => import("./impl/team-chat.jsx"), "ChannelNameGenerator"),
 };
 
 const ToolPage = () => {

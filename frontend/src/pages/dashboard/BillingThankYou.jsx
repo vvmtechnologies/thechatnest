@@ -5,6 +5,8 @@ import { API_BASE_URL } from "../../config/apiBaseUrl";
 import { fetchWithAuth } from "../../utils/authApi";
 import { showSystemNotification } from "../../utils/notificationBridge";
 import { storeBillingCheckoutSuccess } from "../../utils/billingCheckoutSignal";
+import { markCurrentUserPlanRenewed } from "../../utils/currentUser";
+import { invalidatePlanStatusCache } from "../../hooks/usePlanStatus";
 
 const BillingThankYou = () => {
   const navigate = useNavigate();
@@ -46,6 +48,16 @@ const BillingThankYou = () => {
           invoiceNumber: nextInvoiceNumber,
           sessionId,
         });
+
+        // Clear the cached "plan expired" state so the chat composer's
+        // expiry banner disappears immediately on next navigation — the
+        // top-bar plan chip uses a separate cache (usePlanStatus), bust
+        // that too so it refetches the new end-date instead of returning
+        // the pre-renewal "expired" snapshot.
+        try {
+          await markCurrentUserPlanRenewed();
+        } catch { /* non-fatal — banner clears on next login at worst */ }
+        invalidatePlanStatusCache();
 
         showSystemNotification({
           title: "Payment Successful",

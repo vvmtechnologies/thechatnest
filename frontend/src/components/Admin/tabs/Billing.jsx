@@ -32,6 +32,8 @@ import { formatIsoDate } from "../../../utils/dateTime";
 import { resolveSiteDetails } from "../../../utils/siteDetails";
 import { buildSubscriptionView } from "../../../utils/subscription";
 import { getStripeSupportedCurrencies } from "../../../utils/stripeCurrencies";
+import { markCurrentUserPlanRenewed } from "../../../utils/currentUser";
+import { invalidatePlanStatusCache } from "../../../hooks/usePlanStatus";
 
 const billingTabs = ["Billing", "Payment History"];
 
@@ -2739,6 +2741,11 @@ const Billing = ({ adminData }) => {
               "Payment succeeded at gateway but we couldn't finalize it. Contact support.",
           );
         }
+        // Match the BillingThankYou flow — clear the cached expired state
+        // BEFORE reloading so the brief pre-reload render doesn't flash
+        // the "plan expired" banner that's already stale.
+        try { await markCurrentUserPlanRenewed(); } catch { /* non-fatal */ }
+        invalidatePlanStatusCache();
         // Reload so payment history reflects the new succeeded state
         window.location.reload();
         return;

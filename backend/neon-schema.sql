@@ -414,7 +414,7 @@ CREATE TABLE public.billing_checkout_sessions (
     confirmed_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT billing_checkout_sessions_gateway_check CHECK (((gateway)::text = ANY (ARRAY[('stripe'::character varying)::text, ('paypal'::character varying)::text]))),
+    CONSTRAINT billing_checkout_sessions_gateway_check CHECK (((gateway)::text = ANY (ARRAY[('stripe'::character varying)::text, ('paypal'::character varying)::text, ('razorpay'::character varying)::text, ('cashfree'::character varying)::text, ('phonepe'::character varying)::text, ('payu'::character varying)::text]))),
     CONSTRAINT billing_checkout_sessions_status_check CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('confirmed'::character varying)::text, ('failed'::character varying)::text, ('canceled'::character varying)::text])))
 );
 

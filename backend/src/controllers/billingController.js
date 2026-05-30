@@ -694,6 +694,151 @@ const capturePaypalOrder = async ({ accessToken, orderId, gatewayRuntime = null 
   return payload;
 };
 
+// ─── Razorpay ────────────────────────────────────────────────────────────────
+// Razorpay supports two checkout modes: their JS modal SDK (requires
+// frontend integration on every page) or hosted Payment Links (one-API-
+// call → short_url the user visits). Payment Links match our existing
+// Stripe / PayPal "return a checkout_url" pattern, so we use those.
+//
+// Test vs live is determined entirely by the key prefix the owner saved
+// (rzp_test_xxxxx → sandbox, rzp_live_xxxxx → live). Same API base URL.
+//
+// Auth: HTTP Basic header — base64(key_id:key_secret).
+// Amount units: smallest currency unit (paise for INR, cents for USD).
+
+const RAZORPAY_API_BASE = 'https://api.razorpay.com/v1';
+
+const getRazorpayCredentials = ({ gatewayRuntime = null } = {}) => {
+  const config = asPlainObject(gatewayRuntime?.resolved_config);
+  const keyId = pickFirstDefinedString([
+    readDecryptedCredential(config, ['key_id', 'keyId', 'razorpay_key_id', 'credentials.key_id']),
+    process.env.RAZORPAY_KEY_ID,
+  ]);
+  const keySecret = pickFirstDefinedString([
+    readDecryptedCredential(config, ['key_secret', 'keySecret', 'razorpay_key_secret', 'credentials.key_secret']),
+    process.env.RAZORPAY_KEY_SECRET,
+  ]);
+  const webhookSecret = pickFirstDefinedString([
+    readDecryptedCredential(config, ['webhook_secret', 'webhookSecret', 'razorpay_webhook_secret', 'credentials.webhook_secret']),
+    process.env.RAZORPAY_WEBHOOK_SECRET,
+  ]);
+  if (!keyId || !keySecret) {
+    const err = new Error(
+      'Razorpay is not configured. Add key_id and key_secret in Owner Dashboard → Payment Gateways → Razorpay.'
+    );
+    err.status = 500;
+    throw err;
+  }
+  if (!keyId.startsWith('rzp_test_') && !keyId.startsWith('rzp_live_')) {
+    const err = new Error(
+      'Invalid Razorpay key_id — must start with rzp_test_ (sandbox) or rzp_live_ (live).'
+    );
+    err.status = 500;
+    throw err;
+  }
+  return { keyId, keySecret, webhookSecret };
+};
+
+const buildRazorpayAuthHeader = ({ keyId, keySecret }) =>
+  `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString('base64')}`;
+
+const razorpayFetch = async (pathFragment, options = {}, { gatewayRuntime = null } = {}) => {
+  const creds = getRazorpayCredentials({ gatewayRuntime });
+  const url = `${RAZORPAY_API_BASE}${pathFragment}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      Authorization: buildRazorpayAuthHeader(creds),
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  return { response };
+};
+
+const createRazorpayPaymentLink = async ({
+  amount,           // major units (e.g. 999.50)
+  currency,
+  description,
+  referenceId,
+  customer = {},
+  callbackUrl,
+  notes = {},
+  gatewayRuntime = null,
+}) => {
+  // Razorpay refuses payment links above ~5 lakh INR by default; the API
+  // returns a clear 4xx if exceeded so no need to pre-check here.
+  const amountInSmallest = Math.max(Math.round(toNumber(amount, 0) * 100), 100);
+
+  const body = {
+    amount: amountInSmallest,
+    currency: String(currency || 'INR').toUpperCase(),
+    accept_partial: false,
+    reference_id: String(referenceId || '').slice(0, 40) || undefined,
+    description: String(description || '').slice(0, 2048),
+    customer: {
+      name: String(customer.name || '').slice(0, 50) || undefined,
+      email: String(customer.email || '').slice(0, 100) || undefined,
+      contact: String(customer.contact || '').slice(0, 15) || undefined,
+    },
+    notify: { sms: Boolean(customer.contact), email: Boolean(customer.email) },
+    reminder_enable: true,
+    callback_url: callbackUrl,
+    callback_method: 'get',
+    notes,
+  };
+
+  const { response } = await razorpayFetch('/payment_links', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  }, { gatewayRuntime });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload?.id) {
+    const err = new Error(
+      String(payload?.error?.description || payload?.error?.reason || payload?.message || 'Unable to create Razorpay payment link')
+    );
+    err.status = Number(response.status || 502);
+    err.code = String(payload?.error?.code || '').trim() || null;
+    err.details = payload?.error || payload;
+    throw err;
+  }
+  return payload;
+};
+
+const getRazorpayPaymentLink = async ({ linkId, gatewayRuntime = null }) => {
+  const { response } = await razorpayFetch(`/payment_links/${encodeURIComponent(linkId)}`, {
+    method: 'GET',
+  }, { gatewayRuntime });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || !payload?.id) {
+    const err = new Error(
+      String(payload?.error?.description || 'Unable to fetch Razorpay payment link')
+    );
+    err.status = Number(response.status || 502);
+    err.code = String(payload?.error?.code || '').trim() || null;
+    throw err;
+  }
+  return payload;
+};
+
+// HMAC-SHA256 verification for incoming Razorpay webhooks. Razorpay signs
+// the raw request body with the webhook_secret you configured in the
+// dashboard; we sign locally with the same secret and compare in constant
+// time. Use this from the webhook route handler when added in future.
+const verifyRazorpayWebhookSignature = ({ rawBody, signature, secret }) => {
+  if (!signature || !secret || !rawBody) return false;
+  // eslint-disable-next-line global-require
+  const crypto = require('node:crypto');
+  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, 'utf8'), Buffer.from(String(signature), 'utf8'));
+  } catch {
+    return false;
+  }
+};
+
 const enqueueBillingActivityLog = ({
   req,
   organizationId,
@@ -1271,6 +1416,95 @@ const createCheckoutSession = async (req, res, next) => {
       );
     }
 
+    if (requestedGateway === 'razorpay') {
+      const razorpayDescription =
+        `${plan.plan_name} ${cycle === 'year' ? 'Yearly' : 'Monthly'} | ` +
+        `${organization?.name || 'Organization'} | ` +
+        `${userCount} user${userCount > 1 ? 's' : ''}`;
+      const razorpayCurrency = String(currency || 'INR').toUpperCase();
+      const razorpayAmount = Number(toNumber(quote.total, 0).toFixed(2));
+      const razorpayCallbackUrl = appendQueryParam(
+        successUrl.replace('{CHECKOUT_SESSION_ID}', ''),
+        'gateway',
+        'razorpay'
+      );
+
+      // Razorpay only accepts ASCII in notes values and caps each at 256
+      // chars. Trim the metadata down to what's useful for ops + matching.
+      const razorpayNotes = {
+        organization_id: String(organizationId || ''),
+        user_id: String(actorId || ''),
+        plan_id: String(planId || ''),
+        plan_name: String(plan.plan_name || '').slice(0, 80),
+        user_count: String(userCount || ''),
+        cycle,
+        billing_type: ['upgrade', 'renewal'].includes(billingType) ? billingType : 'upgrade',
+      };
+
+      const razorpayLink = await createRazorpayPaymentLink({
+        amount: razorpayAmount,
+        currency: razorpayCurrency,
+        description: razorpayDescription,
+        referenceId: `org${organizationId}-u${actorId}-${Date.now()}`,
+        customer: {
+          name: String(address.fullName || '').slice(0, 50),
+          email: String(billingEmail || address.email || '').slice(0, 100),
+          contact: String(address.mobile || '').replace(/\s+/g, '').slice(0, 15),
+        },
+        callbackUrl: razorpayCallbackUrl,
+        notes: razorpayNotes,
+        gatewayRuntime,
+      });
+
+      await billingModel.upsertBillingCheckoutSession({
+        sessionId: razorpayLink.id,           // plink_XXXXXXXX
+        gateway: 'razorpay',
+        organizationId,
+        actorUserId: actorId,
+        amount: razorpayAmount,
+        currencyCode: razorpayCurrency,
+        status: 'pending',
+        metadata: checkoutMetadata,
+      });
+
+      enqueueBillingActivityLog({
+        req,
+        organizationId,
+        actor,
+        requestMeta,
+        targetType: 'billing_checkout',
+        targetId: razorpayLink.id,
+        action: 'billing.checkout.create',
+        subtype: 'billing_checkout_session_create',
+        description: `Razorpay payment link created for plan ${plan.plan_name}`,
+        newValues: {
+          gateway: 'razorpay',
+          session_id: razorpayLink.id,
+          plan_id: planId,
+          plan_name: plan.plan_name,
+          user_count: userCount,
+          cycle,
+          currency: razorpayCurrency,
+          amount_total: razorpayAmount,
+          billing_type: billingType,
+        },
+        context: 'billing.checkout.create.activity_log',
+      });
+
+      return success(
+        res,
+        {
+          gateway: 'razorpay',
+          checkout_url: razorpayLink.short_url,
+          session_id: razorpayLink.id,
+          amount_total: razorpayAmount,
+          currency: razorpayCurrency,
+        },
+        'Razorpay payment link created',
+        201
+      );
+    }
+
     const stripe = getStripeClient({ gatewayRuntime });
     const unitAmountMinor = Math.max(Math.round(toNumber(quote.total, 0) * 100), 1);
     const stripeDescription =
@@ -1754,6 +1988,35 @@ const confirmCheckoutSession = async (req, res, next) => {
       currencyCode = String(capture?.amount?.currency_code || purchaseUnit?.amount?.currency_code || metadata?.currency || 'USD').toUpperCase();
       billingEmail =
         String(order?.payer?.email_address || metadata?.billing_email || '').trim().toLowerCase() || '';
+    } else if (gateway === 'razorpay') {
+      const link = await getRazorpayPaymentLink({ linkId: sessionId, gatewayRuntime });
+      const linkStatus = String(link?.status || '').toLowerCase();
+      if (linkStatus !== 'paid') {
+        const failedReason = buildFailureReason({
+          stage: 'checkout_confirm',
+          message: `Razorpay payment link not paid (status=${linkStatus || 'unknown'})`,
+          code: linkStatus || null,
+          type: 'razorpay',
+          raw: { session_id: sessionId, status: linkStatus },
+        });
+        await billingModel.markBillingCheckoutSessionStatus(sessionId, { status: 'failed', failureReason: failedReason });
+        const err = new Error(
+          linkStatus === 'expired' || linkStatus === 'cancelled'
+            ? 'This payment link has expired. Please start a new payment.'
+            : 'Payment is not completed'
+        );
+        err.status = 400;
+        throw err;
+      }
+      // Razorpay returns payments[] once status is paid. The first captured
+      // payment is the canonical transaction. amount_paid is in smallest unit.
+      const payments = Array.isArray(link?.payments) ? link.payments : [];
+      const capturedPayment = payments.find((p) => String(p?.status || '').toLowerCase() === 'captured') || payments[0] || null;
+      transactionId = String(capturedPayment?.payment_id || link?.id || sessionId).trim();
+      amountMajor = Number((toNumber(link?.amount_paid || link?.amount, 0) / 100).toFixed(2));
+      currencyCode = String(link?.currency || metadata?.currency || 'INR').toUpperCase();
+      billingEmail =
+        String(capturedPayment?.email || link?.customer?.email || metadata?.billing_email || '').trim().toLowerCase() || '';
     } else {
       const stripe = getStripeClient({ gatewayRuntime });
       const session = await stripe.checkout.sessions.retrieve(sessionId);
@@ -2044,6 +2307,37 @@ const resumeCheckoutSession = async (req, res, next) => {
       checkoutUrl = approvalLink?.href || null;
       if (!checkoutUrl) {
         const err = new Error('PayPal order approval link not found. Please start a new payment.');
+        err.status = 410;
+        throw err;
+      }
+    } else if (gateway === 'razorpay') {
+      const link = await getRazorpayPaymentLink({ linkId: sessionId, gatewayRuntime });
+      const linkStatus = String(link?.status || '').toLowerCase();
+      if (linkStatus === 'expired' || linkStatus === 'cancelled') {
+        const err = new Error('This Razorpay payment link has expired. Please start a new payment.');
+        err.status = 410;
+        throw err;
+      }
+      // If the user has already paid but BillingThankYou never ran (closed
+      // tab), tell the client to call /checkout/confirm to finalize instead
+      // of redirecting them back to a dead link.
+      if (linkStatus === 'paid') {
+        return success(
+          res,
+          {
+            checkout_url: null,
+            gateway,
+            session_id: sessionId,
+            already_paid: true,
+            status: linkStatus,
+            payment_status: 'paid',
+          },
+          'Payment already complete — confirm to finalize.'
+        );
+      }
+      checkoutUrl = link?.short_url || null;
+      if (!checkoutUrl) {
+        const err = new Error('Razorpay short URL missing. Please start a new payment.');
         err.status = 410;
         throw err;
       }

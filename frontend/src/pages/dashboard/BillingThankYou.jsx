@@ -13,6 +13,12 @@ const BillingThankYou = () => {
   const [searchParams] = useSearchParams();
   const sessionId = String(searchParams.get("session_id") || searchParams.get("token") || "").trim();
   const gateway = String(searchParams.get("gateway") || "").trim().toLowerCase();
+  // Razorpay's Checkout modal returns these three signed fields; the
+  // backend verifies the HMAC against the order_id+payment_id. Without
+  // them the confirm endpoint can still proceed by re-fetching the
+  // order (less secure but works for the resume flow).
+  const razorpayPaymentId = String(searchParams.get("razorpay_payment_id") || "").trim();
+  const razorpaySignature = String(searchParams.get("razorpay_signature") || "").trim();
   const handledRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
@@ -32,10 +38,16 @@ const BillingThankYou = () => {
       }
 
       try {
+        const confirmBody = { session_id: sessionId, gateway };
+        if (gateway === "razorpay" && razorpayPaymentId) {
+          confirmBody.razorpay_payment_id = razorpayPaymentId;
+          confirmBody.razorpay_signature = razorpaySignature;
+          confirmBody.razorpay_order_id = sessionId; // order_id IS our session_id for razorpay
+        }
         const { response, payload } = await fetchWithAuth(`${API_BASE_URL}/billing/checkout/confirm`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id: sessionId, gateway }),
+          body: JSON.stringify(confirmBody),
         });
 
         if (!response.ok || payload?.status === "error") {
@@ -73,7 +85,7 @@ const BillingThankYou = () => {
     };
 
     run();
-  }, [gateway, sessionId]);
+  }, [gateway, sessionId, razorpayPaymentId, razorpaySignature]);
 
   useEffect(() => {
     if (loading || error) return undefined;

@@ -562,14 +562,14 @@ const OWNER_MODULES = {
       {
         name: "valid_from",
         label: "Valid From",
-        type: "text",
-        helperText: "Use ISO datetime. Example: 2026-03-10T00:00:00Z",
+        type: "datetime-local",
+        helperText: "When the coupon becomes usable. Leave blank for immediately.",
       },
       {
         name: "valid_to",
         label: "Valid To",
-        type: "text",
-        helperText: "Use ISO datetime. Example: 2026-04-10T23:59:59Z",
+        type: "datetime-local",
+        helperText: "When the coupon expires. Leave blank for no expiry.",
       },
       {
         name: "status",
@@ -951,6 +951,26 @@ const normalizeForCompare = (value) => {
   return String(value);
 };
 
+// HTML5 datetime-local inputs need YYYY-MM-DDTHH:mm in the user's local
+// tz (no seconds, no timezone suffix). The DB sends ISO UTC strings.
+// Convert in both directions so the form is friendly without losing
+// fidelity.
+const isoToDatetimeLocal = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
+const datetimeLocalToIso = (local) => {
+  const text = String(local || "").trim();
+  if (!text) return null;
+  const d = new Date(text);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString();
+};
+
 const toFormStateFromRow = (moduleConfig, row = null) => {
   const fields = moduleConfig.formFields || [];
   return fields.reduce((acc, field) => {
@@ -987,6 +1007,10 @@ const toFormStateFromRow = (moduleConfig, row = null) => {
       } else {
         acc[field.name] = "{}";
       }
+      return acc;
+    }
+    if (field.type === "datetime-local") {
+      acc[field.name] = isoToDatetimeLocal(row?.[field.name]);
       return acc;
     }
     acc[field.name] = stringifyPrimitive(row?.[field.name]);
@@ -1032,6 +1056,10 @@ const buildPayloadFromForm = ({ moduleConfig, formState, mode, originalRow, upda
           throw new Error(`${field.label} must be a valid number`);
         }
       }
+    } else if (field.type === "datetime-local") {
+      // Convert the picker's local-time string to a UTC ISO string for
+      // the API. Blank stays blank → backend treats as "no constraint".
+      transformed = datetimeLocalToIso(rawValue);
     } else {
       transformed = String(rawValue || "").trim();
     }
@@ -3074,17 +3102,21 @@ const ResourcePanel = ({
                 }
 
                 const isDisabledByMode = mode === "edit" && Boolean(field.readOnlyOnEdit);
+                const isDateTime = field.type === "datetime-local";
                 return (
                   <TextField
                     key={field.name}
                     fullWidth
                     size="small"
-                    type={field.type === "number" ? "number" : "text"}
+                    type={isDateTime ? "datetime-local" : field.type === "number" ? "number" : "text"}
                     label={field.label}
                     value={value}
                     multiline={isMulti}
                     minRows={isMulti ? 3 : undefined}
                     placeholder={fieldPlaceholder}
+                    // datetime-local inputs always need the label shrunk —
+                    // the picker placeholder otherwise overlaps the label.
+                    InputLabelProps={isDateTime ? { shrink: true } : undefined}
                     InputProps={{ readOnly: readOnly || isDisabledByMode }}
                     helperText={field.helperText || ""}
                     onChange={(event) => {
@@ -3092,7 +3124,19 @@ const ResourcePanel = ({
                       setFormState((prev) => ({ ...prev, [field.name]: event.target.value }));
                     }}
                     disabled={readOnly || isDisabledByMode}
-                    sx={commonSx}
+                    sx={{
+                      ...commonSx,
+                      // Make sure the calendar icon is visible in both light
+                      // and dark mode — Chrome's default picker glyph is dark
+                      // grey which disappears on dark surfaces.
+                      ...(isDateTime && {
+                        "& input[type='datetime-local']::-webkit-calendar-picker-indicator": {
+                          filter: "invert(0.45)",
+                          cursor: "pointer",
+                          opacity: 1,
+                        },
+                      }),
+                    }}
                   />
                 );
               })}

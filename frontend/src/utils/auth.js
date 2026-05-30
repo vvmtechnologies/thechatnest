@@ -118,7 +118,13 @@ const refreshSession = async () => {
 
     if (!response.ok || result?.status === "error") {
       const refreshError = new Error(result?.message || "Session refresh failed");
+      refreshError.status = response.status;
       refreshError.forceLogoutAll = Boolean(result?.errors?.force_logout_all);
+      // 400/401/403 from /auth/refresh means the refresh token itself is
+      // dead (expired, rotated, revoked) — fetchWithAuth needs this signal
+      // to bounce the user to /login instead of leaving them staring at
+      // "Invalid or expired token" on whichever form they were on.
+      refreshError.sessionDead = response.status === 400 || response.status === 401 || response.status === 403;
       throw refreshError;
     }
 

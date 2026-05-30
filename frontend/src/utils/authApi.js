@@ -81,7 +81,15 @@ export const fetchWithAuth = async (
         result = await doRequest("");
       }
     } catch (error) {
-      if (error?.forceLogoutAll) {
+      // Force a clean logout in two cases:
+      //   1. Server explicitly said the session is compromised
+      //      (force_logout_all flag), OR
+      //   2. /auth/refresh itself returned 400/401/403 — meaning the
+      //      refresh token is dead, no point letting the user sit on a
+      //      page where every action will keep 401'ing.
+      // Transient network failures (no status set, 500, timeouts) are
+      // still tolerated — those don't justify yanking the user out.
+      if (error?.forceLogoutAll || error?.sessionDead) {
         authStore.logout();
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("chatx:logout"));

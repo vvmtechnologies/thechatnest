@@ -102,6 +102,8 @@ const PAYPAL_FAVICON_URL =
   "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://paypal.com&size=256";
 const STRIPE_FAVICON_URL =
   "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://stripe.com&size=256";
+const RAZORPAY_FAVICON_URL =
+  "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://razorpay.com&size=256";
 
 const getGatewayFromMethod = (value) =>
   String(value || "")
@@ -534,6 +536,7 @@ const BillingPanel = ({
       .toLowerCase();
     const isPaypal = key === "paypal";
     const isStripe = key === "stripe";
+    const isRazorpay = key === "razorpay";
     return {
       key,
       label: String(
@@ -541,29 +544,37 @@ const BillingPanel = ({
       )
         .trim()
         .toUpperCase(),
-      iconLetter: isPaypal ? "P" : isStripe ? "S" : "G",
+      iconLetter: isPaypal ? "P" : isStripe ? "S" : isRazorpay ? "R" : "G",
       iconUrl: isPaypal
         ? PAYPAL_FAVICON_URL
         : isStripe
           ? STRIPE_FAVICON_URL
-          : "",
+          : isRazorpay
+            ? RAZORPAY_FAVICON_URL
+            : "",
       iconBg: isPaypal
         ? "linear-gradient(135deg, #e6f4ff 0%, #bfdbfe 100%)"
         : isStripe
           ? "linear-gradient(135deg, #e9e7ff 0%, #c4b5fd 100%)"
-          : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
-      iconColor: isPaypal ? "#0369a1" : isStripe ? "#4c1d95" : "#334155",
+          : isRazorpay
+            ? "linear-gradient(135deg, #e0f2fe 0%, #93c5fd 100%)"
+            : "linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%)",
+      iconColor: isPaypal ? "#0369a1" : isStripe ? "#4c1d95" : isRazorpay ? "#1d4ed8" : "#334155",
       cardBorder: isPaypal
         ? "rgba(14,116,144,0.34)"
         : isStripe
           ? "rgba(76,29,149,0.34)"
-          : "rgba(51,65,85,0.28)",
+          : isRazorpay
+            ? "rgba(29,78,216,0.34)"
+            : "rgba(51,65,85,0.28)",
       cardBg: isPaypal
         ? "rgba(240,249,255,0.95)"
         : isStripe
           ? "rgba(245,243,255,0.95)"
-          : "rgba(248,250,252,0.96)",
-      testBg: isPaypal ? "rgba(251,191,36,0.2)" : "rgba(251,191,36,0.2)",
+          : isRazorpay
+            ? "rgba(239,246,255,0.95)"
+            : "rgba(248,250,252,0.96)",
+      testBg: "rgba(251,191,36,0.2)",
       testColor: "#92400e",
     };
   };

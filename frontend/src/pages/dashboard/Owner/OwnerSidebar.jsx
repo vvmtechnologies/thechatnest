@@ -32,6 +32,7 @@ const menuItems = [
     section: "Commercial",
     items: [
       { id: "payment-gateways", label: "Payment Gateways", icon: <FiLayers size={16} /> },
+      { id: "razorpay-sync", label: "Razorpay Sync", icon: <FiActivity size={16} /> },
       { id: "plans", label: "Plans", icon: <FiLayers size={16} /> },
       { id: "plan-features", label: "Plan Features", icon: <FiSliders size={16} /> },
       { id: "coupons", label: "Coupons", icon: <FiLayers size={16} /> },

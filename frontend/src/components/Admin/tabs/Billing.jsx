@@ -104,6 +104,84 @@ const STRIPE_FAVICON_URL =
   "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://stripe.com&size=256";
 const RAZORPAY_FAVICON_URL =
   "https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://razorpay.com&size=256";
+const RAZORPAY_CHECKOUT_SDK = "https://checkout.razorpay.com/v1/checkout.js";
+
+// Lazy-load Razorpay's Checkout SDK on first use. Multiple callers share
+// one in-flight Promise so opening the modal twice never re-injects the
+// script tag. Resolves to `true` when window.Razorpay is callable.
+let __razorpaySdkPromise = null;
+const ensureRazorpaySdk = () => {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  if (__razorpaySdkPromise) return __razorpaySdkPromise;
+  __razorpaySdkPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = RAZORPAY_CHECKOUT_SDK;
+    s.async = true;
+    s.onload = () => resolve(Boolean(window.Razorpay));
+    s.onerror = () => {
+      __razorpaySdkPromise = null;
+      reject(new Error("Failed to load Razorpay Checkout SDK"));
+    };
+    document.head.appendChild(s);
+  });
+  return __razorpaySdkPromise;
+};
+
+// Open the Razorpay Checkout modal with the order details the backend
+// just minted. On success, post the signed result to /checkout/confirm
+// and bounce the user to BillingThankYou. On dismiss / failure, surface
+// a friendly toast — the order is still finalisable via the resume flow.
+const openRazorpayCheckout = async (data) => {
+  const ok = await ensureRazorpaySdk();
+  if (!ok || !window.Razorpay) throw new Error("Razorpay Checkout failed to load");
+
+  return new Promise((resolve, reject) => {
+    const rzp = new window.Razorpay({
+      key: data.razorpay_key_id,
+      order_id: data.razorpay_order_id,
+      amount: data.razorpay_amount,
+      currency: data.razorpay_currency,
+      name: data.razorpay_name || "TheChatNest",
+      description: data.razorpay_description || "",
+      prefill: {
+        name: data.razorpay_prefill?.name || "",
+        email: data.razorpay_prefill?.email || "",
+        contact: data.razorpay_prefill?.contact || "",
+      },
+      notes: data.razorpay_notes || {},
+      theme: { color: "#2563eb" },
+      // Disable retry — we want the user to come back to our flow if
+      // the first attempt fails, not loop in Razorpay's UI forever.
+      retry: { enabled: false },
+      handler: (response) => {
+        // Razorpay calls this when the modal completes successfully.
+        // Bounce to BillingThankYou with the signed payment fields so
+        // the existing confirm flow can verify the signature.
+        const params = new URLSearchParams({
+          session_id: data.razorpay_order_id,
+          gateway: "razorpay",
+          razorpay_payment_id: response.razorpay_payment_id || "",
+          razorpay_order_id: response.razorpay_order_id || data.razorpay_order_id,
+          razorpay_signature: response.razorpay_signature || "",
+        });
+        window.location.href = `/billing/thank-you?${params.toString()}`;
+        resolve();
+      },
+      modal: {
+        ondismiss: () => {
+          // User closed the modal without paying — not an error, just
+          // a no-op. They can hit Pay again or resume from history.
+          resolve();
+        },
+      },
+    });
+    rzp.on("payment.failed", (err) => {
+      reject(new Error(err?.error?.description || "Payment failed in Razorpay"));
+    });
+    rzp.open();
+  });
+};
 
 const getGatewayFromMethod = (value) =>
   String(value || "")
@@ -2545,9 +2623,18 @@ const Billing = ({ adminData }) => {
       if (!response.ok || responsePayload?.status === "error") {
         throw new Error(responsePayload?.message || "Unable to start checkout");
       }
-      const checkoutUrl = String(
-        responsePayload?.data?.checkout_url || "",
-      ).trim();
+      const data = responsePayload?.data || {};
+      const gateway = String(data.gateway || "").trim().toLowerCase();
+
+      // Razorpay needs the Checkout modal to open in-page so the user
+      // can pick Card / UPI / Netbanking. Skip the window.location
+      // redirect and load their JS SDK on demand.
+      if (gateway === "razorpay" && data.razorpay_order_id) {
+        await openRazorpayCheckout(data);
+        return;
+      }
+
+      const checkoutUrl = String(data.checkout_url || "").trim();
       if (!checkoutUrl) {
         throw new Error("Checkout URL missing in response");
       }
@@ -2759,6 +2846,16 @@ const Billing = ({ adminData }) => {
         invalidatePlanStatusCache();
         // Reload so payment history reflects the new succeeded state
         window.location.reload();
+        return;
+      }
+
+      // Razorpay resume — re-open the Checkout modal against the same
+      // order instead of redirecting (there's no hosted URL to land on).
+      if (
+        String(payload?.data?.gateway || "").toLowerCase() === "razorpay" &&
+        payload?.data?.razorpay_order_id
+      ) {
+        await openRazorpayCheckout(payload.data);
         return;
       }
 

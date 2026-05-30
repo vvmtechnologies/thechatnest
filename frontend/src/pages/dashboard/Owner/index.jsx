@@ -35,6 +35,7 @@ import authStore from "../../../utils/auth";
 import { downloadInvoicePdf } from "../../../utils/invoicePdf";
 import SettingsDrawer from "../../../components/settings/drawer/index.jsx";
 import OwnerSidebar from "./OwnerSidebar";
+import RazorpaySyncPanel from "./RazorpaySyncPanel";
 import useHideTawkWhileMounted from "../../../utils/hideTawkWhileMounted";
 
 const ORG_PAGE_SIZE = 20;
@@ -6722,6 +6723,8 @@ const OwnerDashboard = () => {
           ) : null}
 
           {activeSection === "smtp-settings" ? <SmtpSettingsPanel /> : null}
+
+          {activeSection === "razorpay-sync" ? <RazorpaySyncPanel /> : null}
 
           {activeSection === "socket-dashboard" ? (
             <SocketDashboardPanel ownerUi={ownerUi} />

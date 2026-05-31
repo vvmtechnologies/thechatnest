@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, AppState,
   Platform, TextInput, ActivityIndicator, Keyboard, RefreshControl, Linking, Modal, Pressable,
+  useWindowDimensions, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -12,32 +13,25 @@ import * as Contacts from 'expo-contacts';
 import * as Notifications from 'expo-notifications';
 import { AudioModule, createAudioPlayer } from 'expo-audio';
 import * as LocalAuthentication from 'expo-local-authentication';
-import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StorageKeys } from '../../src/constants/storageKeys';
 import Avatar from '../../src/components/Avatar';
 import { useToast } from '../../src/components/Toast';
 import { useAuth } from '../../src/store/AuthContext';
 import { useTheme } from '../../src/store/ThemeContext';
-import { getMe, changePassword, getTrustedDevices, revokeDevice, logout, logoutAll } from '../../src/api/auth';
+import { getMe, changePassword, getTrustedDevices, revokeDevice, logoutAll } from '../../src/api/auth';
 import api from '../../src/api/config';
 
+// ─── Constants ─────────────────────────────────────────────────────────────
 const NOTIFICATION_TONES = [
   { key: 'default', label: 'Default' },
-  { key: 'chime', label: 'Chime' },
-  { key: 'ping', label: 'Ping' },
-  { key: 'bubble', label: 'Bubble' },
-  { key: 'bell', label: 'Bell' },
-  { key: 'drop', label: 'Drop' },
-  { key: 'pop', label: 'Pop' },
-  { key: 'ding', label: 'Ding' },
-  { key: 'chirp', label: 'Chirp' },
-  { key: 'soft', label: 'Soft' },
-  { key: 'bright', label: 'Bright' },
-  { key: 'knock', label: 'Knock' },
-  { key: 'swoosh', label: 'Swoosh' },
-  { key: 'crystal', label: 'Crystal' },
-  { key: 'ripple', label: 'Ripple' },
+  { key: 'chime', label: 'Chime' }, { key: 'ping', label: 'Ping' },
+  { key: 'bubble', label: 'Bubble' }, { key: 'bell', label: 'Bell' },
+  { key: 'drop', label: 'Drop' }, { key: 'pop', label: 'Pop' },
+  { key: 'ding', label: 'Ding' }, { key: 'chirp', label: 'Chirp' },
+  { key: 'soft', label: 'Soft' }, { key: 'bright', label: 'Bright' },
+  { key: 'knock', label: 'Knock' }, { key: 'swoosh', label: 'Swoosh' },
+  { key: 'crystal', label: 'Crystal' }, { key: 'ripple', label: 'Ripple' },
   { key: 'alert', label: 'Alert' },
 ];
 
@@ -59,6 +53,21 @@ const TONE_FILES = {
   alert: require('../../assets/tones/alert.wav'),
 };
 
+const PRESET_COLORS = ['#ffd54a', '#6d5dfc', '#ffb74d', '#22c55e', '#0ea5e9', '#ec4899', '#f59e0b', '#11162a'];
+const FONTS_LIST = ['SF Display', 'Poppins', 'Noto Sans', 'Inter', 'Roboto'];
+const FONT_SIZES_LIST = ['Small', 'Normal', 'Large'];
+const STRIPE_PALETTE = ['#6d5dfc', '#ffd54a', '#22c55e', '#ec4899', '#0ea5e9', '#f59e0b'];
+
+const STATUS_OPTIONS = [
+  { key: 'Available', color: '#22c55e', label: 'Available' },
+  { key: 'Busy',      color: '#ef4444', label: 'Busy' },
+  { key: 'Away',      color: '#f59e0b', label: 'Away' },
+  { key: 'DND',       color: '#8b5cf6', label: 'Do Not Disturb' },
+  { key: 'Offline',   color: '#94a3b8', label: 'Appear Offline' },
+];
+
+const ROLE_LABELS = { 1: 'Owner', 2: 'Admin', 3: 'Super Admin', 4: 'User', owner: 'Owner', admin: 'Admin', super_admin: 'Super Admin', users: 'User' };
+
 const getTimeAgo = (d) => {
   if (!d) return '';
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -69,28 +78,21 @@ const getTimeAgo = (d) => {
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
 };
 
-const PRESET_COLORS = ['#ffd54a', '#6d5dfc', '#ffb74d', '#22c55e', '#0ea5e9', '#ec4899', '#f59e0b', '#11162a'];
-const FONTS_LIST = ['SF Display', 'Poppins', 'Noto Sans', 'Inter', 'Roboto'];
-const FONT_SIZES_LIST = ['Small', 'Normal', 'Large'];
-
-const STATUS_OPTIONS = [
-  { key: 'Available', icon: 'ellipse',         color: '#22c55e', label: 'Available' },
-  { key: 'Busy',      icon: 'ellipse',         color: '#ef4444', label: 'Busy' },
-  { key: 'Away',      icon: 'ellipse',         color: '#f59e0b', label: 'Away' },
-  { key: 'DND',       icon: 'remove-circle',   color: '#ef4444', label: 'Do Not Disturb' },
-  { key: 'Offline',   icon: 'ellipse-outline', color: '#94a3b8', label: 'Appear Offline' },
-];
-
+// ─── Main Screen ───────────────────────────────────────────────────────────
 export default function ProfileScreen() {
   const { user, refreshUser, logout: doLogout, organizations, orgsLoading, loadOrganizations, switchOrganization } = useAuth();
   const { theme: t, mode, setTheme, isDark, setBrand, setFont, setFontSize, brandColor: currentBrand, fontFamily: currentFont, fontSizeKey: currentFontSize } = useTheme();
   const toast = useToast();
+  const { width: winW } = useWindowDimensions();
+  const isTablet = winW >= 768;
+  const contentMaxWidth = isTablet ? 720 : winW;
+  const quickGridCols = isTablet ? 4 : 2;
 
   const [profile, setProfile] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [expanded, setExpanded] = useState(null); // which section is expanded
+  const [expanded, setExpanded] = useState(null);
 
-  // Password
+  // Password form
   const [oldPass, setOldPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
@@ -101,7 +103,7 @@ export default function ProfileScreen() {
   const [devices, setDevices] = useState([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
 
-  // Customize
+  // Customize (color hex input)
   const [hexInput, setHexInput] = useState(currentBrand || '#ffd54a');
   useEffect(() => { setHexInput(currentBrand); }, [currentBrand]);
 
@@ -109,49 +111,11 @@ export default function ProfileScreen() {
   const [selectedTone, setSelectedTone] = useState('default');
   const [showTonePicker, setShowTonePicker] = useState(false);
   const [playingTone, setPlayingTone] = useState(null);
-
-  // Load saved tone on mount
   useEffect(() => {
-    AsyncStorage.getItem(StorageKeys.notificationTone).then(v => { if (v) setSelectedTone(v); });
+    AsyncStorage.getItem(StorageKeys.notificationTone).then((v) => { if (v) setSelectedTone(v); });
   }, []);
 
-  const previewTone = async (key) => {
-    // Stop previous
-    if (playingTone) { try { playingTone.pause(); playingTone.remove(); } catch {} }
-    if (key === 'default') { setPlayingTone(null); return; }
-    try {
-      const player = createAudioPlayer(TONE_FILES[key]);
-      player.volume = 1.0;
-      player.play();
-      setPlayingTone(player);
-      const sub = player.addListener('playbackStatusUpdate', (s) => {
-        if (s?.didJustFinish) { try { player.remove(); } catch {} setPlayingTone(null); sub?.remove?.(); }
-      });
-    } catch {}
-  };
-
-  const selectTone = async (key) => {
-    setSelectedTone(key);
-    await AsyncStorage.setItem(StorageKeys.notificationTone, key);
-    previewTone(key);
-    setShowTonePicker(false);
-    toast(`Tone set to ${NOTIFICATION_TONES.find(t => t.key === key)?.label}`, 'success');
-  };
-
-  // App Lock state
-  const [appLockEnabled, setAppLockState] = useState(false);
-  const [showPinSetup, setShowPinSetup] = useState(false);
-  const [pinInput, setPinInput] = useState('');
-  useEffect(() => {
-    (async () => {
-      try {
-        const { isAppLockEnabled } = require('../../src/components/AppLock');
-        setAppLockState(await isAppLockEnabled());
-      } catch {}
-    })();
-  }, []);
-
-  // Custom status
+  // Status picker
   const [myStatus, setMyStatus] = useState('Available');
   const [statusText, setStatusText] = useState('');
   const [showStatusPicker, setShowStatusPicker] = useState(false);
@@ -168,34 +132,27 @@ export default function ProfileScreen() {
       AudioModule.getRecordingPermissionsAsync().catch(() => ({ granted: false })),
       LocalAuthentication.hasHardwareAsync().catch(() => false),
     ]);
-    // Check biometric enrollment
     let bioStatus = 'unavailable';
     if (bioAvail) {
       const enrolled = await LocalAuthentication.isEnrolledAsync().catch(() => false);
       bioStatus = enrolled ? 'granted' : 'undetermined';
     }
     setPerms({
-      camera: cam.status,
-      gallery: gal.status,
-      location: loc.status,
-      contacts: contact.status,
-      notifications: notif.status,
+      camera: cam.status, gallery: gal.status, location: loc.status,
+      contacts: contact.status, notifications: notif.status,
       microphone: mic.granted ? 'granted' : (mic.status || 'undetermined'),
       biometric: bioStatus,
     });
   }, []);
-  useEffect(() => { loadPerms(); }, []);
-  // Refresh perms when user returns from system settings
+  useEffect(() => { loadPerms(); }, [loadPerms]);
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => { if (state === 'active') loadPerms(); });
     return () => sub.remove();
   }, [loadPerms]);
 
-  // Load organizations once user is available so switcher is ready
-  useEffect(() => {
-    if (user && loadOrganizations) loadOrganizations();
-  }, [user, loadOrganizations]);
+  useEffect(() => { if (user && loadOrganizations) loadOrganizations(); }, [user, loadOrganizations]);
 
+  // ─── Handlers ──────────────────────────────────────────────────────────
   const handleSwitchOrg = useCallback(async (orgId) => {
     if (Number(orgId) === Number(user?.orgId)) return;
     await switchOrganization(orgId);
@@ -211,38 +168,27 @@ export default function ProfileScreen() {
       else if (type === 'contacts') await Contacts.requestPermissionsAsync();
       else if (type === 'notifications') await Notifications.requestPermissionsAsync();
       else if (type === 'microphone') await AudioModule.requestRecordingPermissionsAsync();
-      else if (type === 'biometric') { Linking.openSettings(); return; }
       else { Linking.openSettings(); return; }
     } catch { Linking.openSettings(); return; }
     loadPerms();
   }, [loadPerms]);
 
-  // Toggle permission — allowed → open settings to revoke, denied → request or open settings
   const togglePerm = useCallback(async (key, currentlyGranted) => {
-    if (currentlyGranted) {
-      // Can't revoke from app — open system settings
-      Linking.openSettings();
-    } else {
-      // Try requesting, if denied before it'll need settings
+    if (currentlyGranted) { Linking.openSettings(); }
+    else {
       const denied = perms[key] === 'denied';
-      if (denied) {
-        Linking.openSettings();
-      } else {
-        await requestPerm(key);
-      }
+      if (denied) Linking.openSettings();
+      else await requestPerm(key);
     }
   }, [perms, requestPerm]);
 
-  // Load profile
   const loadProfile = useCallback(async () => {
     try {
       const raw = await getMe();
-      // raw = { user, organization, user_role, organization_member, ... }
       const u = raw?.user || raw;
       const org = raw?.organization || {};
       const userRole = raw?.user_role || {};
       const mem = raw?.organization_member || {};
-      console.log('[profile] user_role:', JSON.stringify(userRole));
       setProfile({
         ...u,
         company_name: org?.name || '',
@@ -266,8 +212,8 @@ export default function ProfileScreen() {
     } catch {} finally { setLoadingDevices(false); }
   }, []);
 
-  useEffect(() => { loadProfile(); }, []);
-  useEffect(() => { if (expanded === 'devices') loadDevices(); }, [expanded]);
+  useEffect(() => { loadProfile(); }, [loadProfile]);
+  useEffect(() => { if (expanded === 'devices') loadDevices(); }, [expanded, loadDevices]);
 
   const onRefresh = async () => { setRefreshing(true); await loadProfile(); setRefreshing(false); };
 
@@ -282,670 +228,662 @@ export default function ProfileScreen() {
       setOldPass(''); setNewPass(''); setConfirmPass('');
     } catch (e) { toast(e?.response?.data?.message || 'Failed', 'error'); }
     finally { setSaving(false); }
-  }, [oldPass, newPass, confirmPass]);
+  }, [oldPass, newPass, confirmPass, toast]);
 
   const handleLogout = useCallback(async () => {
     await doLogout();
     toast('Logged out', 'info');
     router.replace('/(auth)/login');
-  }, [doLogout]);
+  }, [doLogout, toast]);
 
   const handleLogoutAll = useCallback(async () => {
-    await logoutAll();
-    toast('All devices logged out', 'info');
-    router.replace('/(auth)/login');
-  }, []);
+    Alert.alert('Logout all devices?', 'You will be signed out from every device including this one.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Logout all', style: 'destructive', onPress: async () => {
+        await logoutAll();
+        toast('All devices logged out', 'info');
+        router.replace('/(auth)/login');
+      }},
+    ]);
+  }, [toast]);
 
   const handleRevokeDevice = useCallback(async (id) => {
     try { await revokeDevice(id); toast('Revoked', 'success'); loadDevices(); }
     catch { toast('Failed', 'error'); }
-  }, []);
+  }, [loadDevices, toast]);
 
-  const toggle = useCallback((key) => setExpanded(prev => prev === key ? null : key), []);
+  const handleDeleteAccount = useCallback(() => {
+    Alert.alert('Delete Account', 'This permanently deletes your account, all messages, and data. This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete My Account', style: 'destructive', onPress: async () => {
+        try {
+          await api.delete('/auth/me');
+          await doLogout();
+          toast('Account deleted', 'info');
+          setTimeout(() => router.replace('/(auth)/login'), 300);
+        } catch { toast('Contact support to delete account', 'info'); }
+      }},
+    ]);
+  }, [doLogout, toast]);
+
+  const previewTone = useCallback(async (key) => {
+    if (playingTone) { try { playingTone.pause(); playingTone.remove(); } catch {} }
+    if (key === 'default') { setPlayingTone(null); return; }
+    try {
+      const player = createAudioPlayer(TONE_FILES[key]);
+      player.volume = 1.0;
+      player.play();
+      setPlayingTone(player);
+      const sub = player.addListener('playbackStatusUpdate', (s) => {
+        if (s?.didJustFinish) { try { player.remove(); } catch {} setPlayingTone(null); sub?.remove?.(); }
+      });
+    } catch {}
+  }, [playingTone]);
+
+  const selectTone = useCallback(async (key) => {
+    setSelectedTone(key);
+    await AsyncStorage.setItem(StorageKeys.notificationTone, key);
+    previewTone(key);
+    setShowTonePicker(false);
+    toast(`Tone set to ${NOTIFICATION_TONES.find((tn) => tn.key === key)?.label}`, 'success');
+  }, [previewTone, toast]);
+
+  const toggleSection = useCallback((key) => setExpanded((prev) => prev === key ? null : key), []);
+
+  const handleAvatarUpload = useCallback(async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [1, 1] });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      const formData = new FormData();
+      formData.append('avatar', { uri: asset.uri, name: 'avatar.jpg', type: asset.mimeType || 'image/jpeg' });
+      toast('Uploading…', 'info');
+      const { data } = await api.post('/upload/profile-picture', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const newUrl = data?.data?.profile_url || data?.data?.url || data?.profile_url;
+      if (newUrl) {
+        setProfile((prev) => ({ ...prev, profile_url: newUrl }));
+        toast('Photo updated!', 'success');
+        refreshUser?.();
+      } else { toast('Updated', 'success'); }
+    } catch (e) { toast(e?.response?.data?.message || 'Upload failed', 'error'); }
+  }, [refreshUser, toast]);
+
+  // ─── Derived values ────────────────────────────────────────────────────
   const p = profile || user || {};
-  // Role — try every possible source
-  const ROLE_LABELS = { 1: 'Owner', 2: 'Admin', 3: 'Super Admin', 4: 'User', owner: 'Owner', admin: 'Admin', super_admin: 'Super Admin', users: 'User' };
   const rawRole = p.role_name || p.role_key || profile?.role_name || profile?.role_key || user?.role_name || user?.role_key;
   const role = rawRole || ROLE_LABELS[p.role_id || user?.role_id] || 'Member';
-
-  // Pick a deterministic accent stripe per user (gold/violet/teal/coral)
-  const STRIPE_PALETTE = ['#ffd54a', '#6d5dfc', '#22c55e', '#ec4899', '#0ea5e9', '#f59e0b'];
   const stripeIdx = ((p.user_id || p.id || 0) + (p.name || '').length) % STRIPE_PALETTE.length;
   const userStripe = STRIPE_PALETTE[stripeIdx];
-
-  // Join date + initials for "member since"
   const joinDate = p.created_at || profile?.joined_at || profile?.created_at;
   const joinLabel = joinDate ? new Date(joinDate).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '—';
-  const initials = (p.name || 'U').split(' ').map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+  const initials = (p.name || 'U').split(' ').map((s) => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+  const isAdmin = Number(user?.role_id) <= 3 && Number(user?.role_id) >= 1;
+  const currentStatus = STATUS_OPTIONS.find((s) => s.key === myStatus) || STATUS_OPTIONS[0];
 
+  const quickActions = useMemo(() => [
+    { icon: 'qr-code',          label: 'Linked devices',  tint: '#6d5dfc', onPress: () => router.push('/chat/linked-devices') },
+    { icon: 'shield-checkmark', label: 'Privacy',         tint: '#22c55e', onPress: () => router.push('/chat/privacy') },
+    { icon: 'notifications',    label: 'Notifications',   tint: '#0ea5e9', onPress: () => router.push('/chat/notifications') },
+    { icon: 'help-circle',      label: 'Help',            tint: '#f59e0b', onPress: () => router.push('/chat/help') },
+  ], []);
+
+  // ─── Render ────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[z.root, { backgroundColor: t.bg }]} edges={['top', 'bottom']}>
-      {/* ─── Minimalist top bar — just title + logout, no brand pill ─── */}
-      <View style={z.topBar}>
-        <Text style={[z.topBarKicker, { color: t.textTer }]}>YOUR · ACCOUNT</Text>
-        <TouchableOpacity style={[z.logoutBtnInline, { backgroundColor: t.surface, borderColor: t.divider }]} onPress={handleLogout} activeOpacity={0.7}
-          accessibilityLabel="Sign out" accessibilityRole="button" hitSlop={6}>
-          <Ionicons name="log-out-outline" size={14} color="#ef4444" />
-          <Text style={z.logoutBtnText}>Sign out</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ─── HERO — gradient banner with overlapping avatar ─── */}
-      <View style={z.heroWrap}>
-        {/* Gradient banner background */}
-        <View style={[z.banner, { backgroundColor: userStripe }]}>
-          <View style={[z.bannerGlow, { backgroundColor: userStripe }]} />
-          <View style={z.bannerDots} pointerEvents="none">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <View key={i} style={[z.bannerDot, { left: 30 + i * 60, top: 18 + (i % 2) * 26 }]} />
-            ))}
-          </View>
-          {/* Top-right "edit photo" hint */}
-          <View style={z.heroInitials}>
-            <Text style={z.heroInitialsText}>{initials}</Text>
-          </View>
-        </View>
-
-        {/* Card body that overlaps the banner */}
-        <View style={[z.heroCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
-          {/* Avatar — overlaps the banner */}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={async () => {
-              try {
-                const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [1, 1] });
-                if (result.canceled || !result.assets?.[0]) return;
-                const asset = result.assets[0];
-                const formData = new FormData();
-                formData.append('avatar', { uri: asset.uri, name: 'avatar.jpg', type: asset.mimeType || 'image/jpeg' });
-                toast('Uploading...', 'info');
-                const { data } = await api.post('/upload/profile-picture', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-                const newUrl = data?.data?.profile_url || data?.data?.url || data?.profile_url;
-                if (newUrl) {
-                  setProfile(prev => ({ ...prev, profile_url: newUrl }));
-                  toast('Photo updated!', 'success');
-                  refreshUser();
-                } else { toast('Updated', 'success'); }
-              } catch (e) { toast(e?.response?.data?.message || 'Upload failed', 'error'); }
-            }}
-            style={z.avatarPlate}
-          >
-            <View style={[z.avatarRing, { backgroundColor: t.surface }]}>
-              <Avatar uri={p.profile_url || p.avatar} name={p.name} size={92} />
-            </View>
-            <View style={[z.cameraBadge, { backgroundColor: userStripe, borderColor: t.surface }]}>
-              <Ionicons name="camera" size={12} color="#fff" />
-            </View>
-          </TouchableOpacity>
-
-          {/* Name + role */}
-          <Text style={[z.heroName, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
-          <Text style={[z.heroEmail, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
-
-          <View style={z.heroPills}>
-            <View style={[z.heroRolePill, { backgroundColor: userStripe + '22', borderColor: userStripe + '66' }]}>
-              <View style={[z.heroRoleDot, { backgroundColor: userStripe }]} />
-              <Text style={[z.heroRoleText, { color: userStripe }]}>{role}</Text>
-            </View>
-            <View style={[z.heroIdPill, { backgroundColor: t.bg, borderColor: t.divider }]}>
-              <Ionicons name="finger-print" size={11} color={t.textTer} />
-              <Text style={[z.heroIdText, { color: t.textSec }]}>
-                #{String(p.user_id || p.id || '—').padStart(4, '0')}
-              </Text>
-            </View>
-          </View>
-
-          {/* Stats strip (3 cells) */}
-          <View style={[z.heroStats, { borderColor: t.divider }]}>
-            <View style={z.heroStatCell}>
-              <Text style={[z.heroStatValue, { color: t.text }]}>{joinLabel}</Text>
-              <Text style={[z.heroStatLabel, { color: t.textTer }]}>JOINED</Text>
-            </View>
-            <View style={[z.heroStatDivider, { backgroundColor: t.divider }]} />
-            <View style={z.heroStatCell}>
-              <Text style={[z.heroStatValue, { color: t.text }]} numberOfLines={1}>
-                {organizations?.length || 1}
-              </Text>
-              <Text style={[z.heroStatLabel, { color: t.textTer }]}>WORKSPACES</Text>
-            </View>
-            <View style={[z.heroStatDivider, { backgroundColor: t.divider }]} />
-            <View style={z.heroStatCell}>
-              <Text style={[z.heroStatValue, { color: '#22c55e' }]}>● Active</Text>
-              <Text style={[z.heroStatLabel, { color: t.textTer }]}>ACCOUNT</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      {/* ─── Status pill — sits below the ID card as a separate floating element ─── */}
-      <TouchableOpacity
-        style={[z.statusFloater, { backgroundColor: t.surface, borderColor: t.divider }]}
-        onPress={() => setShowStatusPicker(true)}
-        activeOpacity={0.7}
+    <SafeAreaView style={[s.root, { backgroundColor: t.bg }]} edges={['top']}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={s.scroll}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[t.accent]} tintColor={t.accent} />}
       >
-        <View style={z.statusFloaterLeft}>
-          <View style={[z.statusDot, { backgroundColor: STATUS_OPTIONS.find(s => s.key === myStatus)?.color || '#22c55e' }]} />
-          <Text style={[z.statusLabel, { color: t.text }]}>{myStatus}</Text>
-          {statusText ? <Text style={[z.statusCustom, { color: t.textSec }]} numberOfLines={1}> · {statusText}</Text> : null}
-        </View>
-        <View style={[z.statusFloaterEdit, { backgroundColor: t.bg }]}>
-          <Ionicons name="pencil" size={11} color={t.textSec} />
-        </View>
-      </TouchableOpacity>
+        <View style={{ width: '100%', maxWidth: contentMaxWidth, alignSelf: 'center' }}>
 
-      <ScrollView showsVerticalScrollIndicator={false}
-        contentContainerStyle={z.scroll}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[t.accent]} />}>
-
-        {/* Quick-action grid — 4 most-used settings */}
-        <View style={z.quickGrid}>
-          {[
-            { icon: 'qr-code',       label: 'Linked\ndevices',  tint: '#6d5dfc', onPress: () => router.push('/chat/linked-devices') },
-            { icon: 'shield-checkmark', label: 'Privacy &\nsecurity', tint: '#22c55e', onPress: () => router.push('/chat/privacy') },
-            { icon: 'notifications', label: 'Notifications',    tint: '#0ea5e9', onPress: () => router.push('/chat/notifications') },
-            { icon: 'help-circle',   label: 'Help &\nsupport',  tint: '#f59e0b', onPress: () => router.push('/chat/help') },
-          ].map((q) => (
+          {/* Top bar */}
+          <View style={s.topBar}>
+            <View>
+              <Text style={[s.topKicker, { color: t.textTer }]}>YOUR ACCOUNT</Text>
+              <Text style={[s.topTitle, { color: t.text }]}>Profile & Settings</Text>
+            </View>
             <TouchableOpacity
-              key={q.label}
-              style={[z.quickGridCard, { backgroundColor: t.surface, borderColor: t.divider }]}
-              onPress={q.onPress}
+              style={[s.topLogout, { backgroundColor: '#ef444412', borderColor: '#ef444433' }]}
+              onPress={handleLogout}
               activeOpacity={0.7}
             >
-              <View style={[z.quickGridIcon, { backgroundColor: q.tint + '22' }]}>
-                <Ionicons name={q.icon} size={18} color={q.tint} />
-              </View>
-              <Text style={[z.quickGridLabel, { color: t.text }]}>{q.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* ═══════════ ADMIN (only for admins) ═══════════ */}
-        {(Number(user?.role_id) <= 3 && Number(user?.role_id) >= 1) && (
-          <>
-            <View style={[z.section, { backgroundColor: t.card, marginTop: 8 }]}>
-              <TouchableOpacity style={z.sectionHeader} onPress={() => router.push('/chat/admin')} activeOpacity={0.6}>
-                <View style={[z.sectionIcon, { backgroundColor: '#ef444412' }]}>
-                  <Ionicons name="shield-checkmark" size={17} color="#ef4444" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[z.sectionLabel, { color: t.text }]}>Admin Panel</Text>
-                  <Text style={{ fontSize: 11, color: t.textTer, marginTop: 1 }}>Users, groups, controls, billing</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={18} color={t.textTer} />
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
-
-        {/* ═══════════ ORGANIZATIONS ═══════════ */}
-        {organizations.length > 1 && (
-          <>
-            <Text style={[z.groupLabel, { color: t.textTer }]}>ORGANIZATIONS</Text>
-            <View style={[z.section, { backgroundColor: t.card }]}>
-              {organizations.map((org, idx) => {
-                const active = Number(org.organization_id) === Number(user?.orgId);
-                return (
-                  <TouchableOpacity
-                    key={org.organization_id}
-                    style={[z.sectionHeader, idx > 0 && { borderTopWidth: 1, borderTopColor: t.borderLight }]}
-                    onPress={() => handleSwitchOrg(org.organization_id)}
-                    activeOpacity={0.6}
-                    disabled={active}
-                  >
-                    <View style={[z.sectionIcon, { backgroundColor: active ? t.accentBg : '#94a3b815' }]}>
-                      <Ionicons name={active ? 'checkmark-circle' : 'business-outline'} size={17} color={active ? t.accent : t.textTer} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[z.sectionLabel, { color: t.text }]} numberOfLines={1}>{org.org_name || `Org #${org.organization_id}`}</Text>
-                      <Text style={{ fontSize: 11, color: t.textTer, marginTop: 1 }} numberOfLines={1}>
-                        {org.role_name || org.role_key || 'Member'}{active ? ' · Current' : ''}
-                      </Text>
-                    </View>
-                    {!active && <Ionicons name="swap-horizontal" size={16} color={t.textTer} />}
-                  </TouchableOpacity>
-                );
-              })}
-              {orgsLoading && (
-                <View style={{ padding: 12, alignItems: 'center' }}>
-                  <ActivityIndicator size="small" color={t.accent} />
-                </View>
-              )}
-            </View>
-          </>
-        )}
-
-        {/* ═══════════ ACCOUNT ═══════════ */}
-        <Text style={[z.groupLabel, { color: t.textTer }]}>ACCOUNT</Text>
-
-        <Section id="profile" icon="person-outline" label="Profile Info" t={t} isOpen={expanded === 'profile'} onToggle={() => toggle('profile')}>
-          <InfoRow icon="briefcase-outline" label="Department" value={p.department_name} t={t} />
-          <InfoRow icon="ribbon-outline" label="Designation" value={p.designation_name} t={t} />
-          <InfoRow icon="call-outline" label="Mobile" value={p.mobile || p.phone} t={t} />
-          <InfoRow icon="business-outline" label="Company" value={p.company_name} t={t} />
-          <InfoRow icon="location-outline" label="Location" value={p.location_name} t={t} />
-          <InfoRow icon="time-outline" label="Last Login" value={p.last_login_at ? new Date(p.last_login_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null} t={t} last />
-        </Section>
-
-        {/* ─── Change Password ─── */}
-        <Section id="password" icon="key-outline" label="Change Password" t={t} isOpen={expanded === 'password'} onToggle={() => toggle('password')}>
-          <View style={z.formGroup}>
-            <Text style={[z.fieldLabel, { color: t.textTer }]}>OLD PASSWORD</Text>
-            <View style={[z.field, { borderColor: t.border, backgroundColor: t.inputBg }]}>
-              <Ionicons name="lock-closed-outline" size={16} color={t.icon} />
-              <TextInput style={[z.input, { color: t.text }]} placeholder="Current password" placeholderTextColor={t.textTer}
-                secureTextEntry={!showPass} value={oldPass} onChangeText={setOldPass} />
-            </View>
-            <Text style={[z.fieldLabel, { color: t.textTer, marginTop: 12 }]}>NEW PASSWORD</Text>
-            <View style={[z.field, { borderColor: t.border, backgroundColor: t.inputBg }]}>
-              <Ionicons name="key-outline" size={16} color={t.icon} />
-              <TextInput style={[z.input, { color: t.text }]} placeholder="Min 8 characters" placeholderTextColor={t.textTer}
-                secureTextEntry={!showPass} value={newPass} onChangeText={setNewPass} />
-              <TouchableOpacity onPress={() => setShowPass(!showPass)} hitSlop={10}>
-                <Ionicons name={showPass ? 'eye-off' : 'eye'} size={16} color={t.icon} />
-              </TouchableOpacity>
-            </View>
-            <Text style={[z.fieldLabel, { color: t.textTer, marginTop: 12 }]}>CONFIRM PASSWORD</Text>
-            <View style={[z.field, { borderColor: t.border, backgroundColor: t.inputBg }]}>
-              <Ionicons name="shield-checkmark-outline" size={16} color={t.icon} />
-              <TextInput style={[z.input, { color: t.text }]} placeholder="Re-enter" placeholderTextColor={t.textTer}
-                secureTextEntry={!showPass} value={confirmPass} onChangeText={setConfirmPass} />
-            </View>
-            <TouchableOpacity style={[z.saveBtn, { backgroundColor: t.accent }]} onPress={handleChangePassword} disabled={saving} activeOpacity={0.85}>
-              {saving ? <ActivityIndicator color="#fff" /> : <Text style={z.saveBtnText}>Save Password</Text>}
+              <Ionicons name="log-out-outline" size={14} color="#ef4444" />
+              <Text style={s.topLogoutText}>Sign out</Text>
             </TouchableOpacity>
           </View>
-        </Section>
 
-        {/* ─── Linked Devices ─── */}
-        <View style={[z.section, { backgroundColor: t.card }]}>
-          <TouchableOpacity style={z.sectionHeader} onPress={() => router.push('/chat/linked-devices')} activeOpacity={0.6}>
-            <View style={[z.sectionIcon, { backgroundColor: '#3b82f610' }]}>
-              <Ionicons name="qr-code-outline" size={17} color="#3b82f6" />
+          {/* Hero card */}
+          <View style={[s.hero, { backgroundColor: t.surface, borderColor: t.divider }]}>
+            <View style={[s.heroBanner, { backgroundColor: userStripe }]}>
+              <View style={[s.heroBannerGlow, { backgroundColor: '#fff' }]} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[z.sectionLabel, { color: t.text }]}>Linked Devices</Text>
-              <Text style={{ fontSize: 11, color: t.textTer, marginTop: 1 }}>Scan QR to login on web</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={18} color={t.textTer} />
-          </TouchableOpacity>
-        </View>
 
-        {/* ─── Active Devices ─── */}
-        <Section id="devices" icon="phone-portrait-outline" label="Active Devices" badge={devices.length > 0 ? String(devices.length) : null} t={t} isOpen={expanded === 'devices'} onToggle={() => toggle('devices')}>
-          {loadingDevices ? <ActivityIndicator color={t.accent} style={{ marginVertical: 20 }} /> : (
-            <>
-              {devices.length > 0 && (
-                <TouchableOpacity style={[z.logoutAllRow, { backgroundColor: `${t.red}08` }]} onPress={handleLogoutAll} activeOpacity={0.7}>
-                  <Ionicons name="log-out-outline" size={14} color={t.red} />
-                  <Text style={[z.logoutAllText, { color: t.red }]}>Logout from all devices</Text>
+            <View style={s.heroBody}>
+              <TouchableOpacity activeOpacity={0.85} onPress={handleAvatarUpload} style={s.heroAvatarWrap}>
+                <View style={[s.heroAvatarRing, { backgroundColor: t.surface, borderColor: t.surface }]}>
+                  <Avatar uri={p.profile_url || p.avatar} name={p.name} size={92} />
+                </View>
+                <View style={[s.heroCameraBadge, { backgroundColor: userStripe, borderColor: t.surface }]}>
+                  <Ionicons name="camera" size={12} color="#fff" />
+                </View>
+              </TouchableOpacity>
+
+              <Text style={[s.heroName, { color: t.text }]} numberOfLines={1}>{p.name || 'User'}</Text>
+              <Text style={[s.heroEmail, { color: t.textSec }]} numberOfLines={1}>{p.email}</Text>
+
+              <View style={s.heroPills}>
+                <View style={[s.heroPill, { backgroundColor: userStripe + '1f', borderColor: userStripe + '55' }]}>
+                  <View style={[s.heroPillDot, { backgroundColor: userStripe }]} />
+                  <Text style={[s.heroPillText, { color: userStripe }]}>{role}</Text>
+                </View>
+                <View style={[s.heroPill, { backgroundColor: t.bg, borderColor: t.divider }]}>
+                  <Ionicons name="finger-print" size={11} color={t.textTer} />
+                  <Text style={[s.heroPillText, { color: t.textSec, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }) }]}>
+                    #{String(p.user_id || p.id || '—').padStart(4, '0')}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => setShowStatusPicker(true)}
+                  style={[s.heroPill, { backgroundColor: currentStatus.color + '1f', borderColor: currentStatus.color + '55' }]}
+                  activeOpacity={0.7}
+                >
+                  <View style={[s.heroPillDot, { backgroundColor: currentStatus.color }]} />
+                  <Text style={[s.heroPillText, { color: currentStatus.color }]}>{myStatus}</Text>
+                  <Ionicons name="chevron-down" size={11} color={currentStatus.color} />
                 </TouchableOpacity>
-              )}
-              {devices.slice(0, 5).map((d, i) => {
-                const isCurrent = i === 0;
-                const os = (d.os_name || '').toLowerCase();
-                const isAndroid = os.includes('android');
-                const isIOS = os.includes('ios') || os.includes('mac');
-                const isWindows = os.includes('windows');
-                let devIcon = 'monitor', devColor = t.blue;
-                if (isAndroid) { devIcon = 'android'; devColor = '#3DDC84'; }
-                else if (isIOS) { devIcon = 'apple'; devColor = '#999'; }
-                else if (isWindows) { devIcon = 'microsoft-windows'; devColor = '#00A4EF'; }
-                return (
-                  <View key={d.device_id || i} style={[z.deviceRow, { borderBottomColor: t.divider }]}>
-                    <View style={[z.deviceIcon, { backgroundColor: `${isCurrent ? t.green : devColor}12` }]}>
-                      <MaterialCommunityIcons name={devIcon} size={20} color={isCurrent ? t.green : devColor} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <Text style={[z.deviceName, { color: t.text }]}>{d.device_name || 'Unknown'}</Text>
-                        {isCurrent && <View style={[z.currentDot, { backgroundColor: t.green }]} />}
+              </View>
+
+              <View style={[s.heroStats, { borderColor: t.divider }]}>
+                <View style={s.heroStatCell}>
+                  <Text style={[s.heroStatVal, { color: t.text }]}>{joinLabel}</Text>
+                  <Text style={[s.heroStatLabel, { color: t.textTer }]}>JOINED</Text>
+                </View>
+                <View style={[s.heroStatDivider, { backgroundColor: t.divider }]} />
+                <View style={s.heroStatCell}>
+                  <Text style={[s.heroStatVal, { color: t.text }]} numberOfLines={1}>
+                    {organizations?.length || 1}
+                  </Text>
+                  <Text style={[s.heroStatLabel, { color: t.textTer }]}>WORKSPACES</Text>
+                </View>
+                <View style={[s.heroStatDivider, { backgroundColor: t.divider }]} />
+                <View style={s.heroStatCell}>
+                  <Text style={[s.heroStatVal, { color: '#22c55e' }]}>● Active</Text>
+                  <Text style={[s.heroStatLabel, { color: t.textTer }]}>STATUS</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Quick actions grid (2 cols phone / 4 cols tablet) */}
+          <View style={[s.quickGrid, { paddingHorizontal: 12, marginTop: 14 }]}>
+            {quickActions.map((q) => (
+              <TouchableOpacity
+                key={q.label}
+                style={[
+                  s.quickCard,
+                  {
+                    backgroundColor: t.surface,
+                    borderColor: t.divider,
+                    width: `${100 / quickGridCols - 2}%`,
+                  },
+                ]}
+                onPress={q.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={[s.quickIcon, { backgroundColor: q.tint + '22' }]}>
+                  <Ionicons name={q.icon} size={18} color={q.tint} />
+                </View>
+                <Text style={[s.quickLabel, { color: t.text }]} numberOfLines={1}>{q.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Admin shortcut */}
+          {isAdmin && (
+            <NavCard
+              t={t}
+              icon="shield-checkmark"
+              tint="#ef4444"
+              label="Admin Panel"
+              hint="Users, groups, controls, billing"
+              onPress={() => router.push('/chat/admin')}
+            />
+          )}
+
+          {/* Organizations */}
+          {organizations.length > 1 && (
+            <>
+              <GroupLabel t={t}>WORKSPACES</GroupLabel>
+              <View style={[s.card, { backgroundColor: t.card, borderColor: t.divider }]}>
+                {organizations.map((org, idx) => {
+                  const active = Number(org.organization_id) === Number(user?.orgId);
+                  return (
+                    <TouchableOpacity
+                      key={org.organization_id}
+                      style={[s.cardRow, idx > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }]}
+                      onPress={() => handleSwitchOrg(org.organization_id)}
+                      activeOpacity={0.6}
+                      disabled={active}
+                    >
+                      <View style={[s.cardIcon, { backgroundColor: active ? t.accent + '22' : '#94a3b815' }]}>
+                        <Ionicons name={active ? 'checkmark-circle' : 'business-outline'} size={18} color={active ? t.accent : t.textTer} />
                       </View>
-                      <Text style={[z.deviceMeta, { color: t.textTer }]}>
-                        {[d.os_name, d.city, d.country].filter(Boolean).join(' · ')} · {isCurrent ? 'Active now' : getTimeAgo(d.last_active_at)}
-                      </Text>
-                    </View>
-                    {!isCurrent && (
-                      <TouchableOpacity onPress={() => handleRevokeDevice(d.device_id)} style={[z.revokeBtn, { backgroundColor: `${t.red}08` }]}>
-                        <Text style={[z.revokeText, { color: t.red }]}>Revoke</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })}
-              {devices.length === 0 && <Text style={[z.emptyText, { color: t.textTer }]}>No active devices</Text>}
+                      <View style={s.cardRowText}>
+                        <Text style={[s.cardLabel, { color: t.text }]} numberOfLines={1}>{org.org_name || `Org #${org.organization_id}`}</Text>
+                        <Text style={[s.cardHint, { color: t.textTer }]} numberOfLines={1}>
+                          {org.role_name || org.role_key || 'Member'}{active ? ' · Current' : ''}
+                        </Text>
+                      </View>
+                      {!active && <Ionicons name="swap-horizontal" size={16} color={t.textTer} />}
+                    </TouchableOpacity>
+                  );
+                })}
+                {orgsLoading && <View style={{ padding: 12, alignItems: 'center' }}><ActivityIndicator size="small" color={t.accent} /></View>}
+              </View>
             </>
           )}
-        </Section>
 
-        {/* ═══════════ APPEARANCE ═══════════ */}
-        <Text style={[z.groupLabel, { color: t.textTer }]}>APPEARANCE</Text>
+          {/* ─── ACCOUNT ─── */}
+          <GroupLabel t={t}>ACCOUNT</GroupLabel>
 
-        {/* ─── Appearance ─── */}
-        <View style={[z.section, { backgroundColor: t.card }]}>
-          <View style={z.sectionHeader}>
-            <View style={[z.sectionIcon, { backgroundColor: `${t.accent}10` }]}>
-              <Ionicons name="moon-outline" size={17} color={t.accent} />
+          <Section t={t} id="profile" icon="person-circle-outline" tint={t.accent} label="Profile information" isOpen={expanded === 'profile'} onToggle={() => toggleSection('profile')}>
+            <InfoRow t={t} icon="briefcase-outline" label="Department" value={p.department_name} />
+            <InfoRow t={t} icon="ribbon-outline" label="Designation" value={p.designation_name} />
+            <InfoRow t={t} icon="call-outline" label="Mobile" value={p.mobile || p.phone} />
+            <InfoRow t={t} icon="business-outline" label="Company" value={p.company_name} />
+            <InfoRow t={t} icon="location-outline" label="Location" value={p.location_name} />
+            <InfoRow t={t} icon="time-outline" label="Last login" value={p.last_login_at ? new Date(p.last_login_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null} last />
+          </Section>
+
+          <Section t={t} id="password" icon="key-outline" tint="#0ea5e9" label="Change password" isOpen={expanded === 'password'} onToggle={() => toggleSection('password')}>
+            <PasswordField t={t} icon="lock-closed-outline" label="OLD PASSWORD" value={oldPass} onChange={setOldPass} placeholder="Current password" show={showPass} />
+            <PasswordField t={t} icon="key-outline" label="NEW PASSWORD" value={newPass} onChange={setNewPass} placeholder="Min 8 characters" show={showPass} onToggleShow={() => setShowPass(!showPass)} />
+            <PasswordField t={t} icon="shield-checkmark-outline" label="CONFIRM PASSWORD" value={confirmPass} onChange={setConfirmPass} placeholder="Re-enter new password" show={showPass} />
+            <TouchableOpacity style={[s.cta, { backgroundColor: t.accent }]} onPress={handleChangePassword} disabled={saving} activeOpacity={0.85}>
+              {saving ? <ActivityIndicator color="#fff" /> : <Text style={s.ctaText}>Save password</Text>}
+            </TouchableOpacity>
+          </Section>
+
+          <NavCard
+            t={t}
+            icon="qr-code-outline"
+            tint="#3b82f6"
+            label="Link to web"
+            hint="Scan QR to sign in on web / desktop"
+            onPress={() => router.push('/chat/linked-devices')}
+          />
+
+          <Section t={t} id="devices" icon="phone-portrait-outline" tint="#8b5cf6" label="Active sessions" badge={devices.length > 0 ? String(devices.length) : null} isOpen={expanded === 'devices'} onToggle={() => toggleSection('devices')}>
+            {loadingDevices ? (
+              <ActivityIndicator color={t.accent} style={{ marginVertical: 20 }} />
+            ) : (
+              <>
+                {devices.length > 0 && (
+                  <TouchableOpacity style={[s.dangerRow, { backgroundColor: '#ef444412' }]} onPress={handleLogoutAll} activeOpacity={0.7}>
+                    <Ionicons name="log-out-outline" size={14} color="#ef4444" />
+                    <Text style={[s.dangerRowText, { color: '#ef4444' }]}>Logout from all devices</Text>
+                  </TouchableOpacity>
+                )}
+                {devices.slice(0, 5).map((d, i) => {
+                  const isCurrent = i === 0;
+                  const os = (d.os_name || '').toLowerCase();
+                  let devIcon = 'monitor', devColor = '#3b82f6';
+                  if (os.includes('android')) { devIcon = 'android'; devColor = '#3DDC84'; }
+                  else if (os.includes('ios') || os.includes('mac')) { devIcon = 'apple'; devColor = '#94a3b8'; }
+                  else if (os.includes('windows')) { devIcon = 'microsoft-windows'; devColor = '#00A4EF'; }
+                  return (
+                    <View key={d.device_id || i} style={[s.deviceRow, { borderBottomColor: t.divider }]}>
+                      <View style={[s.deviceIcon, { backgroundColor: (isCurrent ? '#22c55e' : devColor) + '14' }]}>
+                        <MaterialCommunityIcons name={devIcon} size={20} color={isCurrent ? '#22c55e' : devColor} />
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={[s.deviceName, { color: t.text }]} numberOfLines={1}>{d.device_name || 'Unknown'}</Text>
+                          {isCurrent && <View style={[s.currentDot, { backgroundColor: '#22c55e' }]} />}
+                        </View>
+                        <Text style={[s.deviceMeta, { color: t.textTer }]} numberOfLines={1}>
+                          {[d.os_name, d.city, d.country].filter(Boolean).join(' · ')} · {isCurrent ? 'Active now' : getTimeAgo(d.last_active_at)}
+                        </Text>
+                      </View>
+                      {!isCurrent && (
+                        <TouchableOpacity onPress={() => handleRevokeDevice(d.device_id)} style={[s.revokeBtn, { backgroundColor: '#ef444412' }]}>
+                          <Text style={[s.revokeText, { color: '#ef4444' }]}>Revoke</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  );
+                })}
+                {devices.length === 0 && <Text style={[s.empty, { color: t.textTer }]}>No active devices</Text>}
+              </>
+            )}
+          </Section>
+
+          {/* ─── APPEARANCE ─── */}
+          <GroupLabel t={t}>APPEARANCE</GroupLabel>
+
+          <View style={[s.card, { backgroundColor: t.card, borderColor: t.divider }]}>
+            <View style={s.cardRow}>
+              <View style={[s.cardIcon, { backgroundColor: t.accent + '14' }]}>
+                <Ionicons name="moon-outline" size={18} color={t.accent} />
+              </View>
+              <Text style={[s.cardLabel, { color: t.text, flex: 1 }]}>Dark mode</Text>
+              <Switch
+                value={isDark}
+                onValueChange={(v) => setTheme(v ? 'dark' : 'light')}
+                trackColor={{ false: '#e2e8f0', true: t.accent + '60' }}
+                thumbColor={isDark ? t.accent : '#fff'}
+                ios_backgroundColor="#e2e8f0"
+              />
             </View>
-            <Text style={[z.sectionLabel, { color: t.text }]}>Appearance</Text>
-          </View>
-          <View style={[z.sectionBody, { borderTopColor: t.divider }]}>
-            <View style={z.appearRow}>
-              <Text style={[z.appearLabel, { color: t.text }]}>Dark Mode</Text>
-              <Switch value={isDark} onValueChange={v => setTheme(v ? 'dark' : 'light')}
-                trackColor={{ false: '#e2e8f0', true: `${t.accent}50` }} thumbColor={isDark ? t.accent : '#fff'} />
-            </View>
-            <View style={[z.appearRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }]}>
-              <Text style={[z.appearLabel, { color: t.text }]}>Theme</Text>
-              <View style={z.themeChips}>
-                {['light', 'dark', 'system'].map(m => (
-                  <TouchableOpacity key={m} style={[z.themeChip, mode === m && { backgroundColor: `${t.accent}12`, borderColor: t.accent }]}
-                    onPress={() => setTheme(m)} activeOpacity={0.7}>
-                    <Text style={[z.themeChipText, { color: mode === m ? t.accent : t.textTer }]}>{m[0].toUpperCase() + m.slice(1)}</Text>
+            <View style={[s.cardRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }]}>
+              <View style={[s.cardIcon, { backgroundColor: t.accent + '14' }]}>
+                <Ionicons name="color-palette-outline" size={18} color={t.accent} />
+              </View>
+              <Text style={[s.cardLabel, { color: t.text, flex: 1 }]}>Theme</Text>
+              <View style={s.chipRow}>
+                {['light', 'dark', 'system'].map((m) => (
+                  <TouchableOpacity
+                    key={m}
+                    style={[s.chip, mode === m && { backgroundColor: t.accent + '14', borderColor: t.accent }]}
+                    onPress={() => setTheme(m)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[s.chipText, { color: mode === m ? t.accent : t.textTer }]}>
+                      {m.charAt(0).toUpperCase() + m.slice(1)}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
             </View>
           </View>
-        </View>
 
-        {/* ─── Customize ─── */}
-        <Section id="customize" icon="color-palette-outline" label="Customize" t={t} isOpen={expanded === 'customize'} onToggle={() => toggle('customize')}>
-          {/* Brand Color */}
-          <Text style={[z.customLabel, { color: t.textSec }]}>Brand Color</Text>
-          <View style={z.colorRow}>
-            {PRESET_COLORS.map(c => (
-              <TouchableOpacity key={c} onPress={() => { setBrand(c); setHexInput(c); }} activeOpacity={0.7}
-                style={[z.colorCircle, { backgroundColor: c }, currentBrand === c && z.colorActive]}>
-                {currentBrand === c && <Ionicons name="checkmark" size={13} color="#fff" />}
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View style={z.hexRow}>
-            <View style={[z.hexPreview, { backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(hexInput) ? hexInput : currentBrand }]} />
-            <View style={[z.hexWrap, { borderColor: t.border, backgroundColor: t.inputBg }]}>
-              <Text style={[z.hexLabel, { color: t.textTer }]}>HEX</Text>
-              <TextInput style={[z.hexInput, { color: t.text }]} value={hexInput} onChangeText={setHexInput}
-                placeholder="#ffd54a" placeholderTextColor={t.textTer} maxLength={7} autoCapitalize="characters" />
-            </View>
-            <TouchableOpacity style={[z.hexApply, { backgroundColor: currentBrand }]}
-              onPress={() => { setBrand(hexInput); toast('Applied!', 'success'); }} activeOpacity={0.85}>
-              <Ionicons name="checkmark" size={18} color="#fff" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Font */}
-          <Text style={[z.customLabel, { color: t.textSec, marginTop: 18 }]}>Font</Text>
-          <View style={z.fontChips}>
-            {FONTS_LIST.map(f => (
-              <TouchableOpacity key={f} style={[z.fontChip, currentFont === f && { backgroundColor: `${t.accent}12`, borderColor: t.accent }]}
-                onPress={() => setFont(f)} activeOpacity={0.7}>
-                <Text style={[z.fontChipText, { color: currentFont === f ? t.accent : t.textSec }]}>{f}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Font Size */}
-          <Text style={[z.customLabel, { color: t.textSec, marginTop: 18 }]}>Font Size</Text>
-          <View style={z.fontSizeRow}>
-            {FONT_SIZES_LIST.map(fs => (
-              <TouchableOpacity key={fs} style={[z.fontSizeBtn, currentFontSize === fs && { backgroundColor: `${t.accent}12`, borderColor: t.accent }]}
-                onPress={() => setFontSize(fs)} activeOpacity={0.7}>
-                <Text style={[z.fontSizeBtnText, { color: currentFontSize === fs ? t.accent : t.textSec, fontSize: fs === 'Small' ? 12 : fs === 'Large' ? 16 : 14 }]}>{fs}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Section>
-
-        {/* ═══════════ PRIVACY & SECURITY ═══════════ */}
-        <Text style={[z.groupLabel, { color: t.textTer }]}>PRIVACY & SECURITY</Text>
-
-        {/* ─── Notifications ─── */}
-        <Section id="notifications" icon="notifications-outline" label="Notifications" t={t} isOpen={expanded === 'notifications'} onToggle={() => toggle('notifications')}>
-          <View style={z.appearRow}>
-            <Text style={[z.appearLabel, { color: t.text }]}>Do Not Disturb</Text>
-            <Switch value={false} onValueChange={() => toast('DND scheduling coming soon', 'info')}
-              trackColor={{ false: '#e2e8f0', true: `${t.accent}50` }} />
-          </View>
-          <View style={[z.appearRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }]}>
-            <Text style={[z.appearLabel, { color: t.text }]}>Notification Tone</Text>
-            <TouchableOpacity onPress={() => setShowTonePicker(true)}>
-              <Text style={{ color: t.accent, fontWeight: '700', fontSize: 14 }}>
-                {NOTIFICATION_TONES.find(tn => tn.key === selectedTone)?.label || 'Default'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Section>
-
-        {/* ─── Privacy ─── */}
-        <Section id="privacy" icon="eye-off-outline" label="Privacy" t={t} isOpen={expanded === 'privacy'} onToggle={() => toggle('privacy')}>
-          <Text style={[z.permHint, { color: t.textTer }]}>Control who can see your information</Text>
-        </Section>
-
-        {/* ─── Permissions ─── */}
-        <Section id="permissions" icon="shield-outline" label="Permissions" t={t} isOpen={expanded === 'permissions'} onToggle={() => toggle('permissions')}>
-          <Text style={[z.permHint, { color: t.textTer }]}>Toggle to allow/disallow. Opens system settings when needed.</Text>
-          {[
-            { key: 'camera', icon: 'camera-outline', label: 'Camera', desc: 'Take photos & videos' },
-            { key: 'gallery', icon: 'images-outline', label: 'Photo Library', desc: 'Share images & videos' },
-            { key: 'microphone', icon: 'mic-outline', label: 'Microphone', desc: 'Voice messages' },
-            { key: 'location', icon: 'location-outline', label: 'Location', desc: 'Share your location' },
-            { key: 'contacts', icon: 'people-outline', label: 'Contacts', desc: 'Share contact info' },
-            { key: 'notifications', icon: 'notifications-outline', label: 'Notifications', desc: 'Message alerts' },
-            { key: 'biometric', icon: 'finger-print-outline', label: 'Biometric Login', desc: 'Fingerprint / Face unlock' },
-          ].map(pm => {
-            const ok = perms[pm.key] === 'granted';
-            const denied = perms[pm.key] === 'denied';
-            const unavail = perms[pm.key] === 'unavailable';
-            return (
-              <View key={pm.key} style={[z.permRow, { borderBottomColor: t.divider }]}>
-                <View style={[z.permIconWrap, { backgroundColor: ok ? `${t.green}15` : unavail ? `${t.textTer}10` : `${t.yellow}15` }]}>
-                  <Ionicons name={pm.icon} size={16} color={ok ? t.green : unavail ? t.textTer : t.yellow} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[z.permLabel, { color: unavail ? t.textTer : t.text }]}>{pm.label}</Text>
-                  <Text style={[z.permDesc, { color: t.textTer }]}>
-                    {unavail ? 'Not available on this device' : pm.desc}
-                  </Text>
-                </View>
-                {!unavail && (
-                  <Switch
-                    value={ok}
-                    onValueChange={() => togglePerm(pm.key, ok)}
-                    trackColor={{ false: isDark ? '#334155' : '#e2e8f0', true: `${t.green}60` }}
-                    thumbColor={ok ? t.green : (isDark ? '#64748b' : '#cbd5e1')}
-                    ios_backgroundColor={isDark ? '#334155' : '#e2e8f0'}
-                  />
-                )}
-              </View>
-            );
-          })}
-        </Section>
-
-        {/* ═══════════ CHAT ═══════════ */}
-        <Text style={[z.groupLabel, { color: t.textTer }]}>CHAT</Text>
-
-        {/* ─── Storage & Data ─── */}
-        <View style={[z.section, { backgroundColor: t.card }]}>
-          <TouchableOpacity style={z.sectionHeader} onPress={() => router.push('/chat/storage')} activeOpacity={0.6}>
-            <View style={[z.sectionIcon, { backgroundColor: `${t.accent}10` }]}>
-              <Ionicons name="server-outline" size={17} color={t.accent} />
-            </View>
-            <Text style={[z.sectionLabel, { color: t.text }]}>Storage & Data</Text>
-            <Ionicons name="chevron-forward" size={18} color={t.textTer} />
-          </TouchableOpacity>
-        </View>
-
-        {/* ─── Starred Messages ─── */}
-        <View style={[z.section, { backgroundColor: t.card }]}>
-          <TouchableOpacity style={z.sectionHeader} onPress={() => router.push('/chat/starred')} activeOpacity={0.6}>
-            <View style={[z.sectionIcon, { backgroundColor: '#eab30810' }]}>
-              <Ionicons name="star-outline" size={17} color="#eab308" />
-            </View>
-            <Text style={[z.sectionLabel, { color: t.text }]}>Starred Messages</Text>
-            <Ionicons name="chevron-forward" size={18} color={t.textTer} />
-          </TouchableOpacity>
-        </View>
-
-        {/* ─── Broadcast ─── */}
-        <View style={[z.section, { backgroundColor: t.card }]}>
-          <TouchableOpacity style={z.sectionHeader} onPress={() => router.push('/chat/broadcast')} activeOpacity={0.6}>
-            <View style={[z.sectionIcon, { backgroundColor: '#3b82f610' }]}>
-              <Ionicons name="megaphone-outline" size={17} color="#3b82f6" />
-            </View>
-            <Text style={[z.sectionLabel, { color: t.text }]}>Broadcast Message</Text>
-            <Ionicons name="chevron-forward" size={18} color={t.textTer} />
-          </TouchableOpacity>
-        </View>
-
-        {/* ═══════════ HELP ═══════════ */}
-        <Text style={[z.groupLabel, { color: t.textTer }]}>HELP</Text>
-
-        {/* ─── App Guide + AI ─── */}
-        <View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 12, marginTop: 8 }}>
-          <TouchableOpacity style={[z.quickLink, { backgroundColor: t.card }]}
-            onPress={() => router.push('/chat/guide')} activeOpacity={0.6}>
-            <View style={[z.quickLinkIcon, { backgroundColor: '#06b6d412' }]}>
-              <Ionicons name="book" size={20} color="#06b6d4" />
-            </View>
-            <Text style={[z.quickLinkTitle, { color: t.text }]}>App Guide</Text>
-            <Text style={[z.quickLinkSub, { color: t.textTer }]}>Help & FAQ</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[z.quickLink, { backgroundColor: t.card }]}
-            onPress={() => router.push('/chat/assistant')} activeOpacity={0.6}>
-            <View style={[z.quickLinkIcon, { backgroundColor: `${t.accent}12` }]}>
-              <Ionicons name="sparkles" size={20} color={t.accent} />
-            </View>
-            <Text style={[z.quickLinkTitle, { color: t.text }]}>AI Assistant</Text>
-            <Text style={[z.quickLinkSub, { color: t.textTer }]}>Ask anything</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ─── Legal & About ─── */}
-        <View style={[z.section, { backgroundColor: t.card }]}>
-          <View style={z.aboutRow}>
-            <Ionicons name="information-circle-outline" size={17} color={t.textTer} />
-            <Text style={[z.aboutLabel, { color: t.text }]}>Version</Text>
-            <Text style={[z.aboutValue, { color: t.textTer }]}>1.0.0</Text>
-          </View>
-        </View>
-        <View style={{ flexDirection: 'row', gap: 8, marginHorizontal: 12, marginTop: 8 }}>
-          <TouchableOpacity style={[z.legalBtn, { backgroundColor: t.card }]}
-            onPress={() => router.push('/chat/legal?type=privacy')} activeOpacity={0.6}>
-            <Ionicons name="shield-checkmark" size={20} color="#3b82f6" />
-            <Text style={[z.legalBtnText, { color: t.text }]}>Privacy Policy</Text>
-            <Ionicons name="chevron-forward" size={14} color={t.textTer} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[z.legalBtn, { backgroundColor: t.card }]}
-            onPress={() => router.push('/chat/legal?type=terms')} activeOpacity={0.6}>
-            <Ionicons name="document-text" size={20} color="#8b5cf6" />
-            <Text style={[z.legalBtnText, { color: t.text }]}>Terms of Service</Text>
-            <Ionicons name="chevron-forward" size={14} color={t.textTer} />
-          </TouchableOpacity>
-        </View>
-
-        {/* ─── Danger Zone ─── */}
-        <View style={[z.section, { backgroundColor: t.card, marginTop: 16 }]}>
-          <TouchableOpacity style={z.sectionHeader} onPress={() => {
-            const { Alert } = require('react-native');
-            Alert.alert('Delete Account', 'This will permanently delete your account, all messages, and data. This cannot be undone.', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete My Account', style: 'destructive', onPress: async () => {
-                try {
-                  await api.delete('/auth/me');
-                  await doLogout();
-                  toast('Account deleted', 'info');
-                  setTimeout(() => router.replace('/(auth)/login'), 300);
-                } catch { toast('Contact support to delete account', 'info'); }
-              }},
-            ]);
-          }} activeOpacity={0.6}>
-            <View style={[z.sectionIcon, { backgroundColor: '#ef444412' }]}>
-              <Ionicons name="trash-outline" size={17} color="#ef4444" />
-            </View>
-            <Text style={[z.sectionLabel, { color: '#ef4444' }]}>Delete Account</Text>
-            <Ionicons name="chevron-forward" size={18} color="#ef4444" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
-
-      {/* Status Picker Modal */}
-      {showStatusPicker && (
-        <Modal visible transparent animationType="slide" onRequestClose={() => setShowStatusPicker(false)}>
-          <Pressable style={z.statusOverlay} onPress={() => setShowStatusPicker(false)}>
-            <View style={[z.statusSheet, { backgroundColor: isDark ? '#1e293b' : '#fff' }]}>
-              <Text style={[z.statusSheetTitle, { color: t.text }]}>Set Your Status</Text>
-              {STATUS_OPTIONS.map(s => (
-                <TouchableOpacity key={s.key}
-                  style={[z.statusOption, myStatus === s.key && { backgroundColor: `${s.color}12` }, { borderBottomColor: t.divider }]}
-                  onPress={() => { setMyStatus(s.key); try { const emit = require('../../src/hooks/useSocket').default; } catch {} }}
-                  activeOpacity={0.6}>
-                  <Ionicons name={s.icon} size={14} color={s.color} />
-                  <Text style={[z.statusOptLabel, { color: t.text }]}>{s.label}</Text>
-                  {myStatus === s.key && <Ionicons name="checkmark" size={18} color={s.color} />}
+          <Section t={t} id="customize" icon="brush-outline" tint="#ec4899" label="Customize" isOpen={expanded === 'customize'} onToggle={() => toggleSection('customize')}>
+            <Text style={[s.subLabel, { color: t.textSec }]}>Brand color</Text>
+            <View style={s.colorRow}>
+              {PRESET_COLORS.map((c) => (
+                <TouchableOpacity
+                  key={c}
+                  onPress={() => { setBrand(c); setHexInput(c); }}
+                  activeOpacity={0.7}
+                  style={[s.colorCircle, { backgroundColor: c }, currentBrand === c && s.colorActive]}
+                >
+                  {currentBrand === c && <Ionicons name="checkmark" size={13} color="#fff" />}
                 </TouchableOpacity>
               ))}
-              <View style={[z.statusTextRow, { borderTopColor: t.divider }]}>
-                <TextInput style={[z.statusTextInput, { color: t.text, backgroundColor: isDark ? '#0f172a' : '#f8fafc' }]}
-                  placeholder="What's your status?" placeholderTextColor={t.textTer}
-                  value={statusText} onChangeText={setStatusText} maxLength={100} />
+            </View>
+            <View style={s.hexRow}>
+              <View style={[s.hexPreview, { backgroundColor: /^#[0-9A-Fa-f]{6}$/.test(hexInput) ? hexInput : currentBrand }]} />
+              <View style={[s.hexWrap, { borderColor: t.border, backgroundColor: t.inputBg }]}>
+                <Text style={[s.hexLabel, { color: t.textTer }]}>HEX</Text>
+                <TextInput
+                  style={[s.hexInput, { color: t.text }]}
+                  value={hexInput}
+                  onChangeText={setHexInput}
+                  placeholder="#ffd54a"
+                  placeholderTextColor={t.textTer}
+                  maxLength={7}
+                  autoCapitalize="characters"
+                />
               </View>
-              <TouchableOpacity style={[z.statusSaveBtn, { backgroundColor: t.accent }]}
-                onPress={() => { setShowStatusPicker(false); toast(`Status: ${myStatus}`, 'success'); }} activeOpacity={0.8}>
-                <Text style={z.statusSaveText}>Save</Text>
+              <TouchableOpacity
+                style={[s.hexApply, { backgroundColor: currentBrand }]}
+                onPress={() => { setBrand(hexInput); toast('Applied!', 'success'); }}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="checkmark" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
+
+            <Text style={[s.subLabel, { color: t.textSec, marginTop: 18 }]}>Font family</Text>
+            <View style={s.chipWrap}>
+              {FONTS_LIST.map((f) => (
+                <TouchableOpacity
+                  key={f}
+                  style={[s.fontChip, currentFont === f && { backgroundColor: t.accent + '14', borderColor: t.accent }]}
+                  onPress={() => setFont(f)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.fontChipText, { color: currentFont === f ? t.accent : t.textSec }]}>{f}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={[s.subLabel, { color: t.textSec, marginTop: 18 }]}>Font size</Text>
+            <View style={s.fontSizeRow}>
+              {FONT_SIZES_LIST.map((fs) => (
+                <TouchableOpacity
+                  key={fs}
+                  style={[s.fontSizeBtn, currentFontSize === fs && { backgroundColor: t.accent + '14', borderColor: t.accent }]}
+                  onPress={() => setFontSize(fs)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[s.fontSizeText, { color: currentFontSize === fs ? t.accent : t.textSec, fontSize: fs === 'Small' ? 12 : fs === 'Large' ? 16 : 14 }]}>
+                    {fs}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Section>
+
+          {/* ─── PRIVACY & SECURITY ─── */}
+          <GroupLabel t={t}>PRIVACY & SECURITY</GroupLabel>
+
+          <Section t={t} id="notifications" icon="notifications-outline" tint="#0ea5e9" label="Notifications" isOpen={expanded === 'notifications'} onToggle={() => toggleSection('notifications')}>
+            <View style={s.toggleRow}>
+              <Text style={[s.toggleLabel, { color: t.text }]}>Do not disturb</Text>
+              <Switch
+                value={false}
+                onValueChange={() => toast('DND scheduling coming soon', 'info')}
+                trackColor={{ false: '#e2e8f0', true: t.accent + '60' }}
+                ios_backgroundColor="#e2e8f0"
+              />
+            </View>
+            <View style={[s.toggleRow, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: t.divider }]}>
+              <Text style={[s.toggleLabel, { color: t.text }]}>Notification tone</Text>
+              <TouchableOpacity onPress={() => setShowTonePicker(true)} style={[s.inlinePill, { backgroundColor: t.accent + '14' }]}>
+                <Ionicons name="musical-notes" size={12} color={t.accent} />
+                <Text style={{ color: t.accent, fontWeight: '700', fontSize: 13 }}>
+                  {NOTIFICATION_TONES.find((tn) => tn.key === selectedTone)?.label || 'Default'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Section>
+
+          <Section t={t} id="permissions" icon="shield-outline" tint="#22c55e" label="Permissions" isOpen={expanded === 'permissions'} onToggle={() => toggleSection('permissions')}>
+            <Text style={[s.hint, { color: t.textTer }]}>Toggle to allow / revoke. System settings open when needed.</Text>
+            {[
+              { key: 'camera', icon: 'camera-outline', label: 'Camera', desc: 'Take photos & videos' },
+              { key: 'gallery', icon: 'images-outline', label: 'Photo library', desc: 'Share images & videos' },
+              { key: 'microphone', icon: 'mic-outline', label: 'Microphone', desc: 'Voice messages' },
+              { key: 'location', icon: 'location-outline', label: 'Location', desc: 'Share your location' },
+              { key: 'contacts', icon: 'people-outline', label: 'Contacts', desc: 'Share contact info' },
+              { key: 'notifications', icon: 'notifications-outline', label: 'Notifications', desc: 'Message alerts' },
+              { key: 'biometric', icon: 'finger-print-outline', label: 'Biometric login', desc: 'Fingerprint / face unlock' },
+            ].map((pm) => {
+              const ok = perms[pm.key] === 'granted';
+              const unavail = perms[pm.key] === 'unavailable';
+              return (
+                <View key={pm.key} style={[s.permRow, { borderBottomColor: t.divider }]}>
+                  <View style={[s.permIcon, { backgroundColor: ok ? '#22c55e15' : unavail ? '#94a3b815' : '#f59e0b15' }]}>
+                    <Ionicons name={pm.icon} size={16} color={ok ? '#22c55e' : unavail ? t.textTer : '#f59e0b'} />
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <Text style={[s.permLabel, { color: unavail ? t.textTer : t.text }]}>{pm.label}</Text>
+                    <Text style={[s.permDesc, { color: t.textTer }]}>
+                      {unavail ? 'Not available on this device' : pm.desc}
+                    </Text>
+                  </View>
+                  {!unavail && (
+                    <Switch
+                      value={ok}
+                      onValueChange={() => togglePerm(pm.key, ok)}
+                      trackColor={{ false: isDark ? '#334155' : '#e2e8f0', true: '#22c55e60' }}
+                      thumbColor={ok ? '#22c55e' : (isDark ? '#64748b' : '#cbd5e1')}
+                      ios_backgroundColor={isDark ? '#334155' : '#e2e8f0'}
+                    />
+                  )}
+                </View>
+              );
+            })}
+          </Section>
+
+          {/* ─── CHAT ─── */}
+          <GroupLabel t={t}>CHAT</GroupLabel>
+
+          <NavCard t={t} icon="server-outline" tint={t.accent} label="Storage & data" hint="Manage downloads, auto-download settings" onPress={() => router.push('/chat/storage')} />
+          <NavCard t={t} icon="star-outline" tint="#eab308" label="Starred messages" hint="Your saved messages" onPress={() => router.push('/chat/starred')} />
+          <NavCard t={t} icon="megaphone-outline" tint="#3b82f6" label="Broadcast message" hint="Send to multiple chats at once" onPress={() => router.push('/chat/broadcast')} />
+
+          {/* ─── HELP ─── */}
+          <GroupLabel t={t}>HELP & SUPPORT</GroupLabel>
+
+          <View style={[s.dualCardRow, { marginTop: 4 }]}>
+            <TouchableOpacity style={[s.dualCard, { backgroundColor: t.card, borderColor: t.divider }]} onPress={() => router.push('/chat/guide')} activeOpacity={0.7}>
+              <View style={[s.dualIcon, { backgroundColor: '#06b6d422' }]}>
+                <Ionicons name="book" size={20} color="#06b6d4" />
+              </View>
+              <Text style={[s.dualTitle, { color: t.text }]}>App guide</Text>
+              <Text style={[s.dualSub, { color: t.textTer }]}>Help & FAQ</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.dualCard, { backgroundColor: t.card, borderColor: t.divider }]} onPress={() => router.push('/chat/assistant')} activeOpacity={0.7}>
+              <View style={[s.dualIcon, { backgroundColor: t.accent + '22' }]}>
+                <Ionicons name="sparkles" size={20} color={t.accent} />
+              </View>
+              <Text style={[s.dualTitle, { color: t.text }]}>AI assistant</Text>
+              <Text style={[s.dualSub, { color: t.textTer }]}>Ask anything</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[s.dualCardRow, { marginTop: 8 }]}>
+            <TouchableOpacity style={[s.dualLegal, { backgroundColor: t.card, borderColor: t.divider }]} onPress={() => router.push('/chat/legal?type=privacy')} activeOpacity={0.7}>
+              <Ionicons name="shield-checkmark" size={18} color="#3b82f6" />
+              <Text style={[s.dualLegalText, { color: t.text }]}>Privacy policy</Text>
+              <Ionicons name="chevron-forward" size={14} color={t.textTer} />
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.dualLegal, { backgroundColor: t.card, borderColor: t.divider }]} onPress={() => router.push('/chat/legal?type=terms')} activeOpacity={0.7}>
+              <Ionicons name="document-text" size={18} color="#8b5cf6" />
+              <Text style={[s.dualLegalText, { color: t.text }]}>Terms of service</Text>
+              <Ionicons name="chevron-forward" size={14} color={t.textTer} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={[s.card, { backgroundColor: t.card, borderColor: t.divider, marginTop: 8 }]}>
+            <View style={s.cardRow}>
+              <View style={[s.cardIcon, { backgroundColor: '#94a3b822' }]}>
+                <Ionicons name="information-circle-outline" size={18} color={t.textTer} />
+              </View>
+              <Text style={[s.cardLabel, { color: t.text, flex: 1 }]}>Version</Text>
+              <Text style={[s.cardHint, { color: t.textTer }]}>1.0.0</Text>
+            </View>
+          </View>
+
+          {/* ─── DANGER ─── */}
+          <GroupLabel t={t} color="#ef4444">DANGER ZONE</GroupLabel>
+
+          <TouchableOpacity
+            style={[s.card, { backgroundColor: '#ef444408', borderColor: '#ef444433' }]}
+            onPress={handleDeleteAccount}
+            activeOpacity={0.7}
+          >
+            <View style={s.cardRow}>
+              <View style={[s.cardIcon, { backgroundColor: '#ef444415' }]}>
+                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+              </View>
+              <View style={s.cardRowText}>
+                <Text style={[s.cardLabel, { color: '#ef4444' }]}>Delete account</Text>
+                <Text style={[s.cardHint, { color: '#ef4444aa' }]}>Permanent — no undo</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#ef4444" />
+            </View>
+          </TouchableOpacity>
+
+          <View style={{ height: 60 }} />
+        </View>
+      </ScrollView>
+
+      {/* ─── Status Picker Modal ─── */}
+      {showStatusPicker && (
+        <Modal visible transparent animationType="slide" onRequestClose={() => setShowStatusPicker(false)}>
+          <Pressable style={s.modalOverlay} onPress={() => setShowStatusPicker(false)}>
+            <Pressable style={[s.modalSheet, { backgroundColor: t.surface }]} onPress={() => {}}>
+              <View style={s.modalHandle} />
+              <Text style={[s.modalTitle, { color: t.text }]}>Set your status</Text>
+              {STATUS_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[s.statusOpt, myStatus === opt.key && { backgroundColor: opt.color + '12' }, { borderBottomColor: t.divider }]}
+                  onPress={() => setMyStatus(opt.key)}
+                  activeOpacity={0.6}
+                >
+                  <View style={[s.statusOptDot, { backgroundColor: opt.color }]} />
+                  <Text style={[s.statusOptLabel, { color: t.text }]}>{opt.label}</Text>
+                  {myStatus === opt.key && <Ionicons name="checkmark-circle" size={20} color={opt.color} />}
+                </TouchableOpacity>
+              ))}
+              <View style={[s.statusInputWrap, { borderTopColor: t.divider }]}>
+                <TextInput
+                  style={[s.statusInput, { color: t.text, backgroundColor: t.bg, borderColor: t.border }]}
+                  placeholder="What's your status?"
+                  placeholderTextColor={t.textTer}
+                  value={statusText}
+                  onChangeText={setStatusText}
+                  maxLength={100}
+                />
+              </View>
+              <TouchableOpacity
+                style={[s.modalCta, { backgroundColor: t.accent }]}
+                onPress={() => { setShowStatusPicker(false); toast(`Status: ${myStatus}`, 'success'); }}
+                activeOpacity={0.85}
+              >
+                <Text style={s.modalCtaText}>Save</Text>
+              </TouchableOpacity>
+            </Pressable>
           </Pressable>
         </Modal>
       )}
 
-      {/* Tone Picker Modal */}
+      {/* ─── Tone Picker Modal ─── */}
       {showTonePicker && (
         <Modal visible transparent animationType="slide" onRequestClose={() => setShowTonePicker(false)}>
-          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' }} onPress={() => setShowTonePicker(false)}>
-            <View style={{ backgroundColor: t.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '70%', paddingTop: 16 }} onStartShouldSetResponder={() => true}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.divider }}>
+          <Pressable style={s.modalOverlay} onPress={() => setShowTonePicker(false)}>
+            <Pressable style={[s.modalSheet, { backgroundColor: t.surface, maxHeight: '75%' }]} onPress={() => {}}>
+              <View style={s.modalHandle} />
+              <View style={s.toneHeader}>
                 <Ionicons name="musical-notes" size={20} color={t.accent} />
-                <Text style={{ flex: 1, fontSize: 17, fontWeight: '800', color: t.text, marginLeft: 10 }}>Notification Tone</Text>
-                <TouchableOpacity onPress={() => setShowTonePicker(false)}>
+                <Text style={[s.modalTitle, { color: t.text, flex: 1, marginLeft: 10, marginBottom: 0 }]}>Notification tone</Text>
+                <TouchableOpacity onPress={() => setShowTonePicker(false)} hitSlop={10}>
                   <Ionicons name="close" size={22} color={t.textSec} />
                 </TouchableOpacity>
               </View>
-              <ScrollView style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-                {NOTIFICATION_TONES.map((tn) => (
-                  <TouchableOpacity
-                    key={tn.key}
-                    onPress={() => selectTone(tn.key)}
-                    style={{
-                      flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 12,
-                      borderRadius: 12, marginBottom: 4,
-                      backgroundColor: selectedTone === tn.key ? `${t.accent}15` : 'transparent',
-                    }}
-                  >
-                    <View style={{
-                      width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
-                      backgroundColor: selectedTone === tn.key ? `${t.accent}20` : `${t.textTer}10`,
-                    }}>
-                      <Ionicons name={selectedTone === tn.key ? 'volume-high' : 'musical-note'} size={18} color={selectedTone === tn.key ? t.accent : t.textSec} />
-                    </View>
-                    <Text style={{ flex: 1, fontSize: 15, fontWeight: selectedTone === tn.key ? '700' : '500', color: selectedTone === tn.key ? t.accent : t.text, marginLeft: 12 }}>
-                      {tn.label}
-                    </Text>
-                    {/* Preview button */}
-                    {tn.key !== 'default' && (
-                      <TouchableOpacity onPress={() => previewTone(tn.key)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Ionicons name="play-circle" size={24} color={t.textSec} />
-                      </TouchableOpacity>
-                    )}
-                    {selectedTone === tn.key && (
-                      <Ionicons name="checkmark-circle" size={22} color={t.accent} style={{ marginLeft: 8 }} />
-                    )}
-                  </TouchableOpacity>
-                ))}
+              <ScrollView style={{ paddingHorizontal: 16 }}>
+                {NOTIFICATION_TONES.map((tn) => {
+                  const active = selectedTone === tn.key;
+                  return (
+                    <TouchableOpacity
+                      key={tn.key}
+                      onPress={() => selectTone(tn.key)}
+                      style={[s.toneOpt, active && { backgroundColor: t.accent + '15' }]}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[s.toneOptIcon, { backgroundColor: active ? t.accent + '22' : t.textTer + '12' }]}>
+                        <Ionicons name={active ? 'volume-high' : 'musical-note'} size={16} color={active ? t.accent : t.textSec} />
+                      </View>
+                      <Text style={[s.toneOptLabel, { color: active ? t.accent : t.text, fontWeight: active ? '700' : '500' }]}>
+                        {tn.label}
+                      </Text>
+                      {tn.key !== 'default' && (
+                        <TouchableOpacity onPress={() => previewTone(tn.key)} hitSlop={10}>
+                          <Ionicons name="play-circle" size={24} color={t.textSec} />
+                        </TouchableOpacity>
+                      )}
+                      {active && <Ionicons name="checkmark-circle" size={20} color={t.accent} style={{ marginLeft: 8 }} />}
+                    </TouchableOpacity>
+                  );
+                })}
                 <View style={{ height: 30 }} />
               </ScrollView>
-            </View>
+            </Pressable>
           </Pressable>
         </Modal>
       )}
@@ -953,386 +891,275 @@ export default function ProfileScreen() {
   );
 }
 
-// ─── Sub components ─────────────────────────────────────────────────────────
-function Section({ id, icon, label, badge, children, t, isOpen, onToggle }) {
+// ─── Sub-components ────────────────────────────────────────────────────────
+function GroupLabel({ t, color, children }) {
+  return <Text style={[s.groupLabel, { color: color || t.textTer }]}>{children}</Text>;
+}
+
+function Section({ t, icon, tint, label, badge, children, isOpen, onToggle }) {
   return (
-    <View style={[z.section, { backgroundColor: t.card }]}>
-      <TouchableOpacity style={z.sectionHeader} onPress={onToggle} activeOpacity={0.6}>
-        <View style={[z.sectionIcon, { backgroundColor: `${t.accent}10` }]}>
-          <Ionicons name={icon} size={17} color={t.accent} />
+    <View style={[s.card, { backgroundColor: t.card, borderColor: t.divider }]}>
+      <TouchableOpacity style={s.cardRow} onPress={onToggle} activeOpacity={0.6}>
+        <View style={[s.cardIcon, { backgroundColor: (tint || t.accent) + '14' }]}>
+          <Ionicons name={icon} size={18} color={tint || t.accent} />
         </View>
-        <Text style={[z.sectionLabel, { color: t.text }]}>{label}</Text>
-        {badge ? <View style={[z.sectionBadge, { backgroundColor: t.accentBg }]}><Text style={[z.sectionBadgeText, { color: t.accent }]}>{badge}</Text></View> : null}
+        <Text style={[s.cardLabel, { color: t.text, flex: 1 }]}>{label}</Text>
+        {badge ? (
+          <View style={[s.badge, { backgroundColor: (tint || t.accent) + '22' }]}>
+            <Text style={[s.badgeText, { color: tint || t.accent }]}>{badge}</Text>
+          </View>
+        ) : null}
         <Ionicons name={isOpen ? 'chevron-up' : 'chevron-down'} size={18} color={t.textTer} />
       </TouchableOpacity>
-      {isOpen && <View style={[z.sectionBody, { borderTopColor: t.divider }]}>{children}</View>}
+      {isOpen && <View style={[s.cardBody, { borderTopColor: t.divider }]}>{children}</View>}
     </View>
   );
 }
 
-function InfoRow({ icon, label, value, t, last }) {
+function NavCard({ t, icon, tint, label, hint, onPress }) {
+  return (
+    <View style={[s.card, { backgroundColor: t.card, borderColor: t.divider }]}>
+      <TouchableOpacity style={s.cardRow} onPress={onPress} activeOpacity={0.6}>
+        <View style={[s.cardIcon, { backgroundColor: (tint || t.accent) + '14' }]}>
+          <Ionicons name={icon} size={18} color={tint || t.accent} />
+        </View>
+        <View style={s.cardRowText}>
+          <Text style={[s.cardLabel, { color: t.text }]} numberOfLines={1}>{label}</Text>
+          {hint ? <Text style={[s.cardHint, { color: t.textTer }]} numberOfLines={1}>{hint}</Text> : null}
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={t.textTer} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function InfoRow({ t, icon, label, value, last }) {
   if (!value) return null;
   return (
-    <View style={[z.infoRow, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.divider }]}>
-      <Ionicons name={icon} size={15} color={t.textTer} />
-      <View style={{ flex: 1 }}>
-        <Text style={[z.infoLabel, { color: t.textTer }]}>{label}</Text>
-        <Text style={[z.infoValue, { color: t.text }]}>{value}</Text>
+    <View style={[s.infoRow, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: t.divider }]}>
+      <Ionicons name={icon} size={16} color={t.textTer} />
+      <View style={{ flex: 1, minWidth: 0 }}>
+        <Text style={[s.infoLabel, { color: t.textTer }]}>{label}</Text>
+        <Text style={[s.infoValue, { color: t.text }]} numberOfLines={1}>{value}</Text>
       </View>
     </View>
   );
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────────
-const z = StyleSheet.create({
-  root: { flex: 1 },
-  scroll: { paddingBottom: 120 },
+function PasswordField({ t, icon, label, value, onChange, placeholder, show, onToggleShow }) {
+  return (
+    <View style={{ marginBottom: 12 }}>
+      <Text style={[s.fieldLabel, { color: t.textTer }]}>{label}</Text>
+      <View style={[s.field, { borderColor: t.border, backgroundColor: t.inputBg }]}>
+        <Ionicons name={icon} size={16} color={t.icon} />
+        <TextInput
+          style={[s.fieldInput, { color: t.text }]}
+          placeholder={placeholder}
+          placeholderTextColor={t.textTer}
+          secureTextEntry={!show}
+          value={value}
+          onChangeText={onChange}
+        />
+        {onToggleShow && (
+          <TouchableOpacity onPress={onToggleShow} hitSlop={10}>
+            <Ionicons name={show ? 'eye-off' : 'eye'} size={16} color={t.icon} />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+}
 
-  // Minimalist top bar
+// ─── Styles ────────────────────────────────────────────────────────────────
+const s = StyleSheet.create({
+  root: { flex: 1 },
+  scroll: { paddingBottom: 40 },
+
+  // Top bar
   topBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14,
+    paddingHorizontal: 18, paddingTop: 8, paddingBottom: 12,
   },
-  topBarKicker: { fontSize: 11, fontWeight: '900', letterSpacing: 2.4 },
-  logoutBtnInline: {
+  topKicker: { fontSize: 10, fontWeight: '900', letterSpacing: 2 },
+  topTitle: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5, marginTop: 2 },
+  topLogout: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 12, paddingVertical: 7,
+    paddingHorizontal: 12, paddingVertical: 8,
     borderRadius: 999, borderWidth: 1,
   },
-  logoutBtnText: { fontSize: 11, fontWeight: '800', color: '#ef4444', letterSpacing: 0.2 },
+  topLogoutText: { fontSize: 12, fontWeight: '800', color: '#ef4444', letterSpacing: 0.2 },
 
-  // ─── HERO (gradient banner + overlapping avatar) ────────────
-  heroWrap: {
-    marginHorizontal: 14,
-    borderRadius: 22,
-    overflow: 'hidden',
+  // Hero
+  hero: {
+    marginHorizontal: 12, marginTop: 2,
+    borderRadius: 20, borderWidth: 1, overflow: 'hidden',
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 20 },
-      android: { elevation: 6 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 14 },
+      android: { elevation: 3 },
     }),
   },
-  banner: {
-    height: 110,
-    position: 'relative',
-    overflow: 'hidden',
+  heroBanner: { height: 90, position: 'relative', overflow: 'hidden' },
+  heroBannerGlow: {
+    position: 'absolute', top: -50, right: -30,
+    width: 180, height: 180, borderRadius: 90,
+    opacity: 0.18,
   },
-  bannerGlow: {
-    position: 'absolute',
-    top: -60, right: -40,
-    width: 200, height: 200, borderRadius: 100,
-    opacity: 0.45,
-  },
-  bannerDots: { position: 'absolute', inset: 0 },
-  bannerDot: {
-    position: 'absolute',
-    width: 4, height: 4, borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-  heroInitials: {
-    position: 'absolute',
-    right: 18, top: 18,
-    width: 38, height: 38, borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.28)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  heroInitialsText: {
-    color: '#fff',
-    fontSize: 14, fontWeight: '900',
-    letterSpacing: 0.4,
-  },
-  heroCard: {
-    paddingTop: 50,
-    paddingHorizontal: 18, paddingBottom: 18,
-    borderTopWidth: 0,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  avatarPlate: {
-    position: 'absolute',
-    top: -50, alignSelf: 'center',
-    zIndex: 10,
-  },
-  avatarRing: {
-    padding: 4, borderRadius: 60,
+  heroBody: { alignItems: 'center', paddingHorizontal: 18, paddingBottom: 16, marginTop: -46 },
+  heroAvatarWrap: { position: 'relative' },
+  heroAvatarRing: {
+    padding: 4, borderRadius: 60, borderWidth: 4,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 10 },
-      android: { elevation: 4 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 8 },
+      android: { elevation: 2 },
     }),
   },
-  heroName: {
-    fontSize: 22, fontWeight: '900',
-    letterSpacing: -0.5,
-    textAlign: 'center',
-    marginTop: 6,
+  heroCameraBadge: {
+    position: 'absolute', bottom: 4, right: 4,
+    width: 28, height: 28, borderRadius: 14,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 3,
   },
-  heroEmail: {
-    fontSize: 13, fontWeight: '500',
-    marginTop: 3,
-    textAlign: 'center',
-  },
+  heroName: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5, marginTop: 8, textAlign: 'center' },
+  heroEmail: { fontSize: 13, fontWeight: '500', marginTop: 2, textAlign: 'center' },
   heroPills: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 12,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
+    flexDirection: 'row', flexWrap: 'wrap', gap: 6,
+    justifyContent: 'center', marginTop: 12,
   },
-  heroRolePill: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 11, paddingVertical: 5,
-    borderRadius: 999, borderWidth: 1,
-  },
-  heroRoleDot: { width: 6, height: 6, borderRadius: 3 },
-  heroRoleText: {
-    fontSize: 11, fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-  },
-  heroIdPill: {
+  heroPill: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: 999, borderWidth: 1,
   },
-  heroIdText: {
-    fontSize: 11, fontWeight: '800',
-    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }),
-  },
+  heroPillDot: { width: 6, height: 6, borderRadius: 3 },
+  heroPillText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.3 },
   heroStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 16,
-    paddingTop: 14,
-    borderTopWidth: 1,
+    flexDirection: 'row', alignItems: 'center', width: '100%',
+    marginTop: 16, paddingTop: 14, borderTopWidth: 1,
   },
-  heroStatCell: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 2,
-  },
-  heroStatValue: {
-    fontSize: 13, fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-  heroStatLabel: {
-    fontSize: 9, fontWeight: '900',
-    letterSpacing: 1.2,
-  },
-  heroStatDivider: {
-    width: 1, height: 26,
-  },
+  heroStatCell: { flex: 1, alignItems: 'center', gap: 2 },
+  heroStatVal: { fontSize: 13, fontWeight: '800', letterSpacing: -0.2 },
+  heroStatLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
+  heroStatDivider: { width: 1, height: 24 },
 
-  // Status pill (sits below hero card)
-  statusFloater: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginHorizontal: 14, marginTop: 12,
-    paddingHorizontal: 16, paddingVertical: 13,
-    borderRadius: 16, borderWidth: 1,
-  },
-  statusFloaterLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  statusFloaterEdit: {
-    width: 32, height: 32, borderRadius: 11,
-    alignItems: 'center', justifyContent: 'center',
-  },
-
-  // Profile card
-  profileCard: {
-    paddingHorizontal: 18, paddingVertical: 18,
-    marginHorizontal: 12, marginTop: 12, marginBottom: 6,
-    borderRadius: 20, borderWidth: 1,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12 },
-      android: { elevation: 2 },
-    }),
-  },
-  heroAccent: {
-    position: 'absolute',
-    top: -50, right: -50,
-    width: 160, height: 160, borderRadius: 80,
-    backgroundColor: '#ffd54a',
-    opacity: 0.1,
-  },
-  heroAccentViolet: {
-    position: 'absolute',
-    bottom: -60, left: -50,
-    width: 140, height: 140, borderRadius: 70,
-    backgroundColor: '#6d5dfc',
-    opacity: 0.08,
-  },
-  profileTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  profileTopCenter: { alignItems: 'center', paddingVertical: 6 },
-  avatarWrap: { position: 'relative' },
-  avatarRing: {
-    padding: 3,
-    borderRadius: 38,
-    borderWidth: 2,
-    borderColor: 'rgba(255,213,74,0.5)',
-  },
-  avatarRingBig: {
-    padding: 4,
-    borderRadius: 50,
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,213,74,0.5)',
-  },
-  profileInfo: { flex: 1, minWidth: 0 },
-  profileName: { fontSize: 19, fontWeight: '900', letterSpacing: -0.3 },
-  profileEmail: { fontSize: 13, marginTop: 3 },
-  profileNameCenter: {
-    fontSize: 22, fontWeight: '900', letterSpacing: -0.5,
-    marginTop: 14, textAlign: 'center',
-  },
-  profileEmailCenter: { fontSize: 13, marginTop: 4, textAlign: 'center' },
-
-  // Quick action grid
-  quickGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    paddingHorizontal: 14, paddingTop: 18, gap: 8,
-  },
-  quickGridCard: {
-    width: '48.5%',
+  // Quick grid
+  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  quickCard: {
     paddingVertical: 14, paddingHorizontal: 12,
-    borderRadius: 14, borderWidth: 1,
-    gap: 10,
+    borderRadius: 14, borderWidth: 1, gap: 10,
   },
-  quickGridIcon: {
-    width: 36, height: 36, borderRadius: 11,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  quickGridLabel: { fontSize: 12, fontWeight: '800', letterSpacing: -0.1, lineHeight: 15 },
-  rolePillRow: { flexDirection: 'row', marginTop: 8 },
-  rolePill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10, paddingVertical: 4,
-    borderRadius: 999, borderWidth: 1,
-  },
-  rolePillDot: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#ffd54a' },
-  roleText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 },
-  cameraBadge: {
-    position: 'absolute', bottom: 2, right: 2,
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#ffd54a',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 3, borderColor: '#11162a',
-    ...Platform.select({
-      ios: { shadowColor: '#ffd54a', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.5, shadowRadius: 8 },
-      android: { elevation: 4 },
-    }),
+  quickIcon: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  quickLabel: { fontSize: 13, fontWeight: '800', letterSpacing: -0.1 },
+
+  // Group label
+  groupLabel: {
+    fontSize: 10, fontWeight: '900', letterSpacing: 2,
+    marginHorizontal: 18, marginTop: 22, marginBottom: 6,
   },
 
-  // Section — expandable
-  section: {
-    marginHorizontal: 12, marginTop: 8, borderRadius: 16, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)',
-    ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 6 }, android: { elevation: 1 } }),
+  // Card
+  card: {
+    marginHorizontal: 12, marginTop: 8, borderRadius: 14,
+    borderWidth: 1, overflow: 'hidden',
   },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  sectionIcon: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  sectionLabel: { flex: 1, fontSize: 14.5, fontWeight: '700', letterSpacing: -0.2 },
-  sectionBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  sectionBadgeText: { fontSize: 11, fontWeight: '800' },
-  sectionBody: { paddingHorizontal: 16, paddingBottom: 16, borderTopWidth: StyleSheet.hairlineWidth },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 13 },
+  cardRowText: { flex: 1, minWidth: 0, gap: 1 },
+  cardIcon: { width: 36, height: 36, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  cardLabel: { fontSize: 14.5, fontWeight: '700', letterSpacing: -0.2 },
+  cardHint: { fontSize: 11, marginTop: 1 },
+  cardBody: { paddingHorizontal: 14, paddingBottom: 14, borderTopWidth: StyleSheet.hairlineWidth },
+  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10, minWidth: 22, alignItems: 'center' },
+  badgeText: { fontSize: 11, fontWeight: '800' },
 
   // Info rows
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 11 },
-  infoLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, textTransform: 'uppercase' },
-  infoValue: { fontSize: 14, fontWeight: '500', marginTop: 1 },
+  infoLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
+  infoValue: { fontSize: 14, fontWeight: '500', marginTop: 2 },
 
   // Password form
-  formGroup: { paddingTop: 4 },
   fieldLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 6 },
   field: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 12, height: 46 },
-  input: { flex: 1, fontSize: 14, fontWeight: '500' },
-  saveBtn: { height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  fieldInput: { flex: 1, fontSize: 14, fontWeight: '500' },
+  cta: { height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
+  ctaText: { color: '#fff', fontSize: 15, fontWeight: '800', letterSpacing: 0.3 },
 
   // Devices
-  logoutAllRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, marginBottom: 10 },
-  logoutAllText: { fontSize: 12, fontWeight: '700' },
+  dangerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, marginBottom: 10 },
+  dangerRowText: { fontSize: 12, fontWeight: '700' },
   deviceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
-  deviceIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  deviceName: { fontSize: 14, fontWeight: '600' },
+  deviceIcon: { width: 38, height: 38, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  deviceName: { fontSize: 14, fontWeight: '700' },
   currentDot: { width: 7, height: 7, borderRadius: 3.5 },
   deviceMeta: { fontSize: 11, marginTop: 2 },
-  revokeBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  revokeText: { fontSize: 11, fontWeight: '700' },
-  emptyText: { textAlign: 'center', paddingVertical: 20, fontSize: 13 },
+  revokeBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  revokeText: { fontSize: 11, fontWeight: '800' },
+  empty: { textAlign: 'center', paddingVertical: 20, fontSize: 13 },
 
-  // Appearance
-  appearRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 },
-  appearLabel: { fontSize: 14, fontWeight: '500' },
-  themeChips: { flexDirection: 'row', gap: 6 },
-  themeChip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: 'transparent' },
-  themeChipText: { fontSize: 12, fontWeight: '700' },
+  // Toggle rows
+  toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 },
+  toggleLabel: { fontSize: 14, fontWeight: '500' },
+  inlinePill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 },
+  chipRow: { flexDirection: 'row', gap: 6 },
+  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, borderWidth: 1.5, borderColor: 'transparent' },
+  chipText: { fontSize: 12, fontWeight: '700' },
 
   // Customize
-  customLabel: { fontSize: 12, fontWeight: '700', marginBottom: 8, marginTop: 4 },
+  subLabel: { fontSize: 12, fontWeight: '700', marginBottom: 8 },
   colorRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 },
   colorCircle: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  colorActive: { borderWidth: 3, borderColor: 'rgba(255,255,255,0.5)', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
+  colorActive: { borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
   hexRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hexPreview: { width: 36, height: 36, borderRadius: 10 },
   hexWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 10, height: 40, gap: 6 },
-  hexLabel: { fontSize: 10, fontWeight: '700' },
+  hexLabel: { fontSize: 10, fontWeight: '800' },
   hexInput: { flex: 1, fontSize: 14, fontWeight: '600', letterSpacing: 1 },
   hexApply: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  fontChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  fontChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, borderWidth: 1.5, borderColor: 'transparent' },
+  chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  fontChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: 'transparent' },
   fontChipText: { fontSize: 13, fontWeight: '600' },
   fontSizeRow: { flexDirection: 'row', gap: 8 },
-  fontSizeBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center' },
-  fontSizeBtnText: { fontWeight: '700' },
+  fontSizeBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderColor: 'transparent', alignItems: 'center' },
+  fontSizeText: { fontWeight: '700' },
 
   // Permissions
-  permHint: { fontSize: 11, marginBottom: 10, lineHeight: 16 },
-  permRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: StyleSheet.hairlineWidth },
-  permIconWrap: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  hint: { fontSize: 11, marginBottom: 10, lineHeight: 16 },
+  permRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  permIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   permLabel: { fontSize: 14, fontWeight: '600' },
   permDesc: { fontSize: 11, marginTop: 1 },
-  permBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-  permStatus: { fontSize: 11, fontWeight: '700' },
 
-  // About
-  aboutRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  aboutLabel: { flex: 1, fontSize: 14, fontWeight: '500' },
-  aboutValue: { fontSize: 13 },
+  // Dual card row (Help/AI, Privacy/Terms)
+  dualCardRow: { flexDirection: 'row', gap: 8, marginHorizontal: 12 },
+  dualCard: { flex: 1, alignItems: 'flex-start', padding: 14, borderRadius: 14, borderWidth: 1, gap: 6 },
+  dualIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  dualTitle: { fontSize: 14, fontWeight: '800', letterSpacing: -0.2 },
+  dualSub: { fontSize: 11 },
+  dualLegal: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1 },
+  dualLegalText: { flex: 1, fontSize: 12, fontWeight: '700' },
 
-  // Group label
-  groupLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginHorizontal: 18, marginTop: 20, marginBottom: 4 },
-
-  // Quick links (Guide + Features)
-  quickLink: { flex: 1, alignItems: 'center', padding: 18, borderRadius: 18, elevation: 1, gap: 6 },
-  quickLinkIcon: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  quickLinkTitle: { fontSize: 14, fontWeight: '800' },
-  quickLinkSub: { fontSize: 11 },
-
-  // Legal buttons
-  legalBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 14, borderRadius: 16, elevation: 1 },
-  legalBtnText: { flex: 1, fontSize: 12, fontWeight: '700' },
-
-  // PIN setup
-  pinSetupRow: { paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
-
-  // Status bar under profile
-  statusBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    marginTop: 14, paddingHorizontal: 14, paddingVertical: 11,
-    borderRadius: 14, borderWidth: 1,
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: {
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingTop: 8, paddingBottom: 30,
   },
-  statusDot: { width: 9, height: 9, borderRadius: 4.5 },
-  statusLabel: { fontSize: 13, fontWeight: '800', letterSpacing: -0.1 },
-  statusCustom: { fontSize: 12, flex: 1 },
+  modalHandle: {
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: 'rgba(148,163,184,0.4)',
+    alignSelf: 'center', marginBottom: 12,
+  },
+  modalTitle: { fontSize: 17, fontWeight: '800', paddingHorizontal: 20, marginBottom: 12 },
+  modalCta: { marginHorizontal: 20, marginTop: 12, paddingVertical: 14, borderRadius: 14, alignItems: 'center' },
+  modalCtaText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
-  // Status picker modal
-  statusOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  statusSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 20, paddingBottom: 30 },
-  statusSheetTitle: { fontSize: 18, fontWeight: '800', paddingHorizontal: 20, marginBottom: 12 },
-  statusOption: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  // Status picker
+  statusOpt: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  statusOptDot: { width: 10, height: 10, borderRadius: 5 },
   statusOptLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
-  statusTextRow: { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: StyleSheet.hairlineWidth },
-  statusTextInput: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14 },
-  statusSaveBtn: { marginHorizontal: 20, marginTop: 10, paddingVertical: 14, borderRadius: 14, alignItems: 'center' },
-  statusSaveText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  statusInputWrap: { paddingHorizontal: 20, paddingVertical: 14, borderTopWidth: StyleSheet.hairlineWidth },
+  statusInput: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14 },
+
+  // Tone picker
+  toneHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(148,163,184,0.2)' },
+  toneOpt: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12, marginBottom: 4 },
+  toneOptIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  toneOptLabel: { flex: 1, fontSize: 15, marginLeft: 12 },
 });

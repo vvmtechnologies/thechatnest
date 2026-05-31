@@ -14,9 +14,10 @@ import useSocket from '../../src/hooks/useSocket';
 import { brand } from '../../src/theme/colors';
 
 const TABS = [
-  { name: 'chats',    label: 'Chats',   icon: 'chatbubbles' },
-  { name: 'contacts', label: 'People',  icon: 'people' },
-  { name: 'profile',  label: 'Profile', icon: 'person' },
+  { name: 'chats',    label: 'Chats',    icon: 'chatbubbles' },
+  { name: 'contacts', label: 'People',   icon: 'people' },
+  { name: 'meetings', label: 'Meetings', icon: 'videocam' },
+  { name: 'profile',  label: 'Profile',  icon: 'person' },
 ];
 
 function CustomTabBar({ state, navigation, unreadCount, setUnreadCount }) {
@@ -112,6 +113,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="chats" />
       <Tabs.Screen name="contacts" />
+      <Tabs.Screen name="meetings" />
       <Tabs.Screen name="profile" />
     </Tabs>
   );

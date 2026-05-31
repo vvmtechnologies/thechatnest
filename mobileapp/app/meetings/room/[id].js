@@ -18,10 +18,11 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useKeepAwake } from 'expo-keep-awake';
 import { useAuth } from '../../../src/store/AuthContext';
 import { useTheme } from '../../../src/store/ThemeContext';
 import useMeeting, { isWebrtcAvailable } from '../../../src/hooks/useMeeting';
-import { getMeetingById } from '../../../src/api/meetings';
+import { getMeetingById, setCoHost } from '../../../src/api/meetings';
 
 // react-native-webrtc's <RTCView> renders the live stream. Lazy-required so
 // Expo Go (no native module) doesn't crash on import.
@@ -29,6 +30,15 @@ let RTCView = null;
 try { RTCView = require('react-native-webrtc').RTCView; } catch {}
 
 const { width: SCREEN_W } = Dimensions.get('window');
+
+const REACTIONS = [
+  { key: '👏', label: 'Clap' },
+  { key: '❤️', label: 'Love' },
+  { key: '🎉', label: 'Party' },
+  { key: '😂', label: 'Laugh' },
+  { key: '👍', label: 'Thumbs up' },
+  { key: '🤔', label: 'Hmm' },
+];
 
 const fmtDuration = (sec) => {
   const s = Math.max(0, Math.floor(sec || 0));
@@ -47,9 +57,17 @@ const initialsOf = (name) => {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 };
 
+const QUALITY = {
+  good:    { color: '#22c55e', label: 'Good' },
+  fair:    { color: '#f59e0b', label: 'Fair' },
+  poor:    { color: '#ef4444', label: 'Poor' },
+  unknown: { color: '#64748b', label: '…' },
+};
+
 const ParticipantTile = ({ participant, theme: t, isLocal, isPinned, onPin, dimensions }) => {
   const stream = participant?.stream;
   const isVideoOff = !participant?.video;
+  const isScreenShare = !!participant?.screenShare;
   const handRaised = !!participant?.handRaised;
 
   return (
@@ -58,8 +76,8 @@ const ParticipantTile = ({ participant, theme: t, isLocal, isPinned, onPin, dime
         <RTCView
           streamURL={stream.toURL ? stream.toURL() : ''}
           style={s.video}
-          objectFit="cover"
-          mirror={isLocal}
+          objectFit={isScreenShare ? 'contain' : 'cover'}
+          mirror={isLocal && !isScreenShare}
         />
       ) : (
         <View style={[s.placeholder, { backgroundColor: '#0f172a' }]}>
@@ -69,9 +87,11 @@ const ParticipantTile = ({ participant, theme: t, isLocal, isPinned, onPin, dime
         </View>
       )}
 
-      {/* Overlays */}
       <View style={s.tileOverlay}>
         <View style={s.tileNameRow}>
+          {isScreenShare && (
+            <Ionicons name="desktop-outline" size={12} color="#fff" style={{ marginRight: 4 }} />
+          )}
           <Text style={s.tileName} numberOfLines={1}>
             {isLocal ? 'You' : (participant?.userName || 'Guest')}
           </Text>
@@ -95,29 +115,28 @@ const ParticipantTile = ({ participant, theme: t, isLocal, isPinned, onPin, dime
 };
 
 export default function MeetingRoomScreen() {
+  useKeepAwake();
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
   const { theme: t } = useTheme();
   const meeting = useMeeting();
   const insets = useSafeAreaInsets();
-  // Bottom controls dock sits ABOVE the home indicator; everything above it
-  // (scroll content, reactions feed) needs the same offset so nothing hides
-  // behind the dock.
   const controlsBottom = Math.max(insets.bottom, 12);
-  const controlsHeight = 68; // ctrlBtn 48 + 10 padding * 2
+  const controlsHeight = 68;
   const scrollBottomPad = controlsBottom + controlsHeight + 16;
   const [meetingData, setMeetingData] = useState(null);
+  const [coHostIds, setCoHostIds] = useState(new Set()); // user_id Set
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const [chatInput, setChatInput] = useState('');
   const [showParticipants, setShowParticipants] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
   const joinedRef = useRef(false);
 
   const userName = useMemo(() => (
     user?.name || user?.email?.split?.('@')[0] || 'User'
   ), [user]);
 
-  // Load meeting data + auto-join the room
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -126,6 +145,13 @@ export default function MeetingRoomScreen() {
         if (cancelled) return;
         const data = m?.meeting || m;
         setMeetingData(data);
+        // Seed co-host set from initial participants (role === 'co_host' or 'co-host')
+        const seed = new Set();
+        (data?.participants || []).forEach((p) => {
+          const role = String(p.role || '').toLowerCase();
+          if (role === 'co_host' || role === 'co-host') seed.add(Number(p.user_id));
+        });
+        setCoHostIds(seed);
         const roomId = data?.meeting_id || data?.id;
         if (!isWebrtcAvailable()) {
           Alert.alert(
@@ -150,14 +176,14 @@ export default function MeetingRoomScreen() {
     })();
     return () => {
       cancelled = true;
-      // Always leave on unmount
       try { meeting.leaveMeeting(); } catch {}
     };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Stop the screen from sleeping while in a meeting? Skipped — needs expo-keep-awake (already in deps?).
-
   const isHost = meetingData && Number(meetingData.host_id) === Number(user?.id);
+  const isCoHost = coHostIds.has(Number(user?.id));
+  const canManage = isHost || isCoHost;
+
   const allTiles = useMemo(() => {
     const me = {
       socketId: 'self',
@@ -165,23 +191,30 @@ export default function MeetingRoomScreen() {
       userName,
       stream: meeting.localStream,
       audio: !meeting.isMuted,
-      video: !meeting.isVideoOff,
+      video: !meeting.isVideoOff || meeting.isScreenSharing,
+      screenShare: meeting.isScreenSharing,
       handRaised: meeting.handRaised,
       isLocal: true,
     };
     return [me, ...meeting.participants.map((p) => ({ ...p, isLocal: false }))];
-  }, [meeting.localStream, meeting.isMuted, meeting.isVideoOff, meeting.handRaised, meeting.participants, user?.id, userName]);
+  }, [meeting.localStream, meeting.isMuted, meeting.isVideoOff, meeting.isScreenSharing, meeting.handRaised, meeting.participants, user?.id, userName]);
 
+  // Spotlight (host-set, wins over personal pin) overrides personal pin.
+  const effectivePinnedId = meeting.spotlightSocketId || meeting.pinnedSocketId;
   const pinnedTile = useMemo(() => {
-    if (!meeting.pinnedSocketId) return null;
-    return allTiles.find((p) => p.socketId === meeting.pinnedSocketId) || null;
-  }, [allTiles, meeting.pinnedSocketId]);
+    if (!effectivePinnedId) {
+      // Auto-pin any active screen share
+      const sharer = allTiles.find((p) => p.screenShare && !p.isLocal);
+      if (sharer) return sharer;
+      return null;
+    }
+    return allTiles.find((p) => p.socketId === effectivePinnedId) || null;
+  }, [allTiles, effectivePinnedId]);
 
   const otherTiles = pinnedTile
     ? allTiles.filter((p) => p.socketId !== pinnedTile.socketId)
     : allTiles;
 
-  // Compute grid tile size
   const gridTileSize = useMemo(() => {
     const n = otherTiles.length;
     if (n <= 1) return { width: SCREEN_W - 16, height: 220 };
@@ -197,6 +230,46 @@ export default function MeetingRoomScreen() {
     ]);
   };
 
+  const handleScreenShare = async () => {
+    try {
+      await meeting.toggleScreenShare();
+    } catch (err) {
+      Alert.alert('Screen share unavailable', err?.message || 'Screen sharing failed.');
+    }
+  };
+
+  const sendEmoji = (emoji) => {
+    meeting.sendReaction(emoji);
+    setShowReactions(false);
+  };
+
+  const toggleSpotlight = (socketId) => {
+    if (!canManage) return;
+    const same = meeting.spotlightSocketId === socketId;
+    meeting.spotlight(same ? null : socketId);
+  };
+
+  const promoteToCoHost = async (userId) => {
+    if (!isHost) return;
+    const wasCoHost = coHostIds.has(Number(userId));
+    setCoHostIds((prev) => {
+      const next = new Set(prev);
+      if (wasCoHost) next.delete(Number(userId)); else next.add(Number(userId));
+      return next;
+    });
+    try {
+      await setCoHost(meetingData.id, userId, !wasCoHost);
+    } catch (e) {
+      // Roll back
+      setCoHostIds((prev) => {
+        const next = new Set(prev);
+        if (wasCoHost) next.add(Number(userId)); else next.delete(Number(userId));
+        return next;
+      });
+      Alert.alert('Failed', e?.response?.data?.message || e.message);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: '#0f172a' }]}>
@@ -206,6 +279,8 @@ export default function MeetingRoomScreen() {
       </SafeAreaView>
     );
   }
+
+  const quality = QUALITY[meeting.networkQuality] || QUALITY.unknown;
 
   return (
     <>
@@ -222,8 +297,22 @@ export default function MeetingRoomScreen() {
               <View style={s.liveDot} />
               <Text style={s.headerTime}>{fmtDuration(meeting.duration)}</Text>
               <Text style={s.headerCount}> · {allTiles.length} participant{allTiles.length === 1 ? '' : 's'}</Text>
+              <View style={[s.qDot, { backgroundColor: quality.color }]} />
             </View>
           </View>
+          {canManage && (
+            <TouchableOpacity
+              style={[s.headerBtn, meeting.isLocked && { backgroundColor: '#dc262633' }]}
+              onPress={() => meeting.setLocked(!meeting.isLocked)}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={meeting.isLocked ? 'lock-closed' : 'lock-open-outline'}
+                size={18}
+                color={meeting.isLocked ? '#ef4444' : '#fff'}
+              />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={s.headerBtn} onPress={() => setShowParticipants(true)} hitSlop={8}>
             <Ionicons name="people-outline" size={20} color="#fff" />
           </TouchableOpacity>
@@ -255,7 +344,7 @@ export default function MeetingRoomScreen() {
             ))}
           </View>
 
-          {/* Reactions feed */}
+          {/* Floating reactions feed */}
           {meeting.reactions.length > 0 && (
             <View style={s.reactionsBar}>
               {meeting.reactions.slice(-5).map((r) => (
@@ -289,11 +378,25 @@ export default function MeetingRoomScreen() {
             </TouchableOpacity>
           )}
           <TouchableOpacity
+            style={[s.ctrlBtn, meeting.isScreenSharing ? { backgroundColor: '#3b82f6' } : s.ctrlOn]}
+            onPress={handleScreenShare}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="desktop-outline" size={20} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[s.ctrlBtn, meeting.handRaised ? { backgroundColor: '#f59e0b' } : s.ctrlOn]}
             onPress={meeting.toggleHandRaise}
             activeOpacity={0.8}
           >
             <Text style={{ fontSize: 18 }}>✋</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[s.ctrlBtn, s.ctrlOn]}
+            onPress={() => setShowReactions(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="happy-outline" size={20} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={[s.ctrlBtn, s.ctrlOn]} onPress={() => setShowChat(true)} activeOpacity={0.8}>
             <Ionicons name="chatbubble-outline" size={20} color="#fff" />
@@ -307,6 +410,28 @@ export default function MeetingRoomScreen() {
             <Ionicons name="call" size={20} color="#fff" style={{ transform: [{ rotate: '135deg' }] }} />
           </TouchableOpacity>
         </View>
+
+        {/* Reactions picker — small horizontal strip above controls */}
+        <Modal visible={showReactions} animationType="fade" transparent onRequestClose={() => setShowReactions(false)}>
+          <TouchableOpacity
+            style={s.reactionsOverlay}
+            activeOpacity={1}
+            onPress={() => setShowReactions(false)}
+          >
+            <View style={[s.reactionsTray, { bottom: controlsBottom + controlsHeight + 16 }]}>
+              {REACTIONS.map((r) => (
+                <TouchableOpacity
+                  key={r.key}
+                  style={s.reactionTrayBtn}
+                  onPress={() => sendEmoji(r.key)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={{ fontSize: 24 }}>{r.key}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </Modal>
 
         {/* Chat panel */}
         <Modal visible={showChat} animationType="slide" transparent onRequestClose={() => setShowChat(false)}>
@@ -376,42 +501,80 @@ export default function MeetingRoomScreen() {
                 data={allTiles}
                 keyExtractor={(item) => String(item.socketId)}
                 contentContainerStyle={{ padding: 12 }}
-                renderItem={({ item }) => (
-                  <View style={s.participantRow}>
-                    <View style={[s.smallAvatar, { backgroundColor: '#334155' }]}>
-                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>
-                        {initialsOf(item.userName)}
-                      </Text>
+                renderItem={({ item }) => {
+                  const itemUid = Number(item.userId);
+                  const isThemCoHost = coHostIds.has(itemUid);
+                  const isThemHost = meetingData && Number(meetingData.host_id) === itemUid;
+                  const isSpotlit = meeting.spotlightSocketId === item.socketId;
+                  return (
+                    <View style={s.participantRow}>
+                      <View style={[s.smallAvatar, { backgroundColor: '#334155' }]}>
+                        <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>
+                          {initialsOf(item.userName)}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={s.participantName} numberOfLines={1}>
+                          {item.isLocal ? `${item.userName} (You)` : item.userName}
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 6, marginTop: 2 }}>
+                          {isThemHost && (
+                            <Text style={[s.tag, { backgroundColor: '#fef3c733', color: '#facc15' }]}>HOST</Text>
+                          )}
+                          {isThemCoHost && !isThemHost && (
+                            <Text style={[s.tag, { backgroundColor: '#10b98133', color: '#34d399' }]}>CO-HOST</Text>
+                          )}
+                          {isSpotlit && (
+                            <Text style={[s.tag, { backgroundColor: '#3b82f633', color: '#60a5fa' }]}>SPOTLIT</Text>
+                          )}
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                        {!item.audio && <Ionicons name="mic-off" size={14} color="#94a3b8" />}
+                        {!item.video && !item.screenShare && <Ionicons name="videocam-off" size={14} color="#94a3b8" />}
+                        {item.screenShare && <Ionicons name="desktop-outline" size={14} color="#60a5fa" />}
+                        {item.handRaised && <Text>✋</Text>}
+                      </View>
+                      {canManage && !item.isLocal && (
+                        <TouchableOpacity
+                          onPress={() => toggleSpotlight(item.socketId)}
+                          hitSlop={8}
+                          style={[s.actionIcon, isSpotlit && { backgroundColor: '#3b82f633' }]}
+                        >
+                          <Ionicons name="star" size={14} color={isSpotlit ? '#60a5fa' : '#94a3b8'} />
+                        </TouchableOpacity>
+                      )}
+                      {isHost && !item.isLocal && !isThemHost && (
+                        <TouchableOpacity
+                          onPress={() => promoteToCoHost(itemUid)}
+                          hitSlop={8}
+                          style={[s.actionIcon, isThemCoHost && { backgroundColor: '#10b98133' }]}
+                        >
+                          <Ionicons name="ribbon" size={14} color={isThemCoHost ? '#34d399' : '#94a3b8'} />
+                        </TouchableOpacity>
+                      )}
+                      {isHost && !item.isLocal && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            Alert.alert('Remove participant?', `Remove ${item.userName} from the meeting?`, [
+                              { text: 'Cancel', style: 'cancel' },
+                              { text: 'Remove', style: 'destructive', onPress: () => meeting.removeParticipant(item.socketId, item.userId) },
+                            ]);
+                          }}
+                          hitSlop={8}
+                          style={s.actionIcon}
+                        >
+                          <Ionicons name="person-remove-outline" size={14} color="#ef4444" />
+                        </TouchableOpacity>
+                      )}
                     </View>
-                    <Text style={s.participantName} numberOfLines={1}>
-                      {item.isLocal ? `${item.userName} (You)` : item.userName}
-                    </Text>
-                    <View style={{ flexDirection: 'row', gap: 8 }}>
-                      {!item.audio && <Ionicons name="mic-off" size={14} color="#94a3b8" />}
-                      {!item.video && <Ionicons name="videocam-off" size={14} color="#94a3b8" />}
-                      {item.handRaised && <Text>✋</Text>}
-                    </View>
-                    {isHost && !item.isLocal && (
-                      <TouchableOpacity
-                        onPress={() => {
-                          Alert.alert('Remove participant?', `Remove ${item.userName} from the meeting?`, [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Remove', style: 'destructive', onPress: () => meeting.removeParticipant(item.socketId, item.userId) },
-                          ]);
-                        }}
-                        hitSlop={8}
-                        style={{ marginLeft: 8 }}
-                      >
-                        <Ionicons name="person-remove-outline" size={16} color="#ef4444" />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                )}
+                  );
+                }}
               />
-              {isHost && (
-                <View style={{ padding: 12, borderTopWidth: 1, borderTopColor: '#334155' }}>
+              {canManage && (
+                <View style={{ padding: 12, borderTopWidth: 1, borderTopColor: '#334155', flexDirection: 'row', gap: 10 }}>
                   <TouchableOpacity
-                    style={[s.muteAllBtn, { backgroundColor: t.accent }]}
+                    style={[s.muteAllBtn, { backgroundColor: t.accent, flex: 1 }]}
                     onPress={() => {
                       meeting.muteAll();
                       setShowParticipants(false);
@@ -435,9 +598,10 @@ const s = StyleSheet.create({
   loadingTxt: { color: '#94a3b8', textAlign: 'center', marginTop: 12, fontSize: 14 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, gap: 8 },
   headerTitle: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  headerMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2 },
+  headerMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 2, gap: 4 },
   headerTime: { color: '#94a3b8', fontSize: 12, fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace' }) },
   headerCount: { color: '#64748b', fontSize: 12 },
+  qDot: { width: 8, height: 8, borderRadius: 4, marginLeft: 6 },
   liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#ef4444', marginRight: 6 },
   headerBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1e293b', alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
@@ -456,14 +620,21 @@ const s = StyleSheet.create({
   controls: {
     position: 'absolute', left: 12, right: 12, bottom: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, padding: 10, borderRadius: 30, backgroundColor: 'rgba(30,41,59,0.95)',
+    gap: 8, padding: 10, borderRadius: 30, backgroundColor: 'rgba(30,41,59,0.95)',
   },
-  ctrlBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  ctrlBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   ctrlOn: { backgroundColor: '#475569' },
   ctrlOff: { backgroundColor: '#ef4444' },
-  endBtn: { backgroundColor: '#dc2626', width: 56, height: 48, borderRadius: 24 },
+  endBtn: { backgroundColor: '#dc2626', width: 52, height: 44, borderRadius: 22 },
   badgeDot: { position: 'absolute', top: 4, right: 4, backgroundColor: '#ef4444', minWidth: 16, height: 16, borderRadius: 8, paddingHorizontal: 3, alignItems: 'center', justifyContent: 'center' },
   badgeTxt: { color: '#fff', fontSize: 9, fontWeight: '800' },
+  reactionsOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+  reactionsTray: {
+    position: 'absolute', left: 16, right: 16,
+    flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center',
+    backgroundColor: 'rgba(30,41,59,0.97)', borderRadius: 24, paddingVertical: 10, paddingHorizontal: 8,
+  },
+  reactionTrayBtn: { padding: 8 },
   chatOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
   chatPanel: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '80%', minHeight: 320 },
   chatHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderBottomWidth: 1, borderBottomColor: '#334155' },
@@ -476,7 +647,9 @@ const s = StyleSheet.create({
   chatSendBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   participantRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
   smallAvatar: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  participantName: { flex: 1, color: '#f1f5f9', fontSize: 14 },
+  participantName: { color: '#f1f5f9', fontSize: 14 },
+  tag: { fontSize: 9, fontWeight: '800', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, letterSpacing: 0.4, overflow: 'hidden' },
+  actionIcon: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   muteAllBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10 },
   muteAllTxt: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

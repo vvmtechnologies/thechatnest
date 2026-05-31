@@ -18,6 +18,7 @@ import { ThemeProvider, useTheme } from '../src/store/ThemeContext';
 import { ToastProvider } from '../src/components/Toast';
 import { CallProvider, useCall } from '../src/store/CallContext';
 import IncomingCall from '../src/components/IncomingCall';
+import IncomingMeetingInvite from '../src/components/IncomingMeetingInvite';
 import useSocket from '../src/hooks/useSocket';
 import { sendMessageRest, markRead } from '../src/api/chat';
 import ErrorBoundary from '../src/components/ErrorBoundary';
@@ -162,6 +163,7 @@ function InnerLayout() {
         <Stack.Screen name="call" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
       </Stack>
       <IncomingCallOverlay />
+      <IncomingMeetingInvite />
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput, RefreshControl,
-  SectionList, ScrollView, Platform, useWindowDimensions,
+  SectionList, Platform, useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -30,8 +30,6 @@ export default function ContactsScreen() {
   const [userStatuses, setUserStatuses] = useState({});
   const [existingThreads, setExistingThreads] = useState(new Set());
   const [tab, setTab] = useState('people');
-  const [deptFilter, setDeptFilter] = useState(null);
-  const [quickFilter, setQuickFilter] = useState('all'); // 'all' | 'online' | 'active'
   const [viewPhoto, setViewPhoto] = useState(null);
 
   // ─── Data load ─────────────────────────────────────────────────────────
@@ -122,32 +120,21 @@ export default function ContactsScreen() {
   const onRefresh = async () => { setRefreshing(true); await load(); setRefreshing(false); };
 
   // ─── Derived ───────────────────────────────────────────────────────────
-  const departments = useMemo(
-    () => [...new Set(contacts.map((c) => c.department).filter(Boolean))].sort(),
-    [contacts]
-  );
-
   const onlineCount = useMemo(
     () => contacts.filter((c) => {
-      const s = userStatuses[String(c.id)];
-      return s && s !== 'offline';
+      const st = userStatuses[String(c.id)];
+      return st && st !== 'offline';
     }).length,
     [contacts, userStatuses]
   );
 
   const filteredContacts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return contacts.filter((c) => {
-      if (deptFilter && c.department !== deptFilter) return false;
-      if (quickFilter === 'online') {
-        const st = userStatuses[String(c.id)];
-        if (!st || st === 'offline') return false;
-      }
-      if (quickFilter === 'active' && !existingThreads.has(`dm-${c.id}`)) return false;
-      if (!q) return true;
-      return (c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q);
-    });
-  }, [contacts, search, deptFilter, quickFilter, userStatuses, existingThreads]);
+    if (!q) return contacts;
+    return contacts.filter(
+      (c) => (c.name || '').toLowerCase().includes(q) || (c.email || '').toLowerCase().includes(q)
+    );
+  }, [contacts, search]);
 
   const filteredGroups = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -183,14 +170,6 @@ export default function ContactsScreen() {
 
   const hasChat = useCallback((contactId) => existingThreads.has(`dm-${contactId}`), [existingThreads]);
 
-  const clearAllFilters = useCallback(() => {
-    setSearch(''); setDeptFilter(null); setQuickFilter('all');
-  }, []);
-
-  const filtersActive = Boolean(search.trim() || deptFilter || quickFilter !== 'all');
-  const visibleCount = tab === 'people' ? filteredContacts.length : filteredGroups.length;
-  const totalCount = tab === 'people' ? contacts.length : groups.length;
-
   // ─── Render ────────────────────────────────────────────────────────────
   return (
     <SafeAreaView style={[s.root, { backgroundColor: t.bg }]} edges={['top']}>
@@ -206,14 +185,6 @@ export default function ContactsScreen() {
             <View style={s.onlineDotLg} />
             <Text style={s.onlineBadgeText}>{onlineCount} online</Text>
           </View>
-        </View>
-
-        {/* ─── Stats hero — 3 compact cards ─── */}
-        <View style={s.statsRow}>
-          <StatCard t={t} tint="#22c55e" label="Online" value={onlineCount} />
-          <StatCard t={t} tint={t.accent} label="Teammates" value={contacts.length} />
-          <StatCard t={t} tint="#6d5dfc" label="Groups" value={groups.length} />
-          <StatCard t={t} tint="#0ea5e9" label="Departments" value={departments.length || '—'} />
         </View>
 
         {/* ─── Tabs ─── */}
@@ -258,63 +229,6 @@ export default function ContactsScreen() {
           </View>
         </View>
 
-        {/* ─── Quick filter chips (People tab only) ─── */}
-        {tab === 'people' && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={s.chipScroll}
-          >
-            <FilterChip
-              t={t}
-              active={quickFilter === 'all'}
-              icon="people-outline"
-              label="All"
-              onPress={() => setQuickFilter('all')}
-            />
-            <FilterChip
-              t={t}
-              active={quickFilter === 'online'}
-              icon="ellipse"
-              iconColor="#22c55e"
-              label="Online"
-              onPress={() => setQuickFilter('online')}
-            />
-            <FilterChip
-              t={t}
-              active={quickFilter === 'active'}
-              icon="chatbubble-outline"
-              label="Active chats"
-              onPress={() => setQuickFilter('active')}
-            />
-            {departments.length > 0 && <View style={[s.chipDivider, { backgroundColor: t.divider }]} />}
-            {departments.map((d) => (
-              <FilterChip
-                key={d}
-                t={t}
-                active={deptFilter === d}
-                label={d}
-                onPress={() => setDeptFilter(deptFilter === d ? null : d)}
-              />
-            ))}
-            {filtersActive && (
-              <TouchableOpacity onPress={clearAllFilters} style={[s.clearChip, { borderColor: '#ef444466' }]} activeOpacity={0.7}>
-                <Ionicons name="close" size={11} color="#ef4444" />
-                <Text style={s.clearChipText}>Clear</Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
-        )}
-
-        {/* ─── Result count strip ─── */}
-        {filtersActive && tab === 'people' && (
-          <View style={s.resultStrip}>
-            <Text style={[s.resultText, { color: t.textTer }]}>
-              {visibleCount} of {totalCount} {tab === 'people' ? 'people' : 'groups'} match
-            </Text>
-          </View>
-        )}
-
         {/* ─── List ─── */}
         {tab === 'people' ? (
           <SectionList
@@ -357,13 +271,13 @@ export default function ContactsScreen() {
               <EmptyState
                 t={t}
                 icon="people-outline"
-                title={filtersActive ? 'No matches' : 'No teammates yet'}
+                title={search ? 'No matching people' : 'No teammates yet'}
                 hint={
-                  filtersActive
-                    ? 'Try clearing filters or adjusting your search.'
+                  search
+                    ? 'Try a different search term.'
                     : 'Once teammates join your org they\'ll appear here.'
                 }
-                action={filtersActive ? { label: 'Clear filters', onPress: clearAllFilters } : null}
+                action={search ? { label: 'Clear search', onPress: () => setSearch('') } : null}
               />
             }
           />
@@ -409,16 +323,6 @@ export default function ContactsScreen() {
 }
 
 // ─── Sub-components ────────────────────────────────────────────────────────
-function StatCard({ t, tint, label, value }) {
-  return (
-    <View style={[s.statCard, { backgroundColor: t.surface, borderColor: t.divider }]}>
-      <View style={[s.statTint, { backgroundColor: tint }]} />
-      <Text style={[s.statValue, { color: t.text }]} numberOfLines={1}>{value}</Text>
-      <Text style={[s.statLabel, { color: t.textTer }]} numberOfLines={1}>{label}</Text>
-    </View>
-  );
-}
-
 function TabButton({ t, active, icon, iconActive, label, count, onPress }) {
   return (
     <TouchableOpacity
@@ -431,23 +335,6 @@ function TabButton({ t, active, icon, iconActive, label, count, onPress }) {
       <View style={[s.tabCount, { backgroundColor: active ? 'rgba(110,79,16,0.2)' : t.divider }]}>
         <Text style={[s.tabCountText, { color: active ? '#6e4f10' : t.textSec }]}>{count}</Text>
       </View>
-    </TouchableOpacity>
-  );
-}
-
-function FilterChip({ t, active, icon, iconColor, label, onPress }) {
-  return (
-    <TouchableOpacity
-      style={[
-        s.filterChip,
-        { borderColor: t.divider, backgroundColor: t.surface },
-        active && { backgroundColor: t.accent + '20', borderColor: t.accent },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      {icon ? <Ionicons name={icon} size={11} color={iconColor || (active ? t.accent : t.textTer)} /> : null}
-      <Text style={[s.filterChipText, { color: active ? t.accent : t.textSec }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -591,23 +478,6 @@ const s = StyleSheet.create({
   onlineDotLg: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#22c55e' },
   onlineBadgeText: { fontSize: 11, fontWeight: '800', color: '#15803d', letterSpacing: 0.2 },
 
-  // Stats
-  statsRow: {
-    flexDirection: 'row', gap: 8,
-    paddingHorizontal: 12, paddingTop: 14, paddingBottom: 4,
-  },
-  statCard: {
-    flex: 1, paddingVertical: 12, paddingHorizontal: 12,
-    borderRadius: 14, borderWidth: 1, overflow: 'hidden',
-    position: 'relative',
-  },
-  statTint: {
-    position: 'absolute', top: 0, left: 0,
-    width: 3, height: '100%',
-  },
-  statValue: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
-  statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8, marginTop: 2, textTransform: 'uppercase' },
-
   // Tabs
   tabBar: {
     flexDirection: 'row', marginHorizontal: 12, marginTop: 12,
@@ -631,27 +501,6 @@ const s = StyleSheet.create({
     borderRadius: 14, paddingHorizontal: 14, height: 46, borderWidth: 1,
   },
   searchInput: { flex: 1, fontSize: 14.5, fontWeight: '500' },
-
-  // Filter chips
-  chipScroll: { gap: 6, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center' },
-  filterChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 11, paddingVertical: 7,
-    borderRadius: 999, borderWidth: 1,
-  },
-  filterChipText: { fontSize: 12, fontWeight: '700' },
-  chipDivider: { width: 1, height: 18, marginHorizontal: 4 },
-  clearChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 999, borderWidth: 1,
-    backgroundColor: 'transparent', marginLeft: 4,
-  },
-  clearChipText: { fontSize: 11, fontWeight: '800', color: '#ef4444' },
-
-  // Result strip
-  resultStrip: { paddingHorizontal: 18, paddingBottom: 4 },
-  resultText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
 
   // Pinned row (Myself / New group)
   pinnedRow: {

@@ -22,7 +22,11 @@ const auth = (req, res, next) => {
   }
 
   try {
-    const payload = jwt.verify(resolvedToken, process.env.JWT_SECRET);
+    // Pin algorithm to HS256 — prevents an attacker from crafting a token
+    // with `alg: none` (or any other algorithm) and bypassing verification.
+    const payload = jwt.verify(resolvedToken, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
     // Reject only tokens with no `sub` at all. Accept both numeric user ids
     // and string subs (e.g. 'guest-123' for meeting guests). `org` is optional
     // since owner-level / pre-org-assignment tokens may legitimately omit it.

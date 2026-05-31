@@ -11,9 +11,11 @@ import pg from 'pg';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SQL_PATH = path.resolve(__dirname, '..', 'migrations', '107_seed_alltoolhub_team.sql');
 
-const DEFAULT_CONN =
-  'postgresql://neondb_owner:npg_ixJXWI3FT7Pq@ep-muddy-wildflower-ap2ulhoz-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
-const connectionString = process.env.DATABASE_URL || DEFAULT_CONN;
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error('✗ DATABASE_URL env var is required.');
+  process.exit(1);
+}
 const parsed = new URL(connectionString);
 
 const resolver = new dns.Resolver();

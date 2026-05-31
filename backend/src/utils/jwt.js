@@ -23,7 +23,15 @@ const parseDurationMs = (value, fallbackMs) => {
 
 const signAccessToken = (payload) => {
   const expiresIn = process.env.JWT_EXPIRES_IN || '15m';
-  return jwt.sign(payload, getJwtSecret(), { expiresIn });
+  // Pin signing algorithm to HS256 — matches the verify-side allow-list in
+  // middlewares/auth.js and prevents accidental algorithm drift.
+  return jwt.sign(payload, getJwtSecret(), { expiresIn, algorithm: 'HS256' });
+};
+
+// Used anywhere we need to verify a token outside the auth middleware
+// (socket handshake, password-reset token check, etc.). Always pin HS256.
+const verifyToken = (token) => {
+  return jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
 };
 
 const generateRefreshToken = () => {
@@ -41,6 +49,7 @@ const getRefreshExpiryDate = () => {
 
 module.exports = {
   signAccessToken,
+  verifyToken,
   generateRefreshToken,
   hashToken,
   getRefreshExpiryDate,

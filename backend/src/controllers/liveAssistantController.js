@@ -99,7 +99,11 @@ const chat = async (req, res, next) => {
 // ─── Gemini ──────────────────────────────────────────────────────────────────
 const chatWithGemini = async (provider, messages, systemPrompt) => {
   const model = provider.model || 'gemini-2.0-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${provider.api_key}`;
+  // Send the API key via the `x-goog-api-key` request header instead of as a
+  // `?key=...` query param. Query strings show up in browser history, proxy
+  // logs, and the HTTP referer header — moving the secret to a header keeps
+  // it out of those surfaces. Google's REST API officially supports both.
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   // Convert chat history to Gemini format
   const contents = [];
@@ -116,7 +120,10 @@ const chatWithGemini = async (provider, messages, systemPrompt) => {
 
   const response = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': provider.api_key,
+    },
     body: JSON.stringify({
       contents,
       generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },

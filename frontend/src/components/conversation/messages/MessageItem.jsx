@@ -28,6 +28,7 @@ import { IoCheckmark, IoCheckmarkDone } from "react-icons/io5";
 import { LuClock3 } from "react-icons/lu";
 import { PiWarningCircleBold } from "react-icons/pi";
 import MessageContent from "./MessageContent.jsx";
+import { sanitizeComposerHtml } from "../../../utils/richTextSanitizer.js";
 import ReplyPreview from "./ReplyPreview.jsx";
 import {
   formatTime,
@@ -349,10 +350,13 @@ const MessageItem = React.memo(
       normalizedMessage.content.caption.trim()
         ? normalizedMessage.content.caption
         : "";
+    // Sanitize server-supplied caption HTML before piping it into
+    // dangerouslySetInnerHTML below — defense-in-depth so a compromised
+    // upstream can't inject scripts via captions on media messages.
     const captionHtml =
       normalizedMessage?.content?.captionHtml &&
       normalizedMessage.content.captionHtml.trim()
-        ? normalizedMessage.content.captionHtml
+        ? sanitizeComposerHtml(normalizedMessage.content.captionHtml)
         : "";
     const showCaption =
       Boolean(caption) &&

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,11 +8,17 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  TextInput,
+  Image,
+  FlatList,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import DateTimePicker from '../../src/components/SimpleDateTimePicker';
 import { useAuth } from '../../src/store/AuthContext';
 import { useTheme } from '../../src/store/ThemeContext';
 import {
@@ -20,6 +26,8 @@ import {
   rsvpMeeting,
   changeMeetingStatus,
   deleteMeeting,
+  updateMeeting,
+  getMeetingAttendance,
 } from '../../src/api/meetings';
 
 const formatDateTime = (iso) => {
@@ -35,6 +43,56 @@ const formatDateTime = (iso) => {
   });
 };
 
+const formatDuration = (ms) => {
+  if (!Number.isFinite(ms) || ms <= 0) return '—';
+  const total = Math.floor(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = total % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${sec}s`;
+  return `${sec}s`;
+};
+
+// Fold attendance sessions into per-user totals (mirrors web details dialog).
+const foldSessions = (sessions = []) => {
+  const map = new Map();
+  for (const s of sessions) {
+    const key = s.user_id != null ? `u-${s.user_id}` : `g-${s.display_name || s.socket_id || ''}`;
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        userId: s.user_id || null,
+        name: s.user_name || s.display_name || (s.user_id ? `User #${s.user_id}` : 'Guest'),
+        email: s.user_email || null,
+        firstJoinedAt: s.joined_at,
+        lastLeftAt: s.left_at,
+        totalMs: 0,
+        sessions: 0,
+        stillIn: false,
+      });
+    }
+    const entry = map.get(key);
+    entry.sessions += 1;
+    if (s.joined_at && (!entry.firstJoinedAt || new Date(s.joined_at) < new Date(entry.firstJoinedAt))) {
+      entry.firstJoinedAt = s.joined_at;
+    }
+    if (s.left_at) {
+      if (!entry.lastLeftAt || new Date(s.left_at) > new Date(entry.lastLeftAt)) {
+        entry.lastLeftAt = s.left_at;
+      }
+    } else {
+      entry.stillIn = true;
+    }
+    if (s.joined_at) {
+      const start = new Date(s.joined_at).getTime();
+      const end = s.left_at ? new Date(s.left_at).getTime() : Date.now();
+      if (Number.isFinite(start) && end > start) entry.totalMs += end - start;
+    }
+  }
+  return Array.from(map.values()).sort((a, b) => b.totalMs - a.totalMs);
+};
+
 export default function MeetingDetailScreen() {
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
@@ -43,6 +101,23 @@ export default function MeetingDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // QR share modal
+  const [showQR, setShowQR] = useState(false);
+
+  // Edit meeting modal
+  const [showEdit, setShowEdit] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editWhen, setEditWhen] = useState(new Date());
+  const [editDateOpen, setEditDateOpen] = useState(false);
+  const [editTimeOpen, setEditTimeOpen] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Attendance modal
+  const [showAttendance, setShowAttendance] = useState(false);
+  const [attendance, setAttendance] = useState(null);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -67,6 +142,17 @@ export default function MeetingDetailScreen() {
   const isPast = status === 'ended' || status === 'completed';
   const participants = meeting?.participants || [];
 
+  const inviteUrl = useMemo(() => {
+    if (!meeting?.meeting_id) return '';
+    return `https://dream-phi-three.vercel.app/app/meeting?join=${encodeURIComponent(meeting.meeting_id)}`;
+  }, [meeting?.meeting_id]);
+
+  const qrSrc = useMemo(() => {
+    if (!inviteUrl) return '';
+    // Public QR rendering — no native deps. 220×220 px PNG.
+    return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(inviteUrl)}`;
+  }, [inviteUrl]);
+
   const copyCode = async () => {
     if (!meeting?.meeting_id) return;
     await Clipboard.setStringAsync(String(meeting.meeting_id));
@@ -74,9 +160,8 @@ export default function MeetingDetailScreen() {
   };
 
   const copyLink = async () => {
-    if (!meeting?.meeting_id) return;
-    const link = `https://dream-phi-three.vercel.app/app/meeting?join=${meeting.meeting_id}`;
-    await Clipboard.setStringAsync(link);
+    if (!inviteUrl) return;
+    await Clipboard.setStringAsync(inviteUrl);
     Alert.alert('Copied', 'Invite link copied to clipboard.');
   };
 
@@ -131,6 +216,46 @@ export default function MeetingDetailScreen() {
     ]);
   };
 
+  const openEdit = () => {
+    setEditTitle(meeting?.title || '');
+    setEditDescription(meeting?.description || '');
+    setEditWhen(meeting?.scheduled_at ? new Date(meeting.scheduled_at) : new Date(Date.now() + 30 * 60_000));
+    setShowEdit(true);
+  };
+
+  const saveEdit = async () => {
+    setSavingEdit(true);
+    try {
+      const payload = {
+        title: editTitle.trim() || 'Untitled meeting',
+        description: editDescription.trim() || null,
+      };
+      if (meeting?.meeting_type === 'scheduled' || meeting?.scheduled_at) {
+        payload.scheduled_at = editWhen.toISOString();
+      }
+      await updateMeeting(id, payload);
+      setShowEdit(false);
+      await load();
+    } catch (e) {
+      Alert.alert('Failed', e?.response?.data?.message || e.message);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const openAttendance = async () => {
+    setShowAttendance(true);
+    setLoadingAttendance(true);
+    try {
+      const data = await getMeetingAttendance(id);
+      setAttendance(data);
+    } catch (e) {
+      console.warn('[attendance] load failed:', e?.message);
+    } finally {
+      setLoadingAttendance(false);
+    }
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={[s.container, { backgroundColor: t.bg }]}>
@@ -147,6 +272,9 @@ export default function MeetingDetailScreen() {
     );
   }
 
+  const sessions = attendance?.sessions || attendance?.rows || attendance || [];
+  const folded = foldSessions(Array.isArray(sessions) ? sessions : []);
+
   return (
     <>
       <Stack.Screen
@@ -155,6 +283,20 @@ export default function MeetingDetailScreen() {
           headerStyle: { backgroundColor: t.bg },
           headerTitleStyle: { color: t.text, fontWeight: '700' },
           headerTintColor: t.text,
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', gap: 4, marginRight: 6 }}>
+              {!!meeting.meeting_id && (
+                <TouchableOpacity onPress={() => setShowQR(true)} hitSlop={8} style={s.headerIcon}>
+                  <Ionicons name="qr-code-outline" size={20} color={t.accent} />
+                </TouchableOpacity>
+              )}
+              {isHost && !isLive && !isPast && (
+                <TouchableOpacity onPress={openEdit} hitSlop={8} style={s.headerIcon}>
+                  <Ionicons name="create-outline" size={20} color={t.accent} />
+                </TouchableOpacity>
+              )}
+            </View>
+          ),
         }}
       />
       <SafeAreaView style={[s.container, { backgroundColor: t.bg }]} edges={['bottom']}>
@@ -217,6 +359,18 @@ export default function MeetingDetailScreen() {
                 </View>
               </>
             )}
+            {!!meeting.reminder_sent_at && (
+              <>
+                <View style={[s.divider, { backgroundColor: t.borderLight }]} />
+                <View style={s.metaRow}>
+                  <Ionicons name="notifications-outline" size={18} color={t.textTer} />
+                  <Text style={[s.metaLabel, { color: t.textSec }]}>Reminder sent</Text>
+                  <Text style={[s.metaValue, { color: t.text }]}>
+                    {formatDateTime(meeting.reminder_sent_at)}
+                  </Text>
+                </View>
+              </>
+            )}
           </View>
 
           {/* Code + link */}
@@ -240,6 +394,14 @@ export default function MeetingDetailScreen() {
                 >
                   <Ionicons name="link-outline" size={14} color={t.accent} />
                   <Text style={[s.smallBtnTxt, { color: t.accent }]}>Copy link</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.smallBtn, { backgroundColor: t.accentBg }]}
+                  onPress={() => setShowQR(true)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="qr-code-outline" size={14} color={t.accent} />
+                  <Text style={[s.smallBtnTxt, { color: t.accent }]}>QR</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -272,7 +434,7 @@ export default function MeetingDetailScreen() {
                       <Text style={[s.roleBadgeTxt, { color: t.accent }]}>HOST</Text>
                     </View>
                   )}
-                  {p.role === 'co_host' && (
+                  {(p.role === 'co_host' || p.role === 'co-host') && (
                     <View style={[s.roleBadge, { backgroundColor: '#10b98115' }]}>
                       <Text style={[s.roleBadgeTxt, { color: '#10b981' }]}>CO-HOST</Text>
                     </View>
@@ -285,6 +447,24 @@ export default function MeetingDetailScreen() {
                 </Text>
               )}
             </View>
+          )}
+
+          {/* Attendance — host only, available for live or past meetings */}
+          {isHost && (isLive || isPast) && (
+            <TouchableOpacity
+              style={[s.card, { backgroundColor: t.surface, borderColor: t.borderLight, flexDirection: 'row', alignItems: 'center', gap: 12 }]}
+              onPress={openAttendance}
+              activeOpacity={0.7}
+            >
+              <View style={[s.avatarFallback, { backgroundColor: t.accentBg, width: 40, height: 40, borderRadius: 20 }]}>
+                <Ionicons name="analytics-outline" size={20} color={t.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.cardLabel, { color: t.textSec, marginBottom: 2 }]}>Attendance report</Text>
+                <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }}>View who joined and for how long</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={t.textTer} />
+            </TouchableOpacity>
           )}
 
           {/* RSVP (non-host, not past) */}
@@ -370,6 +550,205 @@ export default function MeetingDetailScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* QR Modal */}
+        <Modal visible={showQR} animationType="fade" transparent onRequestClose={() => setShowQR(false)}>
+          <View style={s.modalOverlay}>
+            <View style={[s.qrCard, { backgroundColor: t.surface }]}>
+              <View style={s.qrHeader}>
+                <Text style={[s.qrHeading, { color: t.text }]}>Share meeting</Text>
+                <TouchableOpacity onPress={() => setShowQR(false)} hitSlop={10}>
+                  <Ionicons name="close" size={22} color={t.text} />
+                </TouchableOpacity>
+              </View>
+              <Text style={[s.qrSub, { color: t.textSec }]}>{meeting.title}</Text>
+              <View style={s.qrImageWrap}>
+                <Image source={{ uri: qrSrc }} style={s.qrImage} />
+              </View>
+              <Text style={[s.code, { color: t.text, textAlign: 'center', marginTop: 8 }]}>
+                {meeting.meeting_id}
+              </Text>
+              <TouchableOpacity
+                style={[s.qrLinkBtn, { backgroundColor: t.accent }]}
+                onPress={copyLink}
+                activeOpacity={0.85}
+              >
+                <Ionicons name="link" size={16} color="#fff" />
+                <Text style={s.qrLinkTxt}>Copy invite link</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Edit Modal */}
+        <Modal visible={showEdit} animationType="slide" transparent onRequestClose={() => setShowEdit(false)}>
+          <View style={s.modalOverlay}>
+            <View style={[s.editCard, { backgroundColor: t.surface }]}>
+              <View style={s.qrHeader}>
+                <Text style={[s.qrHeading, { color: t.text }]}>Edit meeting</Text>
+                <TouchableOpacity onPress={() => setShowEdit(false)} hitSlop={10}>
+                  <Ionicons name="close" size={22} color={t.text} />
+                </TouchableOpacity>
+              </View>
+              <Text style={[s.label, { color: t.textSec }]}>Title</Text>
+              <TextInput
+                style={[s.input, { backgroundColor: t.inputBg, borderColor: t.inputBorder, color: t.text }]}
+                value={editTitle}
+                onChangeText={setEditTitle}
+                maxLength={100}
+              />
+              <Text style={[s.label, { color: t.textSec }]}>Description</Text>
+              <TextInput
+                style={[s.input, s.textarea, { backgroundColor: t.inputBg, borderColor: t.inputBorder, color: t.text }]}
+                value={editDescription}
+                onChangeText={setEditDescription}
+                multiline
+                maxLength={1000}
+              />
+              {(meeting?.meeting_type === 'scheduled' || meeting?.scheduled_at) && (
+                <>
+                  <Text style={[s.label, { color: t.textSec }]}>When</Text>
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity
+                      style={[s.pickerBtn, { backgroundColor: t.inputBg, borderColor: t.inputBorder }]}
+                      onPress={() => setEditDateOpen(true)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="calendar-outline" size={16} color={t.textSec} />
+                      <Text style={[s.pickerTxt, { color: t.text }]}>
+                        {editWhen.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[s.pickerBtn, { backgroundColor: t.inputBg, borderColor: t.inputBorder }]}
+                      onPress={() => setEditTimeOpen(true)}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons name="time-outline" size={16} color={t.textSec} />
+                      <Text style={[s.pickerTxt, { color: t.text }]}>
+                        {editWhen.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {editDateOpen && (
+                    <DateTimePicker
+                      value={editWhen}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                      minimumDate={new Date()}
+                      onChange={(event, picked) => {
+                        if (Platform.OS === 'android') setEditDateOpen(false);
+                        if (event?.type === 'dismissed') return;
+                        if (picked) {
+                          const next = new Date(editWhen);
+                          next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate());
+                          setEditWhen(next);
+                        }
+                      }}
+                    />
+                  )}
+                  {editTimeOpen && (
+                    <DateTimePicker
+                      value={editWhen}
+                      mode="time"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(event, picked) => {
+                        if (Platform.OS === 'android') setEditTimeOpen(false);
+                        if (event?.type === 'dismissed') return;
+                        if (picked) {
+                          const next = new Date(editWhen);
+                          next.setHours(picked.getHours(), picked.getMinutes(), 0, 0);
+                          setEditWhen(next);
+                        }
+                      }}
+                    />
+                  )}
+                  {Platform.OS === 'ios' && (editDateOpen || editTimeOpen) && (
+                    <TouchableOpacity
+                      style={[s.iosDone, { backgroundColor: t.accent }]}
+                      onPress={() => { setEditDateOpen(false); setEditTimeOpen(false); }}
+                    >
+                      <Text style={{ color: '#fff', fontWeight: '700' }}>Done</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
+              )}
+              <TouchableOpacity
+                style={[s.qrLinkBtn, { backgroundColor: t.accent, opacity: savingEdit ? 0.6 : 1, marginTop: 16 }]}
+                onPress={saveEdit}
+                disabled={savingEdit}
+                activeOpacity={0.85}
+              >
+                {savingEdit ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="save" size={16} color="#fff" />
+                    <Text style={s.qrLinkTxt}>Save changes</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Attendance Modal */}
+        <Modal visible={showAttendance} animationType="slide" transparent onRequestClose={() => setShowAttendance(false)}>
+          <View style={s.modalOverlay}>
+            <View style={[s.attCard, { backgroundColor: t.surface }]}>
+              <View style={s.qrHeader}>
+                <Text style={[s.qrHeading, { color: t.text }]}>Attendance</Text>
+                <TouchableOpacity onPress={() => setShowAttendance(false)} hitSlop={10}>
+                  <Ionicons name="close" size={22} color={t.text} />
+                </TouchableOpacity>
+              </View>
+              {loadingAttendance ? (
+                <ActivityIndicator color={t.accent} style={{ marginVertical: 30 }} />
+              ) : folded.length === 0 ? (
+                <Text style={{ textAlign: 'center', color: t.textTer, marginVertical: 30 }}>
+                  No attendance recorded yet.
+                </Text>
+              ) : (
+                <FlatList
+                  data={folded}
+                  keyExtractor={(item) => item.key}
+                  contentContainerStyle={{ paddingBottom: 12 }}
+                  renderItem={({ item }) => (
+                    <View style={[s.attRow, { borderBottomColor: t.borderLight }]}>
+                      <View style={[s.avatarFallback, { backgroundColor: t.accentBg, width: 36, height: 36, borderRadius: 18 }]}>
+                        <Text style={{ color: t.accent, fontWeight: '700' }}>
+                          {(item.name || '?').slice(0, 1).toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: t.text, fontSize: 14, fontWeight: '600' }} numberOfLines={1}>
+                          {item.name}
+                        </Text>
+                        {!!item.email && (
+                          <Text style={{ color: t.textTer, fontSize: 11 }} numberOfLines={1}>{item.email}</Text>
+                        )}
+                        <Text style={{ color: t.textSec, fontSize: 11, marginTop: 2 }}>
+                          {item.sessions} session{item.sessions === 1 ? '' : 's'} · joined {formatDateTime(item.firstJoinedAt)}
+                        </Text>
+                      </View>
+                      <View style={{ alignItems: 'flex-end' }}>
+                        <Text style={{ color: t.text, fontSize: 14, fontWeight: '700' }}>
+                          {formatDuration(item.totalMs)}
+                        </Text>
+                        {item.stillIn && (
+                          <View style={[s.badge, { backgroundColor: '#dc262615', marginTop: 4 }]}>
+                            <View style={s.liveDot} />
+                            <Text style={s.liveTxt}>IN</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  )}
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </>
   );
@@ -392,7 +771,7 @@ const s = StyleSheet.create({
   smallBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
   smallBtnTxt: { fontSize: 12, fontWeight: '700' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
-  metaLabel: { fontSize: 13, width: 80 },
+  metaLabel: { fontSize: 13, width: 110 },
   metaValue: { flex: 1, fontSize: 14, fontWeight: '600', textAlign: 'right' },
   divider: { height: 1, marginVertical: 6 },
   participantRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
@@ -403,10 +782,27 @@ const s = StyleSheet.create({
   rsvpRow: { flexDirection: 'row', gap: 8 },
   rsvpBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, borderWidth: 1, alignItems: 'center' },
   rsvpTxt: { fontSize: 13, fontWeight: '600' },
-  note: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 16 },
-  noteTxt: { flex: 1, fontSize: 12, lineHeight: 17 },
   actionBar: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, borderTopWidth: 1, flexDirection: 'row', gap: 10 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },
   actionTxt: { color: '#fff', fontSize: 15, fontWeight: '700' },
   iconBtn: { width: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  headerIcon: { paddingHorizontal: 6 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 },
+  qrCard: { width: '100%', maxWidth: 340, borderRadius: 20, padding: 20, alignSelf: 'center' },
+  qrHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
+  qrHeading: { fontSize: 17, fontWeight: '800' },
+  qrSub: { fontSize: 13, marginBottom: 16, textAlign: 'center' },
+  qrImageWrap: { alignSelf: 'center', padding: 14, backgroundColor: '#fff', borderRadius: 12 },
+  qrImage: { width: 220, height: 220 },
+  qrLinkBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10, marginTop: 16 },
+  qrLinkTxt: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  editCard: { width: '100%', maxWidth: 420, borderRadius: 20, padding: 20, alignSelf: 'center', maxHeight: '90%' },
+  label: { fontSize: 12, fontWeight: '600', marginTop: 12, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 },
+  input: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15 },
+  textarea: { minHeight: 70, textAlignVertical: 'top', paddingTop: 12 },
+  pickerBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 10, borderWidth: 1 },
+  pickerTxt: { fontSize: 14, fontWeight: '600' },
+  iosDone: { alignSelf: 'flex-end', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8, marginTop: 4 },
+  attCard: { width: '100%', maxWidth: 460, borderRadius: 20, padding: 16, alignSelf: 'center', maxHeight: '85%' },
+  attRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1 },
 });

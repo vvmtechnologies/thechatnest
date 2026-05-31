@@ -55,11 +55,18 @@ export default function useMeeting() {
   const [handRaised, setHandRaised] = useState(false);
   const [reactions, setReactions] = useState([]);
   const [pinnedSocketId, setPinnedSocketId] = useState(null);
+  const [spotlightSocketId, setSpotlightSocketId] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [duration, setDuration] = useState(0);
+  // Lightweight WebRTC stats for the local→remote pipe — used to drive the
+  // network-quality dot in the meeting room header.
+  const [networkQuality, setNetworkQuality] = useState('unknown'); // good | fair | poor | unknown
 
   const peersRef = useRef(new Map());
   const remoteStreamsRef = useRef(new Map());
   const localStreamRef = useRef(null);
+  const screenStreamRef = useRef(null);
   const meetingRoomIdRef = useRef(null);
   const statusRef = useRef('idle');
   const myUserNameRef = useRef('');
@@ -96,14 +103,21 @@ export default function useMeeting() {
       localStreamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
       localStreamRef.current = null;
     }
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+      screenStreamRef.current = null;
+    }
     setLocalStream(null);
     setParticipants([]);
     setChatMessages([]);
     setIsMuted(true);
     setIsVideoOff(true);
+    setIsScreenSharing(false);
     setHandRaised(false);
     setDuration(0);
     setPinnedSocketId(null);
+    setSpotlightSocketId(null);
+    setIsLocked(false);
   }, []);
 
   // ─── Create peer connection (idempotent) ──────────────────────────
@@ -382,6 +396,64 @@ export default function useMeeting() {
     setPinnedSocketId((prev) => prev === targetSocketId ? null : targetSocketId);
   }, []);
 
+  // ─── Screen share ────────────────────────────────────────────────
+  // react-native-webrtc supports getDisplayMedia on Android (FOREGROUND_SERVICE)
+  // and iOS (requires ReplayKit broadcast extension config). We just attempt
+  // and surface friendly errors.
+  const toggleScreenShare = useCallback(async () => {
+    if (!webrtcAvailable) return;
+    if (isScreenSharing) {
+      // Stop sharing
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((track) => {
+          try { track.stop(); } catch {}
+          for (const pc of peersRef.current.values()) {
+            const sender = pc.getSenders().find((s) => s.track?.id === track.id);
+            if (sender) { try { pc.removeTrack(sender); } catch {} }
+          }
+        });
+        screenStreamRef.current = null;
+      }
+      setIsScreenSharing(false);
+      emit('meeting:media-state', { meetingRoomId: meetingRoomIdRef.current, screenShare: false });
+      return;
+    }
+    try {
+      if (!mediaDevices.getDisplayMedia) {
+        throw new Error('Screen share is not supported on this device.');
+      }
+      const stream = await mediaDevices.getDisplayMedia({ video: true });
+      screenStreamRef.current = stream;
+      const screenTrack = stream.getVideoTracks()[0];
+      if (screenTrack) {
+        screenTrack.onended = () => { toggleScreenShare(); };
+        addTrackToPeers(screenTrack, stream);
+      }
+      setIsScreenSharing(true);
+      emit('meeting:media-state', { meetingRoomId: meetingRoomIdRef.current, screenShare: true });
+    } catch (err) {
+      console.warn('[useMeeting] screen share failed:', err.message);
+      // Bubble up by toggling off cleanly
+      setIsScreenSharing(false);
+    }
+  }, [isScreenSharing, emit, addTrackToPeers]);
+
+  // ─── Host: spotlight a participant for everyone ──────────────────
+  const spotlight = useCallback((targetSocketId) => {
+    emit('meeting:host:spotlight', {
+      meetingRoomId: meetingRoomIdRef.current,
+      targetSocketId: targetSocketId || null,
+    });
+  }, [emit]);
+
+  // ─── Host: lock / unlock meeting ─────────────────────────────────
+  const setLocked = useCallback((next) => {
+    emit('meeting:host:lock', {
+      meetingRoomId: meetingRoomIdRef.current,
+      locked: Boolean(next),
+    });
+  }, [emit]);
+
   const muteAll = useCallback(() => {
     emit('meeting:host:mute-all', { meetingRoomId: meetingRoomIdRef.current });
   }, [emit]);
@@ -515,6 +587,14 @@ export default function useMeeting() {
       }
     };
 
+    const onSpotlight = ({ targetSocketId }) => {
+      setSpotlightSocketId(targetSocketId || null);
+    };
+
+    const onLocked = ({ locked }) => {
+      setIsLocked(Boolean(locked));
+    };
+
     const subs = [
       on('meeting:user-joined', onUserJoined),
       on('meeting:user-left', onUserLeft),
@@ -523,6 +603,8 @@ export default function useMeeting() {
       on('meeting:reaction', onReaction),
       on('meeting:media-state', onMediaState),
       on('meeting:pin', onPin),
+      on('meeting:spotlight', onSpotlight),
+      on('meeting:locked', onLocked),
       on('meeting:ended', onMeetingEnded),
       on('meeting:force-mute', onForceMute),
       on('meeting:removed', onRemoved),
@@ -531,13 +613,58 @@ export default function useMeeting() {
     return () => { subs.forEach((u) => { try { u && u(); } catch {} }); };
   }, [socket, on, emit, createPeer, cleanupAll]);
 
+  // ─── Network quality sampling ────────────────────────────────────
+  // Polls getStats() on a primary peer every 5s and classifies based on
+  // packets-lost ratio + RTT. Best-effort; falls back to 'unknown' if no peer.
+  useEffect(() => {
+    if (status !== 'active') {
+      setNetworkQuality('unknown');
+      return;
+    }
+    let cancelled = false;
+    let lastLost = 0, lastSent = 0;
+    const tick = async () => {
+      try {
+        const pc = peersRef.current.values().next().value;
+        if (!pc || typeof pc.getStats !== 'function') {
+          if (!cancelled) setNetworkQuality('unknown');
+          return;
+        }
+        const stats = await pc.getStats();
+        let rtt = 0, lost = 0, sent = 0;
+        stats.forEach?.((report) => {
+          if (report.type === 'remote-inbound-rtp') {
+            if (typeof report.roundTripTime === 'number') rtt = Math.max(rtt, report.roundTripTime);
+            if (typeof report.packetsLost === 'number') lost += report.packetsLost;
+          }
+          if (report.type === 'outbound-rtp') {
+            if (typeof report.packetsSent === 'number') sent += report.packetsSent;
+          }
+        });
+        const deltaLost = Math.max(0, lost - lastLost);
+        const deltaSent = Math.max(0, sent - lastSent);
+        lastLost = lost; lastSent = sent;
+        const lossRatio = deltaSent > 0 ? deltaLost / deltaSent : 0;
+        let q = 'good';
+        if (lossRatio > 0.08 || rtt > 0.4) q = 'poor';
+        else if (lossRatio > 0.03 || rtt > 0.2) q = 'fair';
+        if (!cancelled) setNetworkQuality(q);
+      } catch {
+        if (!cancelled) setNetworkQuality('unknown');
+      }
+    };
+    const handle = setInterval(tick, 5000);
+    tick();
+    return () => { cancelled = true; clearInterval(handle); };
+  }, [status]);
+
   return {
     status, meetingRoomId, meetingInfo, participants, localStream,
-    isMuted, isVideoOff, chatMessages, handRaised, reactions,
-    pinnedSocketId, duration,
+    isMuted, isVideoOff, isScreenSharing, chatMessages, handRaised, reactions,
+    pinnedSocketId, spotlightSocketId, isLocked, duration, networkQuality,
     webrtcAvailable,
     joinMeeting, leaveMeeting, toggleMute, toggleVideo, switchCamera,
-    sendChatMessage, sendReaction, toggleHandRaise, pinParticipant,
-    muteAll, removeParticipant,
+    toggleScreenShare, sendChatMessage, sendReaction, toggleHandRaise,
+    pinParticipant, spotlight, setLocked, muteAll, removeParticipant,
   };
 }

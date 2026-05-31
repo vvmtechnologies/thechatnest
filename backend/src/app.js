@@ -71,11 +71,24 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-XSRF-Token', 'X-Device-Id'],
 };
 
-app.use(helmet());
+// Helmet defaults + explicit HSTS so browsers refuse plain-HTTP for a year.
+// `preload: true` qualifies the domain for Chrome's HSTS preload list once
+// you submit it at hstspreload.org. Safe to enable now — production already
+// serves only HTTPS via Render/Vercel.
+app.use(helmet({
+  hsts: {
+    maxAge: 31536000, // 1 year in seconds
+    includeSubDomains: true,
+    preload: true,
+  },
+}));
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// JSON body cap. 50MB was excessive (DoS risk via large unparsed payloads).
+// File uploads use multer with its own per-route limits and don't go through
+// this parser, so this only affects API JSON payloads — 2MB is plenty.
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(csrfProtection);
 
 if (process.env.NODE_ENV !== 'test') {
@@ -95,93 +108,93 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Diagnostic: users table state (safe — no PII, just counts + sample emails).
-// Remove this endpoint after launch verification.
-app.get('/diag/users', async (req, res) => {
-  const db = require('./config/database');
-  try {
-    const { rows: existsRows } = await db.query(
-      "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users'"
-    );
-    if (!existsRows.length) {
-      return res.json({ exists: false, message: 'users table does not exist' });
+// ─── Diagnostic endpoints ────────────────────────────────────────────────
+// Mounted ONLY in non-production. In production these leaked user emails,
+// org membership snapshots, and live OTP codes to any caller (no auth) —
+// gating by NODE_ENV is the simplest, safest fix that keeps local dev
+// workflows intact. Delete entirely once you've moved off them.
+if (process.env.NODE_ENV !== 'production') {
+  app.get('/diag/users', async (req, res) => {
+    const db = require('./config/database');
+    try {
+      const { rows: existsRows } = await db.query(
+        "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='users'"
+      );
+      if (!existsRows.length) {
+        return res.json({ exists: false, message: 'users table does not exist' });
+      }
+      const [{ rows: totalRows }, { rows: statusRows }, { rows: legacyRows }, { rows: sample }] =
+        await Promise.all([
+          db.query('SELECT COUNT(*)::int AS n FROM users'),
+          db.query(
+            "SELECT COALESCE(status, 'unknown') AS status, COUNT(*)::int AS n FROM users GROUP BY status ORDER BY n DESC"
+          ),
+          db.query("SELECT COUNT(*)::int AS n FROM users WHERE email ~* 'teamchatx|aabhyasa'"),
+          db.query(
+            `SELECT user_id, email, name, COALESCE(status, 'unknown') AS status,
+                    (email_verified_at IS NOT NULL) AS email_verified, created_at
+             FROM users
+             ORDER BY user_id ASC
+             LIMIT 20`
+          ),
+        ]);
+      return res.json({
+        exists: true,
+        total: totalRows[0].n,
+        legacy_emails: legacyRows[0].n,
+        by_status: statusRows,
+        sample,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
-    const [{ rows: totalRows }, { rows: statusRows }, { rows: legacyRows }, { rows: sample }] =
-      await Promise.all([
-        db.query('SELECT COUNT(*)::int AS n FROM users'),
-        db.query(
-          "SELECT COALESCE(status, 'unknown') AS status, COUNT(*)::int AS n FROM users GROUP BY status ORDER BY n DESC"
-        ),
-        db.query("SELECT COUNT(*)::int AS n FROM users WHERE email ~* 'teamchatx|aabhyasa'"),
-        db.query(
-          `SELECT user_id, email, name, COALESCE(status, 'unknown') AS status,
-                  (email_verified_at IS NOT NULL) AS email_verified, created_at
-           FROM users
-           ORDER BY user_id ASC
-           LIMIT 20`
-        ),
-      ]);
-    return res.json({
-      exists: true,
-      total: totalRows[0].n,
-      legacy_emails: legacyRows[0].n,
-      by_status: statusRows,
-      sample,
-    });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
+  });
 
-// Diagnostic: organization membership snapshot. Helpful when chat list
-// looks empty — shows which users belong to which org. Remove after launch.
-app.get('/diag/orgs', async (req, res) => {
-  const db = require('./config/database');
-  try {
-    const { rows: orgs } = await db.query(
-      `SELECT organization_id, name, status, created_at,
-              (SELECT COUNT(*)::int FROM organization_members om
-               WHERE om.organization_id = o.organization_id) AS member_count
-       FROM organizations o
-       ORDER BY organization_id ASC`
-    );
-    const { rows: memberships } = await db.query(
-      `SELECT om.organization_id, om.user_id, u.email, u.name, om.role_id, om.status
-       FROM organization_members om
-       JOIN users u ON u.user_id = om.user_id
-       ORDER BY om.organization_id, om.user_id`
-    );
-    return res.json({ orgs, memberships });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
+  app.get('/diag/orgs', async (req, res) => {
+    const db = require('./config/database');
+    try {
+      const { rows: orgs } = await db.query(
+        `SELECT organization_id, name, status, created_at,
+                (SELECT COUNT(*)::int FROM organization_members om
+                 WHERE om.organization_id = o.organization_id) AS member_count
+         FROM organizations o
+         ORDER BY organization_id ASC`
+      );
+      const { rows: memberships } = await db.query(
+        `SELECT om.organization_id, om.user_id, u.email, u.name, om.role_id, om.status
+         FROM organization_members om
+         JOIN users u ON u.user_id = om.user_id
+         ORDER BY om.organization_id, om.user_id`
+      );
+      return res.json({ orgs, memberships });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
 
-// Diagnostic: latest OTPs for an identifier. Useful while SMTP isn't
-// configured — fetch the OTP that was just generated and use it to log in.
-// Remove after launch.
-app.get('/diag/otp', async (req, res) => {
-  const db = require('./config/database');
-  const identifier = String(req.query.identifier || req.query.email || '').trim().toLowerCase();
-  if (!identifier) {
-    return res.status(400).json({ error: 'Pass ?identifier=<email>' });
-  }
-  try {
-    const { rows } = await db.query(
-      `SELECT otp_id, identifier, otp_code, purpose, status, attempt_count,
-              expires_at, created_at,
-              GREATEST(0, EXTRACT(EPOCH FROM (expires_at - NOW())))::int AS seconds_left
-       FROM otp_verifications
-       WHERE LOWER(identifier) = $1
-       ORDER BY otp_id DESC
-       LIMIT 5`,
-      [identifier]
-    );
-    return res.json({ identifier, count: rows.length, otps: rows });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
+  app.get('/diag/otp', async (req, res) => {
+    const db = require('./config/database');
+    const identifier = String(req.query.identifier || req.query.email || '').trim().toLowerCase();
+    if (!identifier) {
+      return res.status(400).json({ error: 'Pass ?identifier=<email>' });
+    }
+    try {
+      const { rows } = await db.query(
+        `SELECT otp_id, identifier, otp_code, purpose, status, attempt_count,
+                expires_at, created_at,
+                GREATEST(0, EXTRACT(EPOCH FROM (expires_at - NOW())))::int AS seconds_left
+         FROM otp_verifications
+         WHERE LOWER(identifier) = $1
+         ORDER BY otp_id DESC
+         LIMIT 5`,
+        [identifier]
+      );
+      return res.json({ identifier, count: rows.length, otps: rows });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+}
 
 app.use('/auth', authRoutes);
 app.use('/push', pushRoutes);

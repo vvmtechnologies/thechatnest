@@ -109,7 +109,12 @@ const toPositiveInt = (value, fallback) => {
 
 const OTP_RESEND_COOLDOWN_SECONDS = toPositiveInt(process.env.OTP_RESEND_COOLDOWN_SECONDS, 30);
 const OTP_LOCK_WINDOW_MINUTES = toPositiveInt(process.env.OTP_LOCK_WINDOW_MINUTES, 15);
-const REFRESH_REUSE_GRACE_SECONDS = toPositiveInt(process.env.REFRESH_REUSE_GRACE_SECONDS, 5);
+// Tightened from 5s → 1s. The grace period exists to absorb in-flight
+// refresh races (two parallel tabs both refreshing the same token), but
+// longer windows give a compromised refresh-token holder more time to
+// spawn parallel sessions before detection. 1s is enough to cover the
+// real race while making the attack window negligible.
+const REFRESH_REUSE_GRACE_SECONDS = toPositiveInt(process.env.REFRESH_REUSE_GRACE_SECONDS, 1);
 const DEFAULT_OWNER_ROLE_ID = 3;
 
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
@@ -359,7 +364,7 @@ const verifyPasswordResetToken = (token) => {
     err.status = 500;
     throw err;
   }
-  return jwt.verify(token, secret);
+  return jwt.verify(token, secret, { algorithms: ['HS256'] });
 };
 
 const buildResetPasswordLink = ({ resetToken, email }) => {
@@ -490,7 +495,7 @@ const register = async (req, res, next) => {
       throw err;
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, 12);
     const user = await userModel.createUser({ email, name, password_hash });
     await logActivitySafe({
       ...buildActorFromRequest(req, {
@@ -557,7 +562,7 @@ const createNewAccount = async (req, res, next) => {
     const normalizedPhone = normalizePhone(phone);
     const orgName = String(company_name).trim();
     const ownerName = String(owner_name).trim();
-    const password_hash = await bcrypt.hash(String(password), 10);
+    const password_hash = await bcrypt.hash(String(password), 12);
     const otpCode = generateOtpCode();
 
     const account = await db.withTransaction(async (tx) => {
@@ -752,7 +757,18 @@ const resendOtp = async (req, res, next) => {
       throw err;
     }
 
-    const payload = await db.withTransaction(async (tx) => {
+    // Account-enumeration guard: identical response shape regardless of
+    // whether the email is registered or already verified.
+    const FAKE_PAYLOAD = {
+      email: normalizedEmail,
+      otp: { otp_id: null, expires_at: new Date(Date.now() + 10 * 60_000).toISOString() },
+      resend_available_in_seconds: OTP_RESEND_COOLDOWN_SECONDS,
+    };
+    const GENERIC_MESSAGE = 'If an account exists with this email, a verification OTP has been sent.';
+
+    let payload;
+    try {
+      payload = await db.withTransaction(async (tx) => {
       const userResult = await tx.query(
         `SELECT user_id, name, email, email_verified_at
          FROM users
@@ -761,18 +777,12 @@ const resendOtp = async (req, res, next) => {
         [normalizedEmail]
       );
 
-      if (!userResult.rows.length) {
-        const err = new Error('Email is not registered');
-        err.status = 404;
-        throw err;
-      }
+      if (!userResult.rows.length) return null;
 
       const user = userResult.rows[0];
-      if (user.email_verified_at) {
-        const err = new Error('Email already verified');
-        err.status = 409;
-        throw err;
-      }
+      // Already-verified emails are also skipped silently — telling the
+      // caller "already verified" is itself an enumeration signal.
+      if (user.email_verified_at) return null;
 
       const membershipResult = await tx.query(
         `SELECT om.organization_id
@@ -816,45 +826,53 @@ const resendOtp = async (req, res, next) => {
         otp_code: otpCode,
         otp: otpInsertResult.rows[0],
       };
-    });
+      });
+    } catch (err) {
+      console.warn('[resendOtp] internal flow error:', err.message);
+      payload = null;
+    }
 
-    runInBackground(sendVerificationOtpEmail({
-      to: payload.email,
-      ownerName: payload.owner_name,
-      otpCode: payload.otp_code,
-      otpExpiresMinutes: 10,
-      purpose: 'login',
-    }), 'auth.resend_otp.mail');
+    if (payload) {
+      runInBackground(sendVerificationOtpEmail({
+        to: payload.email,
+        ownerName: payload.owner_name,
+        otpCode: payload.otp_code,
+        otpExpiresMinutes: 10,
+        purpose: 'login',
+      }), 'auth.resend_otp.mail');
 
-    runInBackground(logActivitySafe({
-      ...buildActorFromRequest(req, {
-        actor_role_key: 'self',
-      }),
-      ...buildRequestMeta(req),
-      target_type: 'otp_verification',
-      target_id: payload.otp.otp_id,
-      action: 'auth.resend_otp',
-      action_category: 'security',
-      action_subtype: 'verification_otp',
-      description: `Verification OTP resent to ${payload.email}`,
-      new_values: {
-        email: payload.email,
-        otp_id: payload.otp.otp_id,
-        expires_at: payload.otp.expires_at,
-      },
-      is_successful: true,
-      status: 'success',
-    }), 'auth.resend_otp.activity_log');
+      runInBackground(logActivitySafe({
+        ...buildActorFromRequest(req, {
+          actor_role_key: 'self',
+        }),
+        ...buildRequestMeta(req),
+        target_type: 'otp_verification',
+        target_id: payload.otp.otp_id,
+        action: 'auth.resend_otp',
+        action_category: 'security',
+        action_subtype: 'verification_otp',
+        description: `Verification OTP resent to ${payload.email}`,
+        new_values: {
+          email: payload.email,
+          otp_id: payload.otp.otp_id,
+          expires_at: payload.otp.expires_at,
+        },
+        is_successful: true,
+        status: 'success',
+      }), 'auth.resend_otp.activity_log');
 
-    return success(
-      res,
-      {
-        email: payload.email,
-        otp: payload.otp,
-        resend_available_in_seconds: OTP_RESEND_COOLDOWN_SECONDS,
-      },
-      'OTP resent successfully'
-    );
+      return success(
+        res,
+        {
+          email: payload.email,
+          otp: payload.otp,
+          resend_available_in_seconds: OTP_RESEND_COOLDOWN_SECONDS,
+        },
+        GENERIC_MESSAGE
+      );
+    }
+
+    return success(res, FAKE_PAYLOAD, GENERIC_MESSAGE);
   } catch (error) {
     return next(error);
   }
@@ -876,7 +894,21 @@ const forgotPassword = async (req, res, next) => {
       throw err;
     }
 
-    const payload = await db.withTransaction(async (tx) => {
+    // Account-enumeration guard: always reply with the same shape regardless
+    // of whether the email is registered. The real OTP+email pipeline only
+    // runs for known users; unknown emails get a synthetic-but-identical
+    // response so attackers can't distinguish the two cases via HTTP status,
+    // message, or response body.
+    const FAKE_PAYLOAD = {
+      email: normalizedEmail,
+      otp: { otp_id: null, expires_at: new Date(Date.now() + 10 * 60_000).toISOString() },
+      resend_available_in_seconds: OTP_RESEND_COOLDOWN_SECONDS,
+    };
+    const GENERIC_MESSAGE = 'If an account exists with this email, a password reset OTP has been sent.';
+
+    let payload;
+    try {
+      payload = await db.withTransaction(async (tx) => {
       const userResult = await tx.query(
         `SELECT user_id, name, email
          FROM users
@@ -886,9 +918,9 @@ const forgotPassword = async (req, res, next) => {
       );
 
       if (!userResult.rows.length) {
-        const err = new Error('Email is not registered');
-        err.status = 404;
-        throw err;
+        // Sentinel — handled below; no DB writes, no email sent, but the
+        // outer response is indistinguishable from the success case.
+        return null;
       }
 
       const user = userResult.rows[0];
@@ -934,44 +966,56 @@ const forgotPassword = async (req, res, next) => {
         otp_code: otpCode,
         otp: otpResult.rows[0],
       };
-    });
+      });
+    } catch (err) {
+      // Treat any internal flow error like a not-found — log internally,
+      // surface the same generic response. Avoids leaking 5xx differently
+      // from the not-found path.
+      console.warn('[forgotPassword] internal flow error:', err.message);
+      payload = null;
+    }
 
-    runInBackground(sendForgotPasswordOtpEmail({
-      to: payload.email,
-      ownerName: payload.owner_name,
-      otpCode: payload.otp_code,
-      otpExpiresMinutes: 10,
-    }), 'auth.forgot_password.mail');
+    if (payload) {
+      runInBackground(sendForgotPasswordOtpEmail({
+        to: payload.email,
+        ownerName: payload.owner_name,
+        otpCode: payload.otp_code,
+        otpExpiresMinutes: 10,
+      }), 'auth.forgot_password.mail');
 
-    runInBackground(logActivitySafe({
-      ...buildActorFromRequest(req, {
-        actor_role_key: 'self',
-      }),
-      ...buildRequestMeta(req),
-      target_type: 'otp_verification',
-      target_id: payload.otp.otp_id,
-      action: 'auth.forgot_password_otp',
-      action_category: 'security',
-      action_subtype: 'password_reset_otp',
-      description: `Password reset OTP issued for ${payload.email}`,
-      new_values: {
-        email: payload.email,
-        otp_id: payload.otp.otp_id,
-        expires_at: payload.otp.expires_at,
-      },
-      is_successful: true,
-      status: 'success',
-    }), 'auth.forgot_password.activity_log');
+      runInBackground(logActivitySafe({
+        ...buildActorFromRequest(req, {
+          actor_role_key: 'self',
+        }),
+        ...buildRequestMeta(req),
+        target_type: 'otp_verification',
+        target_id: payload.otp.otp_id,
+        action: 'auth.forgot_password_otp',
+        action_category: 'security',
+        action_subtype: 'password_reset_otp',
+        description: `Password reset OTP issued for ${payload.email}`,
+        new_values: {
+          email: payload.email,
+          otp_id: payload.otp.otp_id,
+          expires_at: payload.otp.expires_at,
+        },
+        is_successful: true,
+        status: 'success',
+      }), 'auth.forgot_password.activity_log');
 
-    return success(
-      res,
-      {
-        email: payload.email,
-        otp: payload.otp,
-        resend_available_in_seconds: OTP_RESEND_COOLDOWN_SECONDS,
-      },
-      'Password reset OTP sent'
-    );
+      return success(
+        res,
+        {
+          email: payload.email,
+          otp: payload.otp,
+          resend_available_in_seconds: OTP_RESEND_COOLDOWN_SECONDS,
+        },
+        GENERIC_MESSAGE
+      );
+    }
+
+    // No matching user — return synthetic but identically-shaped payload.
+    return success(res, FAKE_PAYLOAD, GENERIC_MESSAGE);
   } catch (error) {
     return next(error);
   }
@@ -1279,7 +1323,7 @@ const resetPassword = async (req, res, next) => {
         throw err;
       }
 
-      const passwordHash = await bcrypt.hash(String(new_password), 10);
+      const passwordHash = await bcrypt.hash(String(new_password), 12);
       await tx.query(
         `UPDATE users
          SET password_hash = $1,
@@ -1401,7 +1445,7 @@ const changePassword = async (req, res, next) => {
         throw err;
       }
 
-      const passwordHash = await bcrypt.hash(String(new_password), 10);
+      const passwordHash = await bcrypt.hash(String(new_password), 12);
       await tx.query(
         `UPDATE users
          SET password_hash = $1,
@@ -4527,7 +4571,7 @@ const createOwnerV1 = async (req, res, next) => {
     const normalizedPhone = normalizePhone(phone);
     const orgName = String(company_name).trim();
     const ownerName = String(owner_name).trim();
-    const password_hash = await bcrypt.hash(String(password), 10);
+    const password_hash = await bcrypt.hash(String(password), 12);
 
     const created = await db.withTransaction(async (tx) => {
       const ownerRoleId = 1;

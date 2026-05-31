@@ -322,7 +322,7 @@ const authenticateSocket = (socket, next) => {
 
   for (const token of uniqueTokens) {
     try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       socket.user = payload;
       return next();
     } catch {
@@ -901,7 +901,7 @@ const onConnection = (socket) => {
     const newToken = data?.token;
     if (!newToken) return ack?.({ error: 'token required' });
     try {
-      const payload = jwt.verify(newToken, process.env.JWT_SECRET);
+      const payload = jwt.verify(newToken, process.env.JWT_SECRET, { algorithms: ['HS256'] });
       socket.user = payload;
       ack?.({ ok: true });
     } catch (err) {

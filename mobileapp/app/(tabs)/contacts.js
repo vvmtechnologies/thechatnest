@@ -299,7 +299,7 @@ export default function ContactsScreen() {
             ))}
             {filtersActive && (
               <TouchableOpacity onPress={clearAllFilters} style={[s.clearChip, { borderColor: '#ef444466' }]} activeOpacity={0.7}>
-                <Ionicons name="close" size={11} color="#ef4444" />
+                <Ionicons name="close" size={13} color="#ef4444" />
                 <Text style={s.clearChipText}>Clear</Text>
               </TouchableOpacity>
             )}
@@ -436,18 +436,30 @@ function TabButton({ t, active, icon, iconActive, label, count, onPress }) {
 }
 
 function FilterChip({ t, active, icon, iconColor, label, onPress }) {
+  // Inactive chips need stronger contrast — t.surface + t.divider was
+  // disappearing into the page background. Use the page card colour with
+  // a clearly visible 1.5px border, and the primary text colour for the
+  // label. Active chips get a solid accent background instead of an
+  // alpha overlay so they pop unmistakably.
   return (
     <TouchableOpacity
       style={[
         s.filterChip,
-        { borderColor: t.divider, backgroundColor: t.surface },
-        active && { backgroundColor: t.accent + '20', borderColor: t.accent },
+        active
+          ? { backgroundColor: t.accent, borderColor: t.accent }
+          : { backgroundColor: t.card, borderColor: t.border || t.divider },
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
     >
-      {icon ? <Ionicons name={icon} size={11} color={iconColor || (active ? t.accent : t.textTer)} /> : null}
-      <Text style={[s.filterChipText, { color: active ? t.accent : t.textSec }]}>{label}</Text>
+      {icon ? (
+        <Ionicons
+          name={icon}
+          size={13}
+          color={active ? '#6e4f10' : (iconColor || t.text)}
+        />
+      ) : null}
+      <Text style={[s.filterChipText, { color: active ? '#6e4f10' : t.text }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -632,22 +644,27 @@ const s = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14.5, fontWeight: '500' },
 
-  // Filter chips
-  chipScroll: { gap: 6, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'center' },
+  // Filter chips — tuned for visibility: solid bg, 1.5px border, primary
+  // text. Smaller chips were getting lost against the page surface.
+  chipScroll: { gap: 8, paddingHorizontal: 12, paddingVertical: 10, alignItems: 'center' },
   filterChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 11, paddingVertical: 7,
-    borderRadius: 999, borderWidth: 1,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 999, borderWidth: 1.5,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
+      android: { elevation: 1 },
+    }),
   },
-  filterChipText: { fontSize: 12, fontWeight: '700' },
-  chipDivider: { width: 1, height: 18, marginHorizontal: 4 },
+  filterChipText: { fontSize: 13, fontWeight: '800', letterSpacing: -0.1 },
+  chipDivider: { width: 1.5, height: 22, marginHorizontal: 6, opacity: 0.6 },
   clearChip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 999, borderWidth: 1,
-    backgroundColor: 'transparent', marginLeft: 4,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 12, paddingVertical: 8,
+    borderRadius: 999, borderWidth: 1.5,
+    backgroundColor: 'rgba(239,68,68,0.08)', marginLeft: 4,
   },
-  clearChipText: { fontSize: 11, fontWeight: '800', color: '#ef4444' },
+  clearChipText: { fontSize: 12, fontWeight: '800', color: '#ef4444', letterSpacing: -0.1 },
 
   // Result strip
   resultStrip: { paddingHorizontal: 18, paddingBottom: 4 },

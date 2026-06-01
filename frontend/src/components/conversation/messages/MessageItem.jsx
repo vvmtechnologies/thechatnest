@@ -123,14 +123,23 @@ const bubbleStyles = (theme, own, { isEmojiOnly = false } = {}) => {
       // card which has its own light/dark surface inside the bubble.
       "& a": { color: "#ffd54a", textDecoration: "underline" },
       "& .MuiTypography-root": { color: "inherit" },
-      "& [data-meeting-invite-card]": { color: "initial" },
-      "& [data-meeting-invite-card] .MuiTypography-root": { color: "unset" },
+      // Use explicit theme palette values, NOT CSS keywords `initial` /
+      // `unset` — those resolve to `canvastext` which adapts to the OS dark
+      // mode and goes white even when the app is in light mode, making the
+      // child text invisible on the inner card.
+      "& [data-meeting-invite-card]": { color: theme.palette.text.primary },
+      "& [data-meeting-invite-card] .MuiTypography-root": { color: "inherit" },
+      "& [data-meeting-invite-card] .MuiTypography-caption": {
+        color: theme.palette.text.secondary,
+      },
       // File attachment tile renders its own light/dark surface inside the
       // bubble — without this opt-out the bubble's color:inherit forces the
-      // filename / size to white, making them invisible on the white card
-      // in light mode.
-      "& [data-file-attachment-tile]": { color: "initial" },
-      "& [data-file-attachment-tile] .MuiTypography-root": { color: "unset" },
+      // filename / size to white, making them invisible on the white card.
+      "& [data-file-attachment-tile]": { color: theme.palette.text.primary },
+      "& [data-file-attachment-tile] .MuiTypography-root": { color: "inherit" },
+      "& [data-file-attachment-tile] .MuiTypography-caption": {
+        color: theme.palette.text.secondary,
+      },
     };
   }
 

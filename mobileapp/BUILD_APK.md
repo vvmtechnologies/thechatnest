@@ -22,7 +22,7 @@ That's it. The CLI will:
 - **APK file** (~80–120 MB unsigned, ~50–70 MB after Play install)
 - **Direct install** on Android: enable "Unknown sources" → tap downloaded APK
 - **Side-loadable**: share the APK link with testers
-- **Hits production API** at `https://thechatnest-api.onrender.com`
+- **Hits production API** at `https://api.thechatnest.com`
 
 ## Build profiles available
 
@@ -54,7 +54,7 @@ Or visit: https://expo.dev/accounts/thakurbhavesh1725/projects/thechatnest/build
 - **Slug**: `thechatnest`
 - **EAS Project ID**: `9641c7d5-bb92-47bc-a0bd-36583d1700e3`
 - **Android package**: `com.thechatnest.app`
-- **API**: `https://thechatnest-api.onrender.com` (set via `EXPO_PUBLIC_API_URL` in eas.json)
+- **API**: `https://api.thechatnest.com` (set via `EXPO_PUBLIC_API_URL` in eas.json)
 
 ## If build fails
 

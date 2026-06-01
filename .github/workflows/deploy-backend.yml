@@ -9,6 +9,7 @@ on:
       - feat/brochure-and-connectivity-fixes
     paths:
       - 'backend/**'
+      - 'scripts/**'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 

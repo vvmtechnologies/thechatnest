@@ -57,6 +57,31 @@ else
   log "package-lock unchanged — skipping npm install"
 fi
 
+# Sync Nginx config if the repo version differs from the live file.
+# Repo is the source of truth — any direct edits on the VPS get
+# overwritten next deploy. `nginx -t` runs before reload so a bad
+# config never reaches the live socket.
+NGINX_SRC="$REPO/scripts/nginx/api.thechatnest.com.conf"
+NGINX_LIVE=/etc/nginx/sites-available/api.thechatnest.com
+if [ -f "$NGINX_SRC" ]; then
+  if ! cmp -s "$NGINX_SRC" "$NGINX_LIVE" 2>/dev/null; then
+    log "Nginx config changed — syncing + reloading..."
+    cp "$NGINX_SRC" "$NGINX_LIVE"
+    if nginx -t 2>&1 | tee -a "$LOG"; then
+      systemctl reload nginx
+      log "  ✓ Nginx reloaded"
+    else
+      log "  ✗ Nginx config invalid — reverting!"
+      # Roll back to whatever was live before this deploy attempted the
+      # swap. The next git pull will bring back the broken file again,
+      # so a human still needs to fix the repo before the next deploy.
+      cd "$REPO" && git show "$OLD_COMMIT:scripts/nginx/api.thechatnest.com.conf" > "$NGINX_LIVE" 2>/dev/null
+      systemctl reload nginx || true
+      exit 1
+    fi
+  fi
+fi
+
 # Restart PM2. `--update-env` re-reads the .env file in case it was
 # edited out-of-band (rare, but harmless).
 log "Restarting PM2..."

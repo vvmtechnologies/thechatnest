@@ -29,17 +29,20 @@ const formatHandler = (windowLabel) => (req, res /*, next, options */) => {
   });
 };
 
-// Build a Redis-backed store if Redis is open. We use the prefix to keep
-// rate-limit keys partitioned from cache keys (different TTL semantics, and
-// easier to spot in `redis-cli KEYS rl:*`).
+// Build a Redis-backed store if Redis is enabled. Critically, we gate on
+// the env var (not `redisClient.isOpen`) because this module loads BEFORE
+// server.js calls connectRedis() — at module-load time the client exists
+// but hasn't completed its TCP handshake yet, so `isOpen` is always false.
 //
-// IMPORTANT: returns undefined when Redis is unavailable so express-rate-limit
-// silently falls back to its in-memory store. That keeps the API protected
-// during a Redis outage instead of failing open.
+// At request time (first counter increment), `sendCommand` is forwarded to
+// the real client which IS open by then. If Redis is genuinely down,
+// rate-limit-redis surfaces the error and the request 500s — preferable
+// to silently failing open on rate limits.
+//
+// When REDIS_ENABLED=false we return undefined so express-rate-limit uses
+// its in-memory store (acceptable in dev / single-process setups).
 const buildStore = (prefix) => {
-  if (!redisClient || !redisClient.isOpen || typeof redisClient.sendCommand !== 'function') {
-    return undefined;
-  }
+  if (process.env.REDIS_ENABLED !== 'true') return undefined;
   return new RedisStore({
     prefix: `rl:${prefix}:`,
     // node-redis v4 client compatibility shim required by rate-limit-redis.

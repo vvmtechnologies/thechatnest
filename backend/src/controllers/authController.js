@@ -25,6 +25,11 @@ const {
   getRefreshExpiryDate,
 } = require('../utils/jwt');
 const { revokeAccessToken } = require('../utils/tokenDenylist');
+const {
+  isLocked: isOtpEmailLocked,
+  recordFailedAttempt: recordOtpFailure,
+  resetAttempts: resetOtpAttempts,
+} = require('../utils/otpAttemptGuard');
 const { resolveGeoFromIp } = require('../utils/ipGeo');
 const {
   REFRESH_COOKIE,
@@ -1038,6 +1043,15 @@ const verifyForgotPasswordOtp = async (req, res, next) => {
       throw err;
     }
 
+    // Per-email lockout (Redis) — same protection as login OTP path.
+    const fpLock = await isOtpEmailLocked(normalizedEmail);
+    if (fpLock.locked) {
+      const err = new Error(`Too many failed OTP attempts. Try again in ${Math.ceil(fpLock.retryAfterSec / 60)} minutes.`);
+      err.status = 429;
+      err.details = { retry_after_seconds: fpLock.retryAfterSec };
+      throw err;
+    }
+
     const normalizedOtp = String(otp_code).trim();
     if (!/^\d{6}$/.test(normalizedOtp)) {
       const err = new Error('otp_code must be a 6-digit code');
@@ -1136,6 +1150,7 @@ const verifyForgotPasswordOtp = async (req, res, next) => {
            WHERE otp_id = $3`,
           [nextAttempt, reachedMax, otp.otp_id]
         );
+        await recordOtpFailure(normalizedEmail);
         return {
           otp_error: {
             message: reachedMax
@@ -1152,6 +1167,8 @@ const verifyForgotPasswordOtp = async (req, res, next) => {
           },
         };
       }
+
+      await resetOtpAttempts(normalizedEmail);
 
       await tx.query(
         `UPDATE otp_verifications
@@ -1525,6 +1542,17 @@ const verifyOtp = async (req, res, next) => {
       throw err;
     }
 
+    // Per-email lockout (Redis). Caps cross-IP brute force where the
+    // IP-based authLimiter alone wouldn't catch a distributed attacker
+    // hitting the same target email from many addresses.
+    const lock = await isOtpEmailLocked(normalizedEmail);
+    if (lock.locked) {
+      const err = new Error(`Too many failed OTP attempts. Try again in ${Math.ceil(lock.retryAfterSec / 60)} minutes.`);
+      err.status = 429;
+      err.details = { retry_after_seconds: lock.retryAfterSec };
+      throw err;
+    }
+
     const normalizedOtp = String(otp_code).trim();
     if (!/^\d{6}$/.test(normalizedOtp)) {
       const err = new Error('otp_code must be a 6-digit code');
@@ -1624,6 +1652,9 @@ const verifyOtp = async (req, res, next) => {
            WHERE otp_id = $3`,
           [nextAttempt, reachedMax, otp.otp_id]
         );
+        // Bump per-email Redis counter — once it crosses the threshold
+        // (default 5 in 1h), the email is locked even after a fresh OTP.
+        await recordOtpFailure(normalizedEmail);
         const err = new Error(
           reachedMax
             ? `Too many failed OTP attempts. Try again in ${lockRemainingSeconds}s.`
@@ -1639,6 +1670,9 @@ const verifyOtp = async (req, res, next) => {
         };
         throw err;
       }
+
+      // Success path — clear per-email lockout so future logins start fresh.
+      await resetOtpAttempts(normalizedEmail);
 
       await tx.query(
         `UPDATE otp_verifications

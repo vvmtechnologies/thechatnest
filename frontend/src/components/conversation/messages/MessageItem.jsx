@@ -663,6 +663,7 @@ const MessageItem = React.memo(
           <MessageContent
             message={normalizedMessage}
             currentUserId={currentUserId}
+            own={own}
             onAction={(actionKey, payload = {}) =>
               onAction?.(actionKey, normalizedMessage, payload)
             }

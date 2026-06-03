@@ -1,4 +1,5 @@
 import { Box, Link, Stack, Typography, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 
 
 const getYouTubeVideoId = (value = "") => {
@@ -31,7 +32,7 @@ const buildYouTubeEmbedUrl = (videoId) =>
   `https://www.youtube.com/embed/${videoId}`;
 
 
-const LinkMsg = ({ message }) => {
+const LinkMsg = ({ message, own = false }) => {
   const { url, title, description, thumbnail } =
     message?.content ?? {};
   const theme = useTheme();
@@ -43,13 +44,30 @@ const LinkMsg = ({ message }) => {
     thumbnail ||
     (youTubeId ? `https://img.youtube.com/vi/${youTubeId}/hqdefault.jpg` : "");
 
+  // Outgoing bubbles use brand color background — dark text is invisible there,
+  // so we mirror the bubble's contrast text (white) for link/title/description
+  // and use a translucent white card for the preview shell.
+  const cardBg = own
+    ? alpha("#ffffff", 0.14)
+    : theme.palette.background.default;
+  const titleColor = own
+    ? theme.palette.primary.contrastText || "#fff"
+    : theme.palette.text.primary;
+  const descColor = own
+    ? alpha(theme.palette.primary.contrastText || "#fff", 0.78)
+    : theme.palette.text.secondary;
+  const linkColor = own
+    ? theme.palette.primary.contrastText || "#fff"
+    : theme.palette.text.primary;
+
   return (
     <Stack spacing={1.25} sx={{ maxWidth: !isYouTubeLink ? 400 : null }}>
       <Box
         sx={{
-          borderRadius: 0,
+          borderRadius: 1,
           overflow: "hidden",
-          background: theme.palette.background.default,
+          background: cardBg,
+          border: own ? `1px solid ${alpha("#ffffff", 0.18)}` : "none",
         }}
       >
         {isYouTubeLink ? (
@@ -90,7 +108,7 @@ const LinkMsg = ({ message }) => {
                 variant="subtitle2"
                 sx={{
                   fontWeight: 600,
-                  color: theme.palette.text.primary,
+                  color: titleColor,
                   wordBreak: "break-word",
                   my: 0.5,
                 }}
@@ -102,7 +120,7 @@ const LinkMsg = ({ message }) => {
               <Typography
                 variant="caption"
                 sx={{
-                  color: theme.palette.text.secondary,
+                  color: descColor,
                   display: "-webkit-box",
                   overflow: "hidden",
                   WebkitLineClamp: 3,
@@ -122,15 +140,20 @@ const LinkMsg = ({ message }) => {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          underline="hover"
+          underline="always"
           sx={{
             wordBreak: "break-all",
-            color: theme.palette.text.primary,
+            color: linkColor,
+            textDecorationColor: own
+              ? alpha("#ffffff", 0.6)
+              : alpha(theme.palette.text.primary, 0.4),
             display: "inline-block",
             fontSize: "14px",
+            fontWeight: 500,
             maxWidth: "98%",
             "&:hover": {
-              color: theme.palette.text.primary,
+              color: linkColor,
+              textDecorationColor: linkColor,
             },
           }}
         >

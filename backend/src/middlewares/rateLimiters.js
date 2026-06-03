@@ -6,13 +6,20 @@
 // intentionally tight on the "guess credentials / spam OTP" routes and
 // looser on routes that simply read state (e.g. /auth/me).
 //
+// Storage: Redis-backed when REDIS_ENABLED=true (counters persist across
+// PM2 restarts AND across nodes if the app is ever scaled horizontally).
+// Falls back to express-rate-limit's in-memory store when Redis is
+// disabled or unavailable — that's safer than failing closed.
+//
 // All limiters key by IP. We honour the X-Forwarded-For header when behind
-// Render's proxy (set in app.js via app.set('trust proxy', 1)).
+// nginx / Render's proxy (set in app.js via app.set('trust proxy', 1)).
 //
 // Failure response shape matches the rest of the API ({ status: "error",
 // message }), so the existing client error toasts read it cleanly.
 
 const rateLimit = require('express-rate-limit');
+const { RedisStore } = require('rate-limit-redis');
+const { redisClient } = require('../config/redis');
 
 const formatHandler = (windowLabel) => (req, res /*, next, options */) => {
   res.status(429).json({
@@ -22,72 +29,98 @@ const formatHandler = (windowLabel) => (req, res /*, next, options */) => {
   });
 };
 
+// Build a Redis-backed store if Redis is enabled. Critically, we gate on
+// the env var (not `redisClient.isOpen`) because this module loads BEFORE
+// server.js calls connectRedis() — at module-load time the client exists
+// but hasn't completed its TCP handshake yet, so `isOpen` is always false.
+//
+// At request time (first counter increment), `sendCommand` is forwarded to
+// the real client which IS open by then. If Redis is genuinely down,
+// rate-limit-redis surfaces the error and the request 500s — preferable
+// to silently failing open on rate limits.
+//
+// When REDIS_ENABLED=false we return undefined so express-rate-limit uses
+// its in-memory store (acceptable in dev / single-process setups).
+const buildStore = (prefix) => {
+  if (process.env.REDIS_ENABLED !== 'true') return undefined;
+  return new RedisStore({
+    prefix: `rl:${prefix}:`,
+    // node-redis v4 client compatibility shim required by rate-limit-redis.
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  });
+};
+
+const make = ({ windowMs, max, message, prefix, windowLabel }) =>
+  rateLimit({
+    windowMs,
+    max,
+    standardHeaders: true,
+    legacyHeaders: false,
+    store: buildStore(prefix),
+    message: { status: 'error', code: 'rate_limited', message },
+    handler: formatHandler(windowLabel),
+  });
+
 // 5 attempts / 15 minutes — covers credentials-stuffing on /auth/login and
 // the OTP guess flow on /auth/verify-otp / /auth/forgot-verify.
-const authLimiter = rateLimit({
+const authLimiter = make({
   windowMs: 15 * 60 * 1000,
   max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', code: 'rate_limited', message: 'Too many login attempts. Try again in 15 minutes.' },
-  handler: formatHandler('15 minutes'),
+  prefix: 'auth',
+  windowLabel: '15 minutes',
+  message: 'Too many login attempts. Try again in 15 minutes.',
 });
 
 // 3 password-reset emails per hour per IP — slows enumeration of registered
 // emails (each request reveals "yes, this email exists" via timing or wording).
-const passwordResetLimiter = rateLimit({
+const passwordResetLimiter = make({
   windowMs: 60 * 60 * 1000,
   max: 3,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', code: 'rate_limited', message: 'Too many reset requests. Try again in 1 hour.' },
-  handler: formatHandler('1 hour'),
+  prefix: 'pwreset',
+  windowLabel: '1 hour',
+  message: 'Too many reset requests. Try again in 1 hour.',
 });
 
 // 5 OTP resends per 10 minutes per IP — generous enough for legitimate retry
 // (network blips on SMS/email delivery) but caps abusive spam.
-const otpResendLimiter = rateLimit({
+const otpResendLimiter = make({
   windowMs: 10 * 60 * 1000,
   max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', code: 'rate_limited', message: 'Too many OTP requests. Try again in 10 minutes.' },
-  handler: formatHandler('10 minutes'),
+  prefix: 'otp',
+  windowLabel: '10 minutes',
+  message: 'Too many OTP requests. Try again in 10 minutes.',
 });
 
 // 60 refreshes per 15 minutes per IP — refresh tokens rotate naturally, so
 // any IP hitting this is either misconfigured or attempting token reuse.
-const refreshLimiter = rateLimit({
+const refreshLimiter = make({
   windowMs: 15 * 60 * 1000,
   max: 60,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', code: 'rate_limited', message: 'Too many refresh attempts.' },
-  handler: formatHandler('15 minutes'),
+  prefix: 'refresh',
+  windowLabel: '15 minutes',
+  message: 'Too many refresh attempts.',
 });
 
 // Loose registration limiter — 10 new accounts per IP per hour. Stops a
 // single IP signing up bots while allowing a small office NAT to onboard.
-const registrationLimiter = rateLimit({
+const registrationLimiter = make({
   windowMs: 60 * 60 * 1000,
   max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', code: 'rate_limited', message: 'Too many registration attempts. Try again in 1 hour.' },
-  handler: formatHandler('1 hour'),
+  prefix: 'register',
+  windowLabel: '1 hour',
+  message: 'Too many registration attempts. Try again in 1 hour.',
 });
 
 // Public-form limiter — 6 submissions per IP per hour for /contact-us
 // (and any other unauthenticated lead-capture endpoints). Combined with
 // the honeypot field and submit-dwell check on the client, this is enough
 // to keep automated form-spam manageable without blocking real prospects.
-const publicFormLimiter = rateLimit({
+const publicFormLimiter = make({
   windowMs: 60 * 60 * 1000,
   max: 6,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { status: 'error', code: 'rate_limited', message: 'Too many submissions. Please try again later.' },
-  handler: formatHandler('1 hour'),
+  prefix: 'pubform',
+  windowLabel: '1 hour',
+  message: 'Too many submissions. Please try again later.',
 });
 
 module.exports = {

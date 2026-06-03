@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 // API URL — uses env variable, fallback to production backend.
 // Matches the web frontend (frontend/.env → VITE_API_URL).
 // Override locally in mobileapp/.env via EXPO_PUBLIC_API_URL.
-const DEFAULT_URL = 'https://thechatnest-api.onrender.com';
+const DEFAULT_URL = 'https://api.thechatnest.com';
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_URL;
 if (__DEV__ && !process.env.EXPO_PUBLIC_API_URL) {
   console.warn('[config] Using default API URL:', DEFAULT_URL);

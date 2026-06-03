@@ -24,6 +24,7 @@ const {
   hashToken,
   getRefreshExpiryDate,
 } = require('../utils/jwt');
+const { revokeAccessToken } = require('../utils/tokenDenylist');
 const { resolveGeoFromIp } = require('../utils/ipGeo');
 const {
   REFRESH_COOKIE,
@@ -2349,6 +2350,12 @@ const logout = async (req, res, next) => {
       if ((await sessionModel.countActiveByDevice(resolvedDeviceId)) === 0) {
         await userDeviceModel.markLoggedOut(resolvedDeviceId);
       }
+    }
+
+    // Deny-list the current access JWT so the remaining lifetime (up to
+    // 15 min) cannot be reused even if intercepted. No-op if Redis is down.
+    if (req.accessToken) {
+      await revokeAccessToken(req.accessToken);
     }
 
     await logActivitySafe({

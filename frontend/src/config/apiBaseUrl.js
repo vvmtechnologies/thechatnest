@@ -4,7 +4,7 @@ const cleanUrl = (value) =>
     : "";
 
 const DEFAULT_DEV_API_URL = "http://localhost:5000";
-const DEFAULT_PROD_API_URL = "https://thechatnest-api.onrender.com";
+const DEFAULT_PROD_API_URL = "https://api.thechatnest.com";
 
 // Resolution order:
 //   1. Any of the *_API_URL env vars (works in dev + prod, set per environment)

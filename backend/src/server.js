@@ -64,12 +64,14 @@ const dns = require('node:dns');
 // benefit. Individual sockets can still opt back into v6 with `family: 6`.
 try { dns.setDefaultResultOrder('ipv4first'); } catch { /* Node < 18 */ }
 
-const app = require('./app');
 const { connectDatabase } = require('./config/database');
 const { connectRedis } = require('./config/redis');
-const smtpSettingsModel = require('./models/smtpSettingsModel');
-const { initSocket } = require('./socket');
-const { startMeetingScheduler } = require('./schedulers/meetingScheduler');
+// app/socket/scheduler are require()'d lazily inside startServer() AFTER
+// connectRedis() resolves. rate-limit-redis's RedisStore constructor calls
+// loadIncrementScript() synchronously, which throws "ClientClosedError" if
+// Redis isn't open yet. Loading app last guarantees the client is connected
+// before any limiter is constructed.
+let app, smtpSettingsModel, initSocket, startMeetingScheduler;
 
 const BASE_PORT = Number(process.env.PORT) || 5000;
 const MAX_PORT_ATTEMPTS = 5;
@@ -94,13 +96,22 @@ const attachShutdownHooks = (server) => {
 const startServer = async (port = BASE_PORT, attempt = 1) => {
   try {
     await connectDatabase();
-    await smtpSettingsModel.createTableIfNotExists();
 
     try {
       await connectRedis();
     } catch (error) {
       console.warn('Redis connection skipped:', error.message);
     }
+
+    // Lazy-load everything that touches Redis at module-load time (notably
+    // rate-limit-redis's RedisStore constructor). By now Redis is either
+    // connected or definitively unavailable.
+    app = require('./app');
+    smtpSettingsModel = require('./models/smtpSettingsModel');
+    ({ initSocket } = require('./socket'));
+    ({ startMeetingScheduler } = require('./schedulers/meetingScheduler'));
+
+    await smtpSettingsModel.createTableIfNotExists();
 
     const server = await startExpress(port);
 

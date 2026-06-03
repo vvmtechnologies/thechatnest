@@ -1,0 +1,57 @@
+name: Deploy backend to VPS
+
+# Trigger: push to main, or push to the active feature branch.
+# Also: manual trigger from the Actions tab via workflow_dispatch.
+on:
+  push:
+    branches:
+      - main
+      - feat/brochure-and-connectivity-fixes
+    paths:
+      - 'backend/**'
+      - 'scripts/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+# Don't run two deploys at once — newer one supersedes the older.
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: SSH deploy to thechatnest-prod
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            'bash /var/www/thechatnest/scripts/deploy.sh'
+
+      - name: Health check
+        run: |
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w '%{http_code}' https://api.thechatnest.com/health || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Health check passed (HTTP $STATUS)"
+          else
+            echo "❌ Health check failed (HTTP $STATUS)"
+            exit 1
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

@@ -415,7 +415,7 @@ const TextMsg = ({ message, own = false }) => {
                 : theme.palette.primary.main,
               textDecoration: "underline",
               textDecorationColor: own
-                ? alpha("#ffffff", 0.7)
+                ? alpha("#ffffff", 0.95)
                 : "currentColor",
               fontWeight: 600,
               "&:hover": {
@@ -452,7 +452,7 @@ const TextMsg = ({ message, own = false }) => {
             : theme.palette.primary.main,
           textDecoration: "underline",
           textDecorationColor: own
-            ? alpha("#ffffff", 0.7)
+            ? alpha("#ffffff", 0.95)
             : "currentColor",
           fontWeight: 600,
         },
@@ -515,7 +515,7 @@ const TextMsg = ({ message, own = false }) => {
                       ? theme.palette.primary.contrastText || "#fff"
                       : theme.palette.primary.main,
                     textDecorationColor: own
-                      ? alpha("#ffffff", 0.7)
+                      ? alpha("#ffffff", 0.95)
                       : "currentColor",
                     fontWeight: 600,
                   })}

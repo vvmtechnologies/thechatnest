@@ -145,17 +145,18 @@ const AudioMsg = ({ message }) => {
     ? formatDuration(currentTime)
     : formatDuration(duration ?? currentTime);
 
-  const innerSurface = alpha(
-    theme.palette.mode === "light"
-      ? theme.palette.common.white
-      : theme.palette.common.white,
-    0.6,
-  );
+  const innerSurface = theme.palette.mode === "light"
+    ? alpha(theme.palette.common.white, 0.6)
+    : alpha(theme.palette.background.paper, 0.7);
   const progressTrack = alpha(theme.palette.success.main, 0.4);
   const progressFill = theme.palette.success.main;
 
-  const playButtonInner = lighten(theme.palette.error.light, 0.3);
-  const playButtonIcon = theme.palette.error.dark;
+  const playButtonInner = theme.palette.mode === "light"
+    ? lighten(theme.palette.error.light, 0.3)
+    : alpha(theme.palette.error.main, 0.25);
+  const playButtonIcon = theme.palette.mode === "light"
+    ? theme.palette.error.dark
+    : theme.palette.error.light;
 
   const handleTranscribe = async () => {
     if (transcription) {
@@ -290,7 +291,7 @@ const AudioMsg = ({ message }) => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: theme.palette.error.light,
+              backgroundColor: alpha(theme.palette.error.main, 0.15),
             }}
           >
             <IconButton

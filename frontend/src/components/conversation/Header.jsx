@@ -12,6 +12,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -325,10 +326,11 @@ const ConversationHeader = ({
   const isAway = /away|idle/.test(lowerStatus);
   const presenceColor = isOnline ? "#22c55e" : isAway ? "#f59e0b" : "#8189a8";
 
+  const brandMain = theme.palette.primary.main;
   const headerIconBtnSx = {
     color: theme.palette.text.primary,
-    width: 38,
-    height: 38,
+    width: 40,
+    height: 40,
     borderRadius: "12px",
     border:
       theme.palette.mode === "light"
@@ -338,13 +340,11 @@ const ConversationHeader = ({
       theme.palette.mode === "light" ? "#fff" : "rgba(255,255,255,0.02)",
     transition: "all 0.18s ease",
     "&:hover": {
-      background:
-        theme.palette.mode === "light"
-          ? "rgba(109,93,252,0.08)"
-          : "rgba(109,93,252,0.15)",
-      borderColor: "#6d5dfc",
-      color: "#6d5dfc",
+      background: alpha(brandMain, theme.palette.mode === "light" ? 0.08 : 0.15),
+      borderColor: brandMain,
+      color: brandMain,
       transform: "translateY(-1px)",
+      boxShadow: `0 4px 12px ${alpha(brandMain, 0.18)}`,
     },
   };
 
@@ -471,7 +471,7 @@ const ConversationHeader = ({
                     width: 6,
                     height: 6,
                     borderRadius: "50%",
-                    bgcolor: "#6d5dfc",
+                    bgcolor: brandMain,
                   }}
                 />
                 <Box component="span">{groupMemberCount} members</Box>

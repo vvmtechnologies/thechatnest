@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Box, IconButton, Stack, Tooltip, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import {
   PiArrowCounterClockwiseBold,
   PiDownloadSimple,
@@ -364,10 +365,10 @@ const FileMsg = ({ message, onAction, hideInlineActions = false }) => {
                   download={entry.fileName || undefined}
                   onClick={(event) => event.stopPropagation()}
                   sx={{
-                    width: 24,
-                    height: 24,
+                    width: 28,
+                    height: 28,
                     color: isOutgoing
-                      ? theme.palette.text.primary
+                      ? (theme.palette.primary.contrastText || "#fff")
                       : theme.palette.primary.main,
                   }}
                 >
@@ -376,8 +377,13 @@ const FileMsg = ({ message, onAction, hideInlineActions = false }) => {
               ) : null
             }
             sx={{
-              backgroundColor: theme.palette.background.default,
+              backgroundColor: isOutgoing
+                ? alpha("#ffffff", 0.14)
+                : theme.palette.background.default,
               boxShadow: "none",
+              border: isOutgoing
+                ? `1px solid ${alpha("#ffffff", 0.2)}`
+                : "none",
             }}
           />
         );

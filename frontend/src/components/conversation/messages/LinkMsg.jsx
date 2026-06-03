@@ -145,7 +145,7 @@ const LinkMsg = ({ message, own = false }) => {
             wordBreak: "break-all",
             color: linkColor,
             textDecorationColor: own
-              ? alpha("#ffffff", 0.6)
+              ? alpha("#ffffff", 0.85)
               : alpha(theme.palette.text.primary, 0.4),
             display: "inline-block",
             fontSize: "14px",

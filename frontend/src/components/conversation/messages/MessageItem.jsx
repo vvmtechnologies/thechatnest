@@ -632,18 +632,20 @@ const MessageItem = React.memo(
                         }
                       }}
                       sx={{
-                        width: 26,
-                        height: 26,
+                        width: 32,
+                        height: 32,
                         bgcolor: "background.default",
                         border: (theme) =>
                           `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+                        transition: "transform 0.15s ease, background-color 0.15s ease",
                         "&:hover": {
                           bgcolor: "primary.main",
                           color: "primary.contrastText",
+                          transform: "scale(1.08)",
                         },
                       }}
                     >
-                      <ActionIcon size={14} />
+                      <ActionIcon size={15} />
                     </IconButton>
                   </Tooltip>
                 );
@@ -772,10 +774,11 @@ const MessageItem = React.memo(
             direction="row"
             spacing={0.5}
             flexWrap="wrap"
+            alignItems="center"
             justifyContent={!showGroupMeta && own ? "flex-end" : "flex-start"}
             sx={{
               pl: showGroupMeta ? 5.5 : 0,
-              gap: 0.5,
+              gap: 0.75,
               minHeight: 26,
             }}
           >

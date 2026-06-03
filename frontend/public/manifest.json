@@ -10,21 +10,16 @@
   "theme_color": "#0b0f1e",
   "icons": [
     {
-      "src": "/thechatnestElement.png",
+      "src": "/chat.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/thechatnestElement.png",
+      "src": "/chat.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "maskable"
-    },
-    {
-      "src": "/favicon.ico",
-      "sizes": "any",
-      "type": "image/x-icon"
     }
   ]
 }

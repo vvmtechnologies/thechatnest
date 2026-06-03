@@ -22,7 +22,6 @@ import ConversationHeader from "../../components/conversation/Header.jsx";
 import ConversationMessage from "../../components/conversation/Message.jsx";
 import ConversationFooter from "../../components/conversation/Footer.jsx";
 import ConversationInfoSidebar from "../../components/conversation/sidebar/ConversationInfoSidebar.jsx";
-import LiveAssistant from "../../components/LiveAssistant/index.jsx";
 import { appBrandingAssets, agentSelfId, setRealUserId } from "../../data/CommonData.js";
 import ChatList from "../../components/chats/ChatList.jsx";
 import ChatListActionsMenu from "../../components/chats/ChatListActionsMenu.jsx";
@@ -3646,7 +3645,6 @@ const GeneralApp = () => {
           </Dialog>
         );
       })()}
-      <LiveAssistant />
     </>
   );
 };

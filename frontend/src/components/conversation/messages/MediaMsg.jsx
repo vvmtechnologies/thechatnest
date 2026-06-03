@@ -345,10 +345,10 @@ const MediaMsg = ({ message, onAction, hideInlineActions = false }) => {
         rel="noopener noreferrer"
         download={formattedName}
         sx={{
-          width: 28,
-          height: 28,
+          width: 32,
+          height: 32,
           color: isOutgoing
-            ? theme.palette.text.primary
+            ? (theme.palette.primary.contrastText || "#fff")
             : theme.palette.primary.main,
         }}
       >

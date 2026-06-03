@@ -23,6 +23,7 @@ import {
   Tooltip,
   useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import {
   PiCode,
   PiGlobeSimpleBold,
@@ -572,12 +573,14 @@ const ConversationFooter = ({
     enqueueSendTask,
   } = useConversationComposer();
 
+  const brandHoverMain = theme.palette.primary.main;
+  const brandHoverDark = theme.palette.primary.dark || brandHoverMain;
   const iconButtonStyles = {
     color: theme.palette.mode === "light"
       ? "rgba(15,23,42,0.55)"
       : "rgba(255,255,255,0.6)",
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: "50%",
     p: 0,
     background: theme.palette.mode === "light"
@@ -588,32 +591,28 @@ const ConversationFooter = ({
       : "1px solid rgba(255,255,255,0.06)",
     transition: "background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
     "&:hover": {
-      backgroundColor: theme.palette.mode === "light"
-        ? "rgba(109,93,252,0.1)"
-        : "rgba(139,124,255,0.18)",
-      borderColor: theme.palette.mode === "light"
-        ? "rgba(109,93,252,0.35)"
-        : "rgba(139,124,255,0.45)",
-      color: theme.palette.mode === "light" ? "#4d3eff" : "#a99dff",
+      backgroundColor: alpha(brandHoverMain, theme.palette.mode === "light" ? 0.1 : 0.18),
+      borderColor: alpha(brandHoverMain, theme.palette.mode === "light" ? 0.35 : 0.45),
+      color: theme.palette.mode === "light" ? brandHoverDark : alpha(brandHoverMain, 0.9),
       transform: "translateY(-1.5px)",
-      boxShadow: "0 4px 12px rgba(109,93,252,0.18)",
+      boxShadow: `0 4px 12px ${alpha(brandHoverMain, 0.18)}`,
     },
   };
 
   const getFormatButtonStyles = (active) => ({
     ...iconButtonStyles,
-    color: active ? "#fff" : iconButtonStyles.color,
+    color: active ? (theme.palette.primary.contrastText || "#fff") : iconButtonStyles.color,
     background: active
-      ? "linear-gradient(135deg, #6d5dfc, #4d3eff)"
+      ? `linear-gradient(135deg, ${brandHoverMain}, ${brandHoverDark})`
       : iconButtonStyles.background,
-    borderColor: active ? "rgba(109,93,252,0.6)" : iconButtonStyles.border,
-    boxShadow: active ? "0 6px 16px rgba(109,93,252,0.4)" : "none",
+    borderColor: active ? alpha(brandHoverMain, 0.6) : iconButtonStyles.border,
+    boxShadow: active ? `0 6px 16px ${alpha(brandHoverMain, 0.4)}` : "none",
     "&:hover": active
       ? {
-          background: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
-          color: "#fff",
+          background: `linear-gradient(135deg, ${alpha(brandHoverMain, 0.85)}, ${brandHoverMain})`,
+          color: theme.palette.primary.contrastText || "#fff",
           transform: "translateY(-1.5px)",
-          boxShadow: "0 8px 20px rgba(109,93,252,0.5)",
+          boxShadow: `0 8px 20px ${alpha(brandHoverMain, 0.5)}`,
         }
       : iconButtonStyles["&:hover"],
   });

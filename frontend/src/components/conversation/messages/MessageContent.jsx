@@ -35,12 +35,12 @@ const registry = {
   notice: SystemEventMsg,
 };
 
-const MessageContent = ({ message, onAction, ...rest }) => {
+const MessageContent = ({ message, onAction, own, ...rest }) => {
   const Component =
     registry[message?.type?.toLowerCase?.() ?? ""] ||
     registry[message?.content?.mimeType?.split?.("/")?.[0] ?? ""] ||
     TextMsg;
-  return <Component message={message} onAction={onAction} {...rest} />;
+  return <Component message={message} onAction={onAction} own={own} {...rest} />;
 };
 
 export default MessageContent;

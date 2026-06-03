@@ -267,7 +267,7 @@ const MeetingInviteCard = ({ metadata }) => {
   );
 };
 
-const TextMsg = ({ message }) => {
+const TextMsg = ({ message, own = false }) => {
   // console.log("[TextMsg] message --->", message);
   const isMeetingInvite = message?.metadata?.meetingInvite === true;
   const textValue = message?.content?.text ?? "";
@@ -410,9 +410,19 @@ const TextMsg = ({ message }) => {
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
             "& a": {
-              color: theme.palette.primary.light,
+              color: own
+                ? theme.palette.primary.contrastText || "#fff"
+                : theme.palette.primary.main,
               textDecoration: "underline",
+              textDecorationColor: own
+                ? alpha("#ffffff", 0.95)
+                : "currentColor",
               fontWeight: 600,
+              "&:hover": {
+                color: own
+                  ? theme.palette.primary.contrastText || "#fff"
+                  : theme.palette.primary.dark,
+              },
             },
             "& .mention-token": {
               fontWeight: 700,
@@ -437,8 +447,13 @@ const TextMsg = ({ message }) => {
         whiteSpace: "pre-wrap",
         wordBreak: "break-word",
         "& a": {
-          color: theme.palette.primary.light,
+          color: own
+            ? theme.palette.primary.contrastText || "#fff"
+            : theme.palette.primary.main,
           textDecoration: "underline",
+          textDecorationColor: own
+            ? alpha("#ffffff", 0.95)
+            : "currentColor",
           fontWeight: 600,
         },
         "& .mention-token": {
@@ -496,7 +511,12 @@ const TextMsg = ({ message }) => {
                   underline="always"
                   sx={(theme) => ({
                     wordBreak: "break-all",
-                    color: theme.palette.primary.light,
+                    color: own
+                      ? theme.palette.primary.contrastText || "#fff"
+                      : theme.palette.primary.main,
+                    textDecorationColor: own
+                      ? alpha("#ffffff", 0.95)
+                      : "currentColor",
                     fontWeight: 600,
                   })}
                 >

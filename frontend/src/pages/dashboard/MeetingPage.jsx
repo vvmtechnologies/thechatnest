@@ -315,58 +315,73 @@ const MeetingPage = () => {
 
   return (
     <Box sx={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", bgcolor: theme.palette.mode === "light" ? "#fafbff" : theme.palette.background.default, overflow: "auto" }}>
-      {/* Hero header with gradient accent */}
+      {/* Hero header. Single-row flex layout: back-button → icon chip →
+          title block. Each child has flex-shrink:0 except the title block
+          (flex:1 + minWidth:0) so the page header never wraps onto two
+          lines and the title is the only thing that ellipsises on narrow
+          screens. Background tints the hero in the chosen brand colour. */}
       <Box
         sx={{
-          px: 3,
-          py: 2.5,
+          px: { xs: 2, sm: 3 },
+          py: 2,
           borderBottom: `1px solid ${theme.palette.divider}`,
-          background:
-            theme.palette.mode === "light"
-              ? "linear-gradient(135deg, rgba(109,93,252,0.06), rgba(255,213,74,0.05))"
-              : "linear-gradient(135deg, rgba(109,93,252,0.12), rgba(255,213,74,0.06))",
-          position: "relative",
-          overflow: "hidden",
+          background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)} 0%, ${alpha(theme.palette.primary.main, 0.02)} 100%)`,
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={{ xs: 1.25, sm: 1.75 }}
+          sx={{ width: "100%" }}
+        >
           <IconButton
             onClick={() => navigate("/app")}
             size="small"
+            aria-label="Back"
             sx={{
               borderRadius: "10px",
               border: `1px solid ${theme.palette.divider}`,
               background: theme.palette.background.paper,
-              "&:hover": { background: "rgba(109,93,252,0.08)", borderColor: "#6d5dfc", color: "#6d5dfc" },
+              flexShrink: 0,
+              "&:hover": {
+                background: alpha(theme.palette.primary.main, 0.08),
+                borderColor: theme.palette.primary.main,
+                color: theme.palette.primary.main,
+              },
             }}
           >
             <PiArrowLeftBold />
           </IconButton>
+
           <Box
             sx={{
-              width: 48,
-              height: 48,
-              borderRadius: "14px",
+              width: { xs: 40, sm: 46 },
+              height: { xs: 40, sm: 46 },
+              borderRadius: "12px",
               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark || theme.palette.primary.main} 100%)`,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
               color: theme.palette.primary.contrastText || "#fff",
-              boxShadow: `0 8px 22px ${alpha(theme.palette.primary.main, 0.35)}`,
+              boxShadow: `0 6px 18px ${alpha(theme.palette.primary.main, 0.32)}`,
               flexShrink: 0,
             }}
           >
-            <PiVideoConferenceFill size={26} />
+            <PiVideoConferenceFill size={22} />
           </Box>
+
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
-              variant="h4"
+              component="h1"
               fontWeight={800}
               sx={{
                 letterSpacing: "-0.02em",
                 lineHeight: 1.1,
-                fontSize: { xs: 22, sm: 26 },
+                fontSize: { xs: 20, sm: 24 },
                 color: theme.palette.text.primary,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
               Meetings
@@ -374,7 +389,14 @@ const MeetingPage = () => {
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{ fontSize: 13, mt: 0.25 }}
+              sx={{
+                fontSize: { xs: 11.5, sm: 12.5 },
+                mt: 0.25,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: { xs: "none", sm: "block" },
+              }}
             >
               Start an instant call, schedule for later, or join by code
             </Typography>

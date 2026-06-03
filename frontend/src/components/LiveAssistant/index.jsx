@@ -252,10 +252,20 @@ const LiveAssistant = () => {
   const bottomRef = useRef(null);
 
   // ── listen for sidebar toggle event ─────────────────────────────────────────
+  // Defensive: only honour explicit booleans (open: true/false). Anything
+  // else — undefined detail, missing detail — means "toggle". The previous
+  // shape (`?? ((prev) => !prev)`) used nullish-coalescing, which means a
+  // burst of two `{open:false}` events with a stale value in between could
+  // accidentally flip the panel back open. Splitting on typeof makes the
+  // close button single-press reliable.
   useEffect(() => {
     const handler = (e) => {
-      const shouldOpen = e.detail?.open;
-      setOpen(shouldOpen ?? ((prev) => !prev));
+      const value = e.detail?.open;
+      if (typeof value === "boolean") {
+        setOpen(value);
+      } else {
+        setOpen((prev) => !prev);
+      }
     };
     window.addEventListener("thechatnest:assistant", handler);
     return () => window.removeEventListener("thechatnest:assistant", handler);

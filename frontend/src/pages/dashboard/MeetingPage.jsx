@@ -24,6 +24,7 @@ import {
   Alert,
   useTheme,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import {
   PiVideoConferenceFill,
   PiVideoCameraBold,
@@ -343,24 +344,38 @@ const MeetingPage = () => {
           </IconButton>
           <Box
             sx={{
-              width: 44,
-              height: 44,
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #6d5dfc, #4d3eff)",
+              width: 48,
+              height: 48,
+              borderRadius: "14px",
+              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark || theme.palette.primary.main} 100%)`,
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#fff",
-              boxShadow: "0 8px 22px rgba(109,93,252,0.35)",
+              color: theme.palette.primary.contrastText || "#fff",
+              boxShadow: `0 8px 22px ${alpha(theme.palette.primary.main, 0.35)}`,
+              flexShrink: 0,
             }}
           >
-            <PiVideoConferenceFill size={24} />
+            <PiVideoConferenceFill size={26} />
           </Box>
-          <Box>
-            <Typography variant="h5" fontWeight={800} sx={{ letterSpacing: "-0.02em", lineHeight: 1.15 }}>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography
+              variant="h4"
+              fontWeight={800}
+              sx={{
+                letterSpacing: "-0.02em",
+                lineHeight: 1.1,
+                fontSize: { xs: 22, sm: 26 },
+                color: theme.palette.text.primary,
+              }}
+            >
               Meetings
             </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 12 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: 13, mt: 0.25 }}
+            >
               Start an instant call, schedule for later, or join by code
             </Typography>
           </Box>

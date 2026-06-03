@@ -16,6 +16,7 @@ import CallRequestDialog from "../../components/call/CallRequestDialog.jsx";
 import CallOverlay from "../../components/call/CallOverlay.jsx";
 import { MeetingProvider } from "../../contexts/MeetingContext.jsx";
 import MeetingInviteDialog from "../../components/meeting/MeetingInviteDialog.jsx";
+import LiveAssistant from "../../components/LiveAssistant/index.jsx";
 import { appBrandingAssets } from "../../data/CommonData.js";
 import { ensurePushSubscription } from "../../utils/webPushClient.js";
 import useHideTawkWhileMounted from "../../utils/hideTawkWhileMounted.js";
@@ -193,6 +194,7 @@ const DashboardLayout = () => {
                         window.dispatchEvent(new CustomEvent("meeting:join-from-invite", { detail: meetingData }));
                       }}
                     />
+                    <LiveAssistant />
                   </MeetingProvider>
                 </CallProvider>
               </ScreenShareProvider>

@@ -558,25 +558,34 @@ const LiveAssistant = () => {
             {[
               {
                 title: "History",
-                onClick: () => setShowHistory((p) => !p),
+                onClick: (e) => {
+                  e.stopPropagation();
+                  setShowHistory((p) => !p);
+                },
                 Icon: PiClockCounterClockwiseBold,
               },
               {
                 title: "New chat",
-                onClick: handleReset,
+                onClick: (e) => {
+                  e.stopPropagation();
+                  handleReset();
+                },
                 Icon: PiArrowClockwiseBold,
               },
               {
                 title: panelSize === "large" ? "Shrink" : "Expand",
-                onClick: () =>
+                onClick: (e) => {
+                  e.stopPropagation();
                   setPanelSize((prev) =>
                     prev === "small" ? "medium" : prev === "medium" ? "large" : "small"
-                  ),
+                  );
+                },
                 Icon: panelSize === "large" ? PiArrowsInBold : PiArrowsOutBold,
               },
               {
                 title: "Close",
-                onClick: () => {
+                onClick: (e) => {
+                  e.stopPropagation();
                   setOpen(false);
                   window.dispatchEvent(
                     new CustomEvent("thechatnest:assistant", { detail: { open: false } })

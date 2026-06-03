@@ -65,10 +65,12 @@ const SideBar = () => {
   const [loading, setLoading] = useState(true);
   const [toggleOpen, setToggleOpen] = useState(false);
   const [assistantOpen, setAssistantOpen] = useState(false);
-  // Sync sidebar icon when assistant closes itself (via X button)
+  // Sync sidebar icon with LiveAssistant open state — listens for both
+  // explicit open:true (auto-opens from elsewhere) and open:false (X close).
   useEffect(() => {
     const handler = (e) => {
-      if (e.detail?.open === false) setAssistantOpen(false);
+      const value = e.detail?.open;
+      if (typeof value === "boolean") setAssistantOpen(value);
     };
     window.addEventListener("thechatnest:assistant", handler);
     return () => window.removeEventListener("thechatnest:assistant", handler);
@@ -138,6 +140,41 @@ const SideBar = () => {
     alignItems: "center",
     boxShadow: "0 6px 18px rgba(255,213,74,0.18), inset 0 1px 0 rgba(255,255,255,0.08)",
     transition: "all 0.18s ease",
+  };
+
+  // Loud active state for the AI Assistant icon — when the panel is open we
+  // want it visually obvious which sidebar entry is "live". Goes beyond the
+  // generic activePillSx (used for plain nav tabs) with a brighter gradient,
+  // ring glow, and a small pulsing dot.
+  const assistantActivePillSx = {
+    background: "linear-gradient(135deg, rgba(255,213,74,0.32), rgba(109,93,252,0.32))",
+    border: "1.5px solid #ffd54a",
+    borderRadius: "50%",
+    height: 46,
+    width: 46,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    boxShadow:
+      "0 0 0 3px rgba(255,213,74,0.18), 0 8px 22px rgba(255,213,74,0.32), inset 0 1px 0 rgba(255,255,255,0.14)",
+    transition: "all 0.2s ease",
+    position: "relative",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      top: 2,
+      right: 2,
+      width: 8,
+      height: 8,
+      borderRadius: "50%",
+      background: "#22c55e",
+      boxShadow: "0 0 0 2px rgba(11,15,30,0.95)",
+      animation: "tcnAssistantPulse 1.6s ease-in-out infinite",
+    },
+    "@keyframes tcnAssistantPulse": {
+      "0%, 100%": { opacity: 1, transform: "scale(1)" },
+      "50%": { opacity: 0.7, transform: "scale(1.18)" },
+    },
   };
 
   const idleBtnSx = {
@@ -341,17 +378,18 @@ const SideBar = () => {
 
         <Stack alignItems={"center"} spacing={2.5}>
           <Divider sx={{ width: "32px", borderColor: "rgba(255,255,255,0.08)" }} />
-          <Tooltip title="AI Assistant" placement="right">
+          <Tooltip title={assistantOpen ? "Close AI Assistant" : "AI Assistant"} placement="right" arrow>
             {assistantOpen ? (
-              <Box sx={{ ...activePillSx, borderRadius: "50%" }}>
+              <Box sx={assistantActivePillSx}>
                 <IconButton
                   onClick={() => {
                     setAssistantOpen(false);
                     window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: false } }));
                   }}
-                  sx={activeIconSx}
+                  sx={{ ...activeIconSx, "&:hover": { background: "transparent", transform: "scale(1.08)" } }}
+                  aria-label="Close AI Assistant"
                 >
-                  <PiSparkle size={20} />
+                  <PiSparkle size={22} weight="fill" />
                 </IconButton>
               </Box>
             ) : (
@@ -361,6 +399,7 @@ const SideBar = () => {
                   window.dispatchEvent(new CustomEvent("thechatnest:assistant", { detail: { open: true } }));
                 }}
                 sx={{ ...idleBtnSx, borderRadius: "50%" }}
+                aria-label="Open AI Assistant"
               >
                 <PiSparkle size={20} />
               </IconButton>

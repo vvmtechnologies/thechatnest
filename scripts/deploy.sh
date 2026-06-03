@@ -82,6 +82,49 @@ if [ -f "$NGINX_SRC" ]; then
   fi
 fi
 
+# Install/refresh pm2-logrotate module — keeps /root/.pm2/logs/*.log
+# bounded (10 MB per file, 7-day retention). Without this, error logs
+# can grow unbounded and fill the disk over months. Idempotent.
+if ! pm2 list 2>/dev/null | grep -q pm2-logrotate; then
+  log "Installing pm2-logrotate..."
+  pm2 install pm2-logrotate >/dev/null 2>&1 || true
+  pm2 set pm2-logrotate:max_size 10M >/dev/null 2>&1 || true
+  pm2 set pm2-logrotate:retain 7 >/dev/null 2>&1 || true
+  pm2 set pm2-logrotate:compress true >/dev/null 2>&1 || true
+fi
+
+# Wire the postgres backup script into cron.daily (symlink → repo file
+# so updates to the script ship via git pull, no manual sync needed).
+BACKUP_SCRIPT="$REPO/scripts/backup-postgres.sh"
+BACKUP_CRON=/etc/cron.daily/thechatnest-postgres-backup
+if [ -f "$BACKUP_SCRIPT" ]; then
+  chmod +x "$BACKUP_SCRIPT"
+  if [ ! -L "$BACKUP_CRON" ] || [ "$(readlink "$BACKUP_CRON")" != "$BACKUP_SCRIPT" ]; then
+    log "Wiring backup-postgres.sh into cron.daily..."
+    ln -sf "$BACKUP_SCRIPT" "$BACKUP_CRON"
+  fi
+fi
+
+# Add logrotate rules for /var/log/thechatnest/*.log (app.log, deploy.log,
+# backup.log) — keeps each under 50 MB with 14-day retention. logrotate
+# already runs daily via systemd timer, so no extra cron needed.
+LOGROTATE_RULE=/etc/logrotate.d/thechatnest
+if [ ! -f "$LOGROTATE_RULE" ]; then
+  log "Installing logrotate rule for /var/log/thechatnest/*.log..."
+  cat > "$LOGROTATE_RULE" <<'LOGROTATE'
+/var/log/thechatnest/*.log {
+    daily
+    rotate 14
+    size 50M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+}
+LOGROTATE
+fi
+
 # Restart PM2. `--update-env` re-reads the .env file in case it was
 # edited out-of-band (rare, but harmless).
 log "Restarting PM2..."

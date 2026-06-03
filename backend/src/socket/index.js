@@ -24,6 +24,10 @@ const userSettingsModel = require('../models/userSettingsModel');
 const scheduledMessageModel = require('../models/scheduledMessageModel');
 const disappearingModel = require('../models/disappearingModel');
 const { sendMailAsync } = require('../utils/mail');
+const {
+  markOnline: redisMarkOnline,
+  markOffline: redisMarkOffline,
+} = require('../utils/onlinePresence');
 const webPush = require('../utils/webPush');
 const callLogModel = require('../models/callLogModel');
 const threadPinModel = require('../models/threadPinModel');
@@ -794,6 +798,9 @@ const onConnection = (socket) => {
       userOrgMap.set(userId, orgId);
       if (!orgOnlineUsers.has(orgId)) orgOnlineUsers.set(orgId, new Set());
       orgOnlineUsers.get(orgId).add(userId);
+      // Mirror to Redis so cross-process / cross-server presence queries
+      // work (in-memory Maps above only see THIS Node process).
+      redisMarkOnline({ orgId, userId, socketId: socket.id });
     }
   }
 
@@ -3104,6 +3111,10 @@ const onConnection = (socket) => {
       return;
     }
     removeUserSocket(userId, socket.id);
+    // Mirror to Redis (no-ops if Redis disabled / down).
+    if (orgId) {
+      redisMarkOffline({ orgId, userId, socketId: socket.id });
+    }
     // Clear org mapping on disconnect (only when ALL tabs closed)
     if (!isUserOnline(userId)) {
       userOrgMap.delete(userId);

@@ -1,6 +1,7 @@
 const { success, failure } = require('../utils/response');
 const aiProviderModel = require('../models/aiProviderModel');
 const assistantModel = require('../models/assistantModel');
+const { getCachedReply, setCachedReply } = require('../utils/aiResponseCache');
 
 /**
  * POST /live-assistant/chat
@@ -67,9 +68,20 @@ const chat = async (req, res, next) => {
 
     fullSystem += knowledgeContext + broadcastContext;
 
+    // Short-lived Redis cache — same prompt within 5 min returns instantly
+    // without paying for another API call. Skips automatically when the
+    // last user message is temporal ("now", "today", "abhi", etc).
     let reply = '';
-
-    if (provider.provider_key === 'gemini') {
+    let cached = false;
+    const cacheLookup = await getCachedReply({
+      provider: provider.provider_key,
+      systemPrompt: fullSystem,
+      messages,
+    });
+    if (cacheLookup) {
+      reply = cacheLookup;
+      cached = true;
+    } else if (provider.provider_key === 'gemini') {
       reply = await chatWithGemini(provider, messages, fullSystem);
     } else if (provider.provider_key === 'openai') {
       reply = await chatWithOpenAI(provider, messages, fullSystem);
@@ -79,15 +91,25 @@ const chat = async (req, res, next) => {
       reply = await chatWithGemini(provider, messages, fullSystem);
     }
 
+    // Populate cache for next identical prompt (fire-and-forget).
+    if (!cached && reply) {
+      setCachedReply({
+        provider: provider.provider_key,
+        systemPrompt: fullSystem,
+        messages,
+        reply,
+      }).catch(() => {});
+    }
+
     const responseMs = Date.now() - startTime;
-    // Track usage (non-blocking)
-    if (userId) {
+    // Track usage (non-blocking) — skip on cache hit since no API spend.
+    if (userId && !cached) {
       assistantModel.trackUsage({ userId, orgId, responseMs }).catch(() => {});
     }
 
     res.setHeader('x-ratelimit-remaining', rateCheck.remaining);
     res.setHeader('x-ratelimit-limit', rateCheck.limit);
-    return success(res, { reply, responseMs }, 'Assistant responded');
+    return success(res, { reply, responseMs, cached }, 'Assistant responded');
   } catch (err) {
     if (err?.status) {
       return failure(res, err.message || 'AI API error', err.status);

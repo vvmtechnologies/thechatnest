@@ -104,19 +104,29 @@ const bubbleStyles = (theme, own, { isEmojiOnly = false } = {}) => {
     };
   }
 
-  // Outgoing — violet gradient with subtle inner highlight and lift
+  // Outgoing — uses the user's brand colour (Settings → Brand Color) so
+  // the bubble matches the rest of the brand surface. theme.palette.primary
+  // is reactive to the Setting drawer's picker, so changing the brand color
+  // updates every outgoing bubble instantly.
   if (own) {
+    const brandMain = theme.palette.primary.main;
+    const brandDark = theme.palette.primary.dark || brandMain;
+    const brandContrast = theme.palette.primary.contrastText || "#fff";
+    // Shadow tint should match the bubble so it doesn't look like a stuck-on
+    // purple glow when the brand color is, say, green. alpha() keeps the
+    // exact hue while dropping it to 28% opacity.
+    const shadowTint = alpha(brandMain, 0.28);
     return {
       position: "relative",
       px: 1.4,
       py: 1,
       pb: 0.4,
       borderRadius: "18px 18px 4px 18px",
-      background: "linear-gradient(135deg, #6d5dfc 0%, #4d3eff 100%)",
-      color: "#fff",
+      background: `linear-gradient(135deg, ${brandMain} 0%, ${brandDark} 100%)`,
+      color: brandContrast,
       border: "1px solid rgba(255,255,255,0.08)",
       boxShadow:
-        "0 8px 22px rgba(109, 93, 252, 0.28), inset 0 1px 0 rgba(255,255,255,0.14)",
+        `0 8px 22px ${shadowTint}, inset 0 1px 0 rgba(255,255,255,0.14)`,
       minWidth: 110,
       maxWidth: "min(45vw, 75vw)",
       // Children text/links should also adopt white — except meeting invite

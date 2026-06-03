@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const { ACCESS_COOKIE, readCookie } = require('../utils/httpCookies');
+const { isAccessTokenRevoked } = require('../utils/tokenDenylist');
 
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
   // Validate JWT_SECRET exists
   if (!process.env.JWT_SECRET) {
     console.error('[FATAL] JWT_SECRET not configured');
@@ -35,7 +36,16 @@ const auth = (req, res, next) => {
       err.status = 401;
       return next(err);
     }
+    // Check Redis denylist (set on logout). Adds ~1ms when Redis is up.
+    // Falls through silently when Redis is down — JWT's own 15-min expiry
+    // remains the next line of defence.
+    if (await isAccessTokenRevoked(resolvedToken)) {
+      const err = new Error('Token has been revoked');
+      err.status = 401;
+      return next(err);
+    }
     req.user = payload;
+    req.accessToken = resolvedToken; // expose so logout can deny-list it
     return next();
   } catch (error) {
     const err = new Error('Invalid or expired token');

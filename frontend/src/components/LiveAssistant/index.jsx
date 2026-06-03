@@ -594,26 +594,39 @@ const LiveAssistant = () => {
                 Icon: PiXBold,
               },
             ].map(({ title, onClick, Icon }) => (
-              <Tooltip key={title} title={title}>
+              <Tooltip key={title} title={title} arrow>
                 <IconButton
                   size="small"
                   onClick={onClick}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  aria-label={title}
                   sx={{
-                    color: "rgba(255,255,255,0.85)",
-                    width: 28,
-                    height: 28,
-                    borderRadius: "8px",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.92)",
+                    width: 34,
+                    height: 34,
+                    flexShrink: 0,
+                    borderRadius: "10px",
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                    position: "relative",
+                    zIndex: 2,
+                    pointerEvents: "auto",
                     transition: "all 0.18s ease",
                     "&:hover": {
-                      background: "rgba(255,213,74,0.16)",
-                      borderColor: "rgba(255,213,74,0.45)",
+                      background: "rgba(255,213,74,0.22)",
+                      borderColor: "rgba(255,213,74,0.55)",
                       color: "#ffd54a",
+                      transform: "translateY(-1px)",
+                      boxShadow: "0 4px 12px rgba(255,213,74,0.25)",
+                    },
+                    "&:active": {
+                      transform: "translateY(0)",
+                      background: "rgba(255,213,74,0.3)",
                     },
                   }}
                 >
-                  <Icon size={13} />
+                  <Icon size={15} />
                 </IconButton>
               </Tooltip>
             ))}

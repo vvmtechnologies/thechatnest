@@ -8,6 +8,7 @@ import {
   useTheme,
   Button,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import {
   PiDesktop,
@@ -166,6 +167,9 @@ const TopBar = () => {
   const dragRegionSx = isBrowser ? {} : { WebkitAppRegion: "drag" };
   const noDragRegionSx = isBrowser ? {} : { WebkitAppRegion: "no-drag" };
 
+  // Brand-derived hover tone for the pill buttons (Set PIN, Desktop App).
+  // Falls back to warning if primary feels too saturated against the dark bar.
+  const pillBrand = theme.palette.warning.main;
   const pillBtnSx = {
     fontSize: "12px",
     color: "#e6e6ea",
@@ -181,9 +185,9 @@ const TopBar = () => {
     letterSpacing: 0.02,
     transition: "all 0.18s ease",
     "&:hover": {
-      background: "rgba(255,213,74,0.1)",
-      borderColor: "rgba(255,213,74,0.35)",
-      color: "#ffd54a",
+      background: alpha(pillBrand, 0.1),
+      borderColor: alpha(pillBrand, 0.35),
+      color: pillBrand,
     },
     ...noDragRegionSx,
   };
@@ -230,8 +234,8 @@ const TopBar = () => {
               px: 1.2,
               py: 0.5,
               borderRadius: "999px",
-              background: "rgba(255,213,74,0.08)",
-              border: "1px solid rgba(255,213,74,0.18)",
+              background: alpha(pillBrand, 0.08),
+              border: `1px solid ${alpha(pillBrand, 0.18)}`,
             }}
           >
             <Box
@@ -239,15 +243,15 @@ const TopBar = () => {
                 width: 22,
                 height: 22,
                 borderRadius: "7px",
-                background: "linear-gradient(135deg, #ffd54a, #ffb74d)",
-                color: "#1a1f3a",
+                background: `linear-gradient(135deg, ${pillBrand}, ${theme.palette.warning.dark || pillBrand})`,
+                color: theme.palette.warning.contrastText || "#1a1f3a",
                 fontSize: 10,
                 fontWeight: 800,
                 letterSpacing: 0.5,
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(255,213,74,0.4)",
+                boxShadow: `0 2px 8px ${alpha(pillBrand, 0.4)}`,
               }}
             >
               TCN
@@ -281,10 +285,12 @@ const TopBar = () => {
                 width: 7,
                 height: 7,
                 borderRadius: "50%",
-                background: netOK ? "#22c55e" : "#ef4444",
+                background: netOK
+                  ? theme.palette.success.main
+                  : theme.palette.error.main,
                 boxShadow: netOK
-                  ? "0 0 0 3px rgba(34,197,94,0.2)"
-                  : "0 0 0 3px rgba(239,68,68,0.2)",
+                  ? `0 0 0 3px ${alpha(theme.palette.success.main, 0.2)}`
+                  : `0 0 0 3px ${alpha(theme.palette.error.main, 0.2)}`,
               }}
             />
             <Typography
@@ -316,9 +322,9 @@ const TopBar = () => {
                 alignItems: "center",
                 gap: 0.6,
                 borderRadius: 9999,
-                background: "rgba(239,68,68,0.15)",
-                border: "1px solid rgba(239,68,68,0.35)",
-                color: "#fca5a5",
+                background: alpha(theme.palette.error.main, 0.15),
+                border: `1px solid ${alpha(theme.palette.error.main, 0.35)}`,
+                color: theme.palette.error.light || theme.palette.error.main,
               }}
               title="You are offline"
             >
@@ -342,49 +348,52 @@ const TopBar = () => {
           const isExpiring = plan.status === "expiring";
           const isTrial = plan.status === "trial";
 
+          // Plan badge tones — each state binds to a semantic palette slot so
+          // a brand-color or dark-mode switch flows through automatically.
+          //   expired  → error      expiring → warning
+          //   trial    → primary    active   → warning (gold/crown tone)
+          const buildTone = (key, { Icon, label, sub, pulse, useContrastText = true }) => {
+            const main = theme.palette[key].main;
+            const dark = theme.palette[key].dark || main;
+            const light = theme.palette[key].light || main;
+            return {
+              bg: alpha(main, 0.22),
+              border: alpha(main, 0.6),
+              iconBg: `linear-gradient(135deg, ${light}, ${main})`,
+              iconColor: useContrastText
+                ? theme.palette[key].contrastText || "#fff"
+                : "#1a1f3a",
+              Icon, label, sub, pulse,
+            };
+          };
           const tone = isExpired
-            ? {
-                bg: "rgba(239,68,68,0.22)",
-                border: "rgba(239,68,68,0.6)",
-                iconBg: "linear-gradient(135deg, #ef4444, #dc2626)",
-                iconColor: "#ffffff",
+            ? buildTone("error", {
                 Icon: PiWarningCircleDuotone,
                 label: "Plan expired",
                 sub: "Renew now",
                 pulse: true,
-              }
+              })
             : isExpiring
-              ? {
-                  bg: "rgba(245,158,11,0.22)",
-                  border: "rgba(245,158,11,0.6)",
-                  iconBg: "linear-gradient(135deg, #f59e0b, #d97706)",
-                  iconColor: "#ffffff",
+              ? buildTone("warning", {
                   Icon: PiClockCountdownDuotone,
                   label: `${r} day${r === 1 ? "" : "s"} left`,
                   sub: plan.planName,
                   pulse: true,
-                }
+                })
               : isTrial
-                ? {
-                    bg: "rgba(109,93,252,0.22)",
-                    border: "rgba(109,93,252,0.6)",
-                    iconBg: "linear-gradient(135deg, #8b7cff, #6d5dfc)",
-                    iconColor: "#ffffff",
+                ? buildTone("primary", {
                     Icon: PiSparkleDuotone,
                     label: r !== null && r >= 0 ? `Trial · ${r}d left` : "Trial",
                     sub: plan.planName,
                     pulse: false,
-                  }
-                : {
-                    bg: "rgba(255,213,74,0.2)",
-                    border: "rgba(255,213,74,0.55)",
-                    iconBg: "linear-gradient(135deg, #ffd54a, #ffb74d)",
-                    iconColor: "#1a1f3a",
+                  })
+                : buildTone("warning", {
                     Icon: PiCrownSimpleDuotone,
                     label: plan.planName,
                     sub: r !== null && r >= 0 ? `${r} days left` : "Active",
                     pulse: false,
-                  };
+                    useContrastText: false,
+                  });
 
           return (
             <Box
@@ -411,7 +420,7 @@ const TopBar = () => {
                 ...noDragRegionSx,
                 "&:hover": {
                   transform: "translate(-50%, calc(-50% - 1px))",
-                  background: tone.bg.replace("0.22", "0.32").replace("0.2", "0.3"),
+                  filter: "brightness(1.18) saturate(1.05)",
                 },
                 ...(tone.pulse && {
                   animation: "tcnPlanPulse 2.2s ease-in-out infinite",
@@ -495,13 +504,13 @@ const TopBar = () => {
                 marginLeft: { xs: 0, md: 0 },
               },
               ...(lockState.locked && {
-                background: "rgba(34,197,94,0.12)",
-                borderColor: "rgba(34,197,94,0.35)",
-                color: "#4ade80",
+                background: alpha(theme.palette.success.main, 0.12),
+                borderColor: alpha(theme.palette.success.main, 0.35),
+                color: theme.palette.success.light || theme.palette.success.main,
                 "&:hover": {
-                  background: "rgba(34,197,94,0.18)",
-                  borderColor: "rgba(34,197,94,0.5)",
-                  color: "#4ade80",
+                  background: alpha(theme.palette.success.main, 0.18),
+                  borderColor: alpha(theme.palette.success.main, 0.5),
+                  color: theme.palette.success.light || theme.palette.success.main,
                 },
               }),
             }}
@@ -539,27 +548,27 @@ const TopBar = () => {
             sx={{
               ...noDragRegionSx,
               fontSize: "12px",
-              color: "#fff",
+              color: theme.palette.error.contrastText || "#fff",
               textTransform: "none",
               fontWeight: 700,
               letterSpacing: 0.02,
-              background: "linear-gradient(135deg, #ff5b3e, #ff7e5f)",
+              background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.light || theme.palette.error.main})`,
               borderRadius: "999px",
               px: { xs: 1, md: 1.6 },
               py: 0.5,
               minHeight: 0,
               minWidth: { xs: 34, md: "auto" },
               ml: 0.5,
-              boxShadow: "0 4px 14px rgba(255,91,62,0.35)",
+              boxShadow: `0 4px 14px ${alpha(theme.palette.error.main, 0.35)}`,
               transition: "all 0.18s ease",
               "& .MuiButton-endIcon": {
                 marginLeft: { xs: 0, md: "8px" },
                 marginRight: 0,
               },
               "&:hover": {
-                background: "linear-gradient(135deg, #ff7e5f, #ff5b3e)",
+                background: `linear-gradient(135deg, ${theme.palette.error.dark || theme.palette.error.main}, ${theme.palette.error.main})`,
                 transform: "translateY(-1px)",
-                boxShadow: "0 6px 18px rgba(255,91,62,0.5)",
+                boxShadow: `0 6px 18px ${alpha(theme.palette.error.main, 0.5)}`,
               },
             }}
           >

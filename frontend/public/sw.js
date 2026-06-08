@@ -3,11 +3,10 @@ const APP_BRANDING_ASSETS = {
     notificationIcon: '/thechatnest_logo_element.png',
 };
 
-// Bump on each deploy where SW logic changes. v4 fixes white-screen
-// on stale cached JS chunks: scripts are now network-first so a new
-// Vercel build's chunks are fetched fresh instead of returning the
-// stale cache (which would 404 → ChunkLoadError → blank screen).
-const CACHE_NAME = 'thechatnest-cache-v4';
+// Bump on each deploy where SW logic changes. v5 ships proper square
+// PWA icons (192/512 + maskable + apple-touch) — chat.png was 515×117
+// which made Chrome refuse the install prompt (no compliant icon).
+const CACHE_NAME = 'thechatnest-cache-v5';
 
 const getPrecacheUrls = () => [
     // Do NOT cache '/': it can serve different content depending on deploy

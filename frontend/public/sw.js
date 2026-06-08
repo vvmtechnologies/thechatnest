@@ -3,10 +3,11 @@ const APP_BRANDING_ASSETS = {
     notificationIcon: '/thechatnest_logo_element.png',
 };
 
-// Bump on each deploy where SW logic changes. v5 ships proper square
-// PWA icons (192/512 + maskable + apple-touch) — chat.png was 515×117
-// which made Chrome refuse the install prompt (no compliant icon).
-const CACHE_NAME = 'thechatnest-cache-v5';
+// Bump on each deploy where SW logic changes. v6 switches the PWA icons
+// over to the proper brand-supplied favicon set (android-chrome-192/512,
+// favicon-16/32, apple-touch-icon, .ico). v5 had stand-ins generated
+// from the logo element — these are the real ones.
+const CACHE_NAME = 'thechatnest-cache-v6';
 
 const getPrecacheUrls = () => [
     // Do NOT cache '/': it can serve different content depending on deploy
